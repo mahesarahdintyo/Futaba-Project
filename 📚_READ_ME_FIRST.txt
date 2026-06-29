@@ -213,3 +213,27 @@ Happy documenting! 📚✨
 Your Supabase integration is ready to go! 🚀
 
 ═══════════════════════════════════════════════════════════════════════
+
+
+# Futaba Digital Document Management System (FDDMS)
+
+## 📖 About
+Sistem manajemen dokumen internal PT FUTABA untuk menampilkan dokumen kerja pada tablet dan TV secara real-time.
+
+## 🚀 Tech Stack
+- Next.js
+- TypeScript
+- Tailwind CSS
+- Supabase
+- shadcn/ui
+
+## 🎯 Main Features
+- Document Management
+- Category Management
+- Folder Management
+- Realtime TV Display
+- Multi Land Support
+- Admin Dashboard
+
+## 📌 Status
+🚧 Under Development
