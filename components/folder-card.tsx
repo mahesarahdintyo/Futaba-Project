@@ -17,6 +17,13 @@ export function FolderCard({
 }: FolderCardProps) {
   const [isDeleting, setIsDeleting] = useState(false)
 
+  console.log("[operator-debug][FolderCard] render", {
+    id,
+    name,
+    hasOnEnter: typeof onEnter === "function",
+    hasOnDeleteSuccess: typeof onDeleteSuccess === "function",
+  })
+
   const handleDelete = async (e: React.MouseEvent) => {
     e.stopPropagation() // Prevent entering the folder
     

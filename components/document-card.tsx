@@ -42,6 +42,16 @@ export function DocumentCard({
   const [isDeleting, setIsDeleting] = useState(false)
   const [isViewing, setIsViewing] = useState(false)
 
+  console.log("[operator-debug][DocumentCard] render", {
+    id,
+    title,
+    description,
+    category,
+    type,
+    file,
+    hasOnDelete: typeof onDelete === "function",
+  })
+
   const handleView = async () => {
     try {
       setIsViewing(true)
@@ -413,21 +423,23 @@ export function DocumentCard({
             )}
             <span className="sm:hidden text-xs font-medium">Print</span>
           </Button>
-          <Button
-            size="sm"
-            variant="ghost"
-            className="text-red-600 hover:bg-red-50 hover:text-red-700 flex-1 sm:flex-initial flex items-center justify-center gap-1.5"
-            onClick={handleDelete}
-            disabled={isDeleting}
-            title="Hapus Dokumen"
-          >
-            {isDeleting ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <Trash2 className="w-4 h-4" />
-            )}
-            <span className="sm:hidden text-xs font-medium">Hapus</span>
-          </Button>
+          {onDelete && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="text-red-600 hover:bg-red-50 hover:text-red-700 flex-1 sm:flex-initial flex items-center justify-center gap-1.5"
+              onClick={handleDelete}
+              disabled={isDeleting}
+              title="Hapus Dokumen"
+            >
+              {isDeleting ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Trash2 className="w-4 h-4" />
+              )}
+              <span className="sm:hidden text-xs font-medium">Hapus</span>
+            </Button>
+          )}
         </div>
       </div>
     </div>

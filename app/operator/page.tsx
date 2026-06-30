@@ -1,7 +1,319 @@
+"use client";
+
+import OperatorHeader from "@/components/operator/OperatorHeader";
+import LandSelector from "@/components/operator/LandSelector";
+import SearchBar from "@/components/operator/SearchBar";
+import DocumentList from "@/components/operator/DocumentList";
+import { getDocuments, type Document } from "@/lib/services/document";
+import { getFolders, type Folder } from "@/lib/services/folder";
+import { getLands, type Land } from "@/lib/services/land";
+import { useEffect, useState } from "react";
+
+const LAND_STORAGE_KEY = "futaba.operator.selectedLand";
+
+interface BreadcrumbItem {
+  id: number;
+  name: string;
+}
+
 export default function OperatorPage() {
+  const [selectedLand, setSelectedLand] = useState<Land | null>(null);
+  const [lands, setLands] = useState<Land[]>([]);
+  const [folders, setFolders] = useState<Folder[]>([]);
+  const [documents, setDocuments] = useState<Document[]>([]);
+  const [currentFolder, setCurrentFolder] = useState<BreadcrumbItem | null>(null);
+  const [folderPathHistory, setFolderPathHistory] = useState<BreadcrumbItem[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadLands() {
+      try {
+        console.log("[operator-debug][OperatorPage] loadLands:start");
+
+        const activeLands = await getLands();
+
+        if (!isMounted) return;
+
+        console.log("[operator-debug][OperatorPage] loadLands:result", {
+          length: activeLands.length,
+          lands: activeLands,
+        });
+
+        setLands(activeLands);
+
+        const savedLandId = window.localStorage.getItem(LAND_STORAGE_KEY);
+        const savedLand = activeLands.find((land) => land.id === savedLandId);
+
+        console.log("[operator-debug][OperatorPage] saved land lookup", {
+          savedLandId,
+          savedLand,
+          firstLand: activeLands[0] ?? null,
+        });
+
+        if (savedLand) {
+          console.log("[operator-debug][OperatorPage] selectedLand from localStorage", {
+            id: savedLand.id,
+            isUuid:
+              /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+                savedLand.id
+              ),
+            land: savedLand,
+          });
+          setSelectedLand(savedLand);
+          return;
+        }
+
+        if (activeLands[0]) {
+          console.log("[operator-debug][OperatorPage] selectedLand from first land", {
+            id: activeLands[0].id,
+            isUuid:
+              /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+                activeLands[0].id
+              ),
+            land: activeLands[0],
+          });
+          setSelectedLand(activeLands[0]);
+        }
+      } catch (error) {
+        console.error("Failed to load lands", error);
+      }
+    }
+
+    loadLands();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const handleLandChange = (land: Land) => {
+    console.log("[operator-debug][OperatorPage] handleLandChange", {
+      id: land.id,
+      isUuid:
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+          land.id
+        ),
+      land,
+    });
+
+    setSelectedLand(land);
+    setCurrentFolder(null);
+    setFolderPathHistory([]);
+    setSearchQuery("");
+    window.localStorage.setItem(LAND_STORAGE_KEY, land.id);
+  };
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const timeoutId = window.setTimeout(() => {
+      loadWorkspaceData();
+    }, searchQuery.trim() ? 300 : 0);
+
+    async function loadWorkspaceData() {
+      if (!selectedLand) {
+        console.log("[operator-debug][OperatorPage] loadWorkspaceData:skip no selectedLand", {
+          selectedLand,
+        });
+        setFolders([]);
+        setDocuments([]);
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        setIsLoading(true);
+        setError("");
+
+        const search = searchQuery.trim();
+        const folderParentId = search ? null : currentFolder?.id ?? null;
+
+        console.log("[operator-debug][OperatorPage] loadWorkspaceData:start", {
+          selectedLand,
+          selectedLandId: selectedLand.id,
+          selectedLandIdIsUuid:
+            /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+              selectedLand.id
+            ),
+          currentFolder,
+          search,
+          folderParentId,
+          folderArgs: {
+            landId: selectedLand.id,
+            parentId: folderParentId,
+            includeAll: Boolean(search),
+            search,
+          },
+          documentArgs: {
+            landId: selectedLand.id,
+            folderId: folderParentId,
+            search,
+          },
+        });
+
+        const [landFolders, landDocuments] = await Promise.all([
+          getFolders({
+            landId: selectedLand.id,
+            parentId: folderParentId,
+            includeAll: Boolean(search),
+            search,
+          }),
+          getDocuments({
+            landId: selectedLand.id,
+            folderId: folderParentId,
+            search,
+          }),
+        ]);
+
+        if (!isMounted) return;
+
+        console.log("[operator-debug][OperatorPage] loadWorkspaceData:result before setState", {
+          foldersIsArray: Array.isArray(landFolders),
+          foldersLength: landFolders.length,
+          folders: landFolders,
+          documentsIsArray: Array.isArray(landDocuments),
+          documentsLength: landDocuments.length,
+          documents: landDocuments,
+        });
+
+        setFolders(landFolders);
+        setDocuments(landDocuments);
+
+        console.log("[operator-debug][OperatorPage] setState called", {
+          foldersLength: landFolders.length,
+          documentsLength: landDocuments.length,
+        });
+      } catch (error) {
+        console.error("Failed to load operator workspace", error);
+
+        if (isMounted) {
+          setFolders([]);
+          setDocuments([]);
+          setError(
+            error instanceof Error
+              ? error.message
+              : "Gagal memuat data operator"
+          );
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    return () => {
+      isMounted = false;
+      window.clearTimeout(timeoutId);
+    };
+  }, [currentFolder, searchQuery, selectedLand]);
+
+  const handleEnterFolder = (id: number, name: string) => {
+    console.log("[operator-debug][OperatorPage] handleEnterFolder", {
+      id,
+      name,
+    });
+
+    const nextFolder = { id, name };
+    setFolderPathHistory((history) => [...history, nextFolder]);
+    setCurrentFolder(nextFolder);
+    setSearchQuery("");
+  };
+
+  const handleNavigateBreadcrumb = (index: number) => {
+    console.log("[operator-debug][OperatorPage] handleNavigateBreadcrumb", {
+      index,
+      folderPathHistory,
+    });
+
+    setSearchQuery("");
+
+    if (index === -1) {
+      setFolderPathHistory([]);
+      setCurrentFolder(null);
+      return;
+    }
+
+    const nextHistory = folderPathHistory.slice(0, index + 1);
+    setFolderPathHistory(nextHistory);
+    setCurrentFolder(nextHistory[index] ?? null);
+  };
+
+  console.log("[operator-debug][OperatorPage] render", {
+    selectedLand,
+    selectedLandId: selectedLand?.id ?? null,
+    selectedLandIdIsUuid: selectedLand
+      ? /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+          selectedLand.id
+        )
+      : false,
+    landsLength: lands.length,
+    foldersLength: folders.length,
+    documentsLength: documents.length,
+    currentFolder,
+    searchQuery,
+    isLoading,
+    error,
+    documentListProps: {
+      folders,
+      documents,
+      isLoading,
+      error,
+    },
+  });
+
   return (
-    <main>
-      <h1>Operator Dashboard</h1>
+    <main className="min-h-screen bg-slate-100 text-slate-900">
+      <OperatorHeader selectedLand={selectedLand?.name ?? ""} />
+
+      <div className="mx-auto max-w-5xl space-y-6 p-6">
+        <LandSelector
+          value={selectedLand}
+          lands={lands}
+          onChange={handleLandChange}
+        />
+
+        <SearchBar value={searchQuery} onChange={setSearchQuery} />
+
+        {folderPathHistory.length > 0 && !searchQuery && (
+          <div className="flex flex-wrap items-center gap-2 rounded-xl border border-slate-200 bg-white p-3 text-sm text-slate-600 shadow-sm">
+            <button
+              onClick={() => handleNavigateBreadcrumb(-1)}
+              className="font-semibold text-emerald-700 transition hover:text-emerald-800"
+              type="button"
+            >
+              Home
+            </button>
+
+            {folderPathHistory.map((folder, index) => (
+              <div key={folder.id} className="flex items-center gap-2">
+                <span className="text-slate-400">/</span>
+
+                <button
+                  onClick={() => handleNavigateBreadcrumb(index)}
+                  className="font-semibold text-slate-800 transition enabled:text-emerald-700 enabled:hover:text-emerald-800"
+                  disabled={index === folderPathHistory.length - 1}
+                  type="button"
+                >
+                  {folder.name}
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <DocumentList
+          folders={folders}
+          documents={documents}
+          isLoading={isLoading}
+          error={error}
+          onEnterFolder={handleEnterFolder}
+        />
+      </div>
     </main>
   );
 }

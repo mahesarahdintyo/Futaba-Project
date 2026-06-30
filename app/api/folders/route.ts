@@ -6,15 +6,27 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
     const parentIdStr = searchParams.get('parentId')
+    const landId = searchParams.get('landId')
+    const includeAll = searchParams.get('includeAll') === 'true'
+    const searchQuery = searchParams.get('search')?.trim()
     const parentId = parentIdStr ? parseInt(parentIdStr) : null
 
     const supabase = await createClient()
 
     let query = supabase.from('folders').select('*')
-    
-    if (parentId === null) {
+
+    if (landId) {
+      query = query.eq('land_id', landId)
+    }
+
+    if (searchQuery) {
+      const escapedSearch = searchQuery.replace(/[%_]/g, '\\$&')
+      query = query.ilike('name', `%${escapedSearch}%`)
+    }
+
+    if (!includeAll && parentId === null) {
       query = query.is('parent_id', null)
-    } else {
+    } else if (!includeAll && parentIdStr) {
       query = query.eq('parent_id', parentId)
     }
 

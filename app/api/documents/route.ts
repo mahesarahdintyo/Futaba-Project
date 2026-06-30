@@ -1,20 +1,22 @@
-import { createClient } from '@/lib/supabase/server'
-import { NextResponse } from 'next/server'
+import { createClient } from "@/lib/supabase/server";
+import { NextResponse } from "next/server";
 
-// GET - Fetch documents by folder, or search across all folders when search is provided
+// GET - Fetch documents
 export async function GET(request: Request) {
   try {
-    const { searchParams } = new URL(request.url)
-    const folderIdStr = searchParams.get('folderId')
-    const folderId = folderIdStr ? parseInt(folderIdStr) : null
-    const searchQuery = searchParams.get('search')?.trim()
+    const { searchParams } = new URL(request.url);
 
-    const supabase = await createClient()
+    const folderIdStr = searchParams.get("folderId");
+    const folderId = folderIdStr ? parseInt(folderIdStr) : null;
+
+    const landId = searchParams.get("landId");
+    const searchQuery = searchParams.get("search")?.trim();
+
+    const supabase = await createClient();
 
     let query = supabase
-      .from('documents')
-      .select(
-        `
+      .from("documents")
+      .select(`
         id,
         title,
         description,
@@ -23,57 +25,74 @@ export async function GET(request: Request) {
         file_type,
         file_size,
         created_at,
-        folder_id
-      `
-      )
+        folder_id,
+        folders (
+          id,
+          name,
+          land_id
+        )
+      `);
 
-    if (searchQuery) {
-      const escapedSearch = searchQuery.replace(/[%_]/g, '\\$&')
-      query = query.or(
-        `title.ilike.%${escapedSearch}%,description.ilike.%${escapedSearch}%,file_name.ilike.%${escapedSearch}%`
-      )
-    } else if (folderId === null) {
-      query = query.is('folder_id', null)
-    } else {
-      query = query.eq('folder_id', folderId)
+    // Filter berdasarkan folder
+    if (folderIdStr) {
+      query = query.eq("folder_id", folderId);
     }
 
-    const { data: documents, error } = await query.order('created_at', { ascending: false })
+    // Filter search
+    if (searchQuery) {
+      const escapedSearch = searchQuery.replace(/[%_]/g, "\\$&");
+
+      query = query.or(
+        `title.ilike.%${escapedSearch}%,description.ilike.%${escapedSearch}%,file_name.ilike.%${escapedSearch}%`
+      );
+    }
+
+    const { data, error } = await query.order("created_at", {
+      ascending: false,
+    });
 
     if (error) {
+      console.error(error);
       return NextResponse.json(
         { error: error.message },
         { status: 500 }
-      )
+      );
     }
 
-    // Transform data to match frontend expectations
+    // Filter land di sisi server (sementara)
+    const documents = landId
+      ? data.filter((doc: any) => doc.folders?.land_id === landId)
+      : data;
+
     const transformedDocuments = documents.map((doc: any) => ({
       id: doc.id,
       title: doc.title,
       description: doc.description,
-      category: 'Lainnya', // default category for compatibility
-      type: doc.file_type || 'unknown',
+      category: "Lainnya",
+      type: doc.file_type,
       file: {
         name: doc.file_name,
         path: doc.file_path,
-        size: doc.file_size
-      }
-    }))
+        size: doc.file_size,
+      },
+    }));
 
-    return NextResponse.json(transformedDocuments)
+    return NextResponse.json(transformedDocuments);
   } catch (error) {
+    console.error(error);
+
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: "Internal server error" },
       { status: 500 }
-    )
+    );
   }
 }
 
-// POST - Create a new document
+// POST - Create document
 export async function POST(request: Request) {
   try {
-    const body = await request.json()
+    const body = await request.json();
+
     const {
       title,
       description,
@@ -82,19 +101,19 @@ export async function POST(request: Request) {
       file_path,
       file_size,
       file_type
-    } = body
+    } = body;
 
     if (!title || !file_name || !file_path) {
       return NextResponse.json(
-        { error: 'Missing required fields' },
+        { error: "Missing required fields" },
         { status: 400 }
-      )
+      );
     }
 
-    const supabase = await createClient()
+    const supabase = await createClient();
 
     const { data, error } = await supabase
-      .from('documents')
+      .from("documents")
       .insert({
         title,
         description,
@@ -102,22 +121,22 @@ export async function POST(request: Request) {
         file_name,
         file_path,
         file_size,
-        file_type
+        file_type,
       })
-      .select()
+      .select();
 
     if (error) {
       return NextResponse.json(
         { error: error.message },
         { status: 500 }
-      )
+      );
     }
 
-    return NextResponse.json(data[0], { status: 201 })
+    return NextResponse.json(data[0], { status: 201 });
   } catch (error) {
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: "Internal server error" },
       { status: 500 }
-    )
+    );
   }
 }

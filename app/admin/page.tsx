@@ -1,13 +1,13 @@
 'use client'
 
 import { useState, useMemo, useEffect } from 'react'
-import Image from 'next/image'
 import { ChevronRight } from 'lucide-react'
 import { DocumentCard } from '@/components/document-card'
 import { SearchBar } from '@/components/search-bar'
 import { UploadDialog } from '@/components/upload-dialog'
 import { FolderCard } from '@/components/folder-card'
 import { CreateFolderDialog } from '@/components/create-folder-dialog'
+import { AppHeader } from '@/components/app-header'
 
 interface Document {
   id: string
@@ -156,33 +156,16 @@ export default function Page() {
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 shadow-sm">
-        <div className="w-full px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="flex items-center">
-              <Image
-                src="/futaba-logo.png"
-                alt="FUTABA Logo"
-                width={150}
-                height={52}
-                className="object-contain h-10 sm:h-11 lg:h-12 w-auto"
-                priority
-              />
-              <h1 className="sr-only">PKIS</h1>
-            </div>
-            <div className="w-full sm:w-auto flex flex-col sm:flex-row gap-2">
-              <CreateFolderDialog 
-                parentId={currentFolder ? currentFolder.id : null}
-                onCreateSuccess={fetchFolders}
-              />
-              <UploadDialog 
-                folderId={currentFolder ? currentFolder.id : null}
-                onUploadSuccess={handleUploadSuccess}
-              />
-            </div>
-          </div>
-        </div>
-      </header>
+      <AppHeader>
+        <CreateFolderDialog 
+          parentId={currentFolder ? currentFolder.id : null}
+          onCreateSuccess={fetchFolders}
+        />
+        <UploadDialog 
+          folderId={currentFolder ? currentFolder.id : null}
+          onUploadSuccess={handleUploadSuccess}
+        />
+      </AppHeader>
 
       {/* Main Content */}
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
