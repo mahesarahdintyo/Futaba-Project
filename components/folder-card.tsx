@@ -1,3 +1,5 @@
+'use client'
+
 import { Folder, Trash2, Loader2 } from 'lucide-react'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
@@ -53,11 +55,14 @@ export function FolderCard({
   }
 
   return (
-    <div
-      onClick={() => onEnter(id, name)}
-      className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md hover:border-blue-400 transition-all cursor-pointer group flex items-center justify-between text-gray-900"
-      title={`Klik untuk masuk ke folder ${name}`}
-    >
+<div
+  onClick={() => {
+    console.log("CLICK FOLDER", id, name)
+    onEnter(id, name)
+  }}
+  className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md hover:border-blue-400 transition-all cursor-pointer group flex items-center justify-between text-gray-900"
+  title={`Klik untuk masuk ke folder ${name}`}
+>
       <div className="flex items-center gap-3 min-w-0">
         <div className="flex-shrink-0 w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center group-hover:bg-yellow-200 transition-colors">
           <Folder className="w-5 h-5 text-yellow-600 fill-yellow-600" />

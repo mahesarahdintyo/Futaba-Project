@@ -6,11 +6,13 @@ import { Button } from '@/components/ui/button'
 
 interface CreateFolderDialogProps {
   parentId: number | null
+  landId: string
   onCreateSuccess?: () => void
 }
 
 export function CreateFolderDialog({
   parentId,
+  landId,
   onCreateSuccess
 }: CreateFolderDialogProps) {
   const [isOpen, setIsOpen] = useState(false)
@@ -36,7 +38,8 @@ export function CreateFolderDialog({
         },
         body: JSON.stringify({
           name: name.trim(),
-          parentId
+          parentId,
+          landId
         })
       })
 

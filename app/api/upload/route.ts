@@ -8,6 +8,7 @@ export async function POST(request: Request) {
     const title = formData.get('title') as string
     const description = formData.get('description') as string
     const folderId = formData.get('folderId') as string
+    const landId = formData.get('landId') as string
 
     if (!file) {
       return NextResponse.json(
@@ -46,18 +47,25 @@ export async function POST(request: Request) {
     }
 
     // Create document record in database
-    const { data: docData, error: dbError } = await supabase
-      .from('documents')
-      .insert({
-        title,
-        description,
-        folder_id: folderId ? parseInt(folderId) : null,
-        file_name: file.name,
-        file_path: uploadData.path,
-        file_size: file.size,
-        file_type: file.type
-      })
-      .select()
+    console.log('[UPLOAD] landId =', landId)
+    console.log('[UPLOAD] folderId =', folderId)
+    const payload = {
+  title,
+  description,
+  folder_id: folderId ? parseInt(folderId) : null,
+  land_id: landId || null,
+  file_name: file.name,
+  file_path: uploadData.path,
+  file_size: file.size,
+  file_type: file.type,
+}
+
+console.log('[UPLOAD] payload =', payload)
+
+const { data: docData, error: dbError } = await supabase
+  .from('documents')
+  .insert(payload)
+  .select()
 
     if (dbError) {
       // Delete the uploaded file if database insert fails

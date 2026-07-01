@@ -6,11 +6,13 @@ import { Button } from '@/components/ui/button'
 
 interface UploadDialogProps {
   folderId: number | null
+  landId: string
   onUploadSuccess?: () => void
 }
 
 export function UploadDialog({
   folderId,
+  landId,
   onUploadSuccess
 }: UploadDialogProps) {
   const [isOpen, setIsOpen] = useState(false)
@@ -48,6 +50,7 @@ export function UploadDialog({
       formData.append('file', file)
       formData.append('title', title)
       formData.append('description', description)
+      formData.append('landId', landId)
       if (folderId !== null) {
         formData.append('folderId', folderId.toString())
       }

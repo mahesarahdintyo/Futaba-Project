@@ -8,6 +8,8 @@ import { UploadDialog } from '@/components/upload-dialog'
 import { FolderCard } from '@/components/folder-card'
 import { CreateFolderDialog } from '@/components/create-folder-dialog'
 import { AppHeader } from '@/components/app-header'
+import LandSelector from '@/components/operator/LandSelector'
+import { getLands, type Land } from '@/lib/services/land'
 
 interface Document {
   id: string
@@ -35,12 +37,51 @@ interface BreadcrumbItem {
 
 export default function Page() {
   const [searchQuery, setSearchQuery] = useState('')
+  const [selectedLand, setSelectedLand] = useState<Land | null>(null)
+  const [lands, setLands] = useState<Land[]>([])
   const [documents, setDocuments] = useState<Document[]>([])
   const [folders, setFolders] = useState<Folder[]>([])
   const [currentFolder, setCurrentFolder] = useState<BreadcrumbItem | null>(null)
   const [folderPathHistory, setFolderPathHistory] = useState<BreadcrumbItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
+
+  useEffect(() => {
+    let mounted = true
+
+    async function loadLands() {
+      try {
+        const data = await getLands()
+
+        console.log('[ADMIN]', {
+  currentFolder,
+  folderPathHistory
+})
+        if (!mounted) return
+
+        setLands(data)
+
+        if (data.length > 0) {
+          setSelectedLand(data[0])
+        }
+      } catch (err) {
+        console.error(err)
+      }
+    }
+
+    loadLands()
+
+    return () => {
+      mounted = false
+    }
+  }, [])
+
+  const handleLandChange = (land: Land) => {
+    setSelectedLand(land)
+    setCurrentFolder(null)
+    setFolderPathHistory([])
+    setSearchQuery('')
+  }
 
   // Fetch documents and folders whenever the current folder or search changes
   useEffect(() => {
@@ -49,27 +90,41 @@ export default function Page() {
     }, searchQuery.trim() ? 300 : 0)
 
     return () => window.clearTimeout(timeoutId)
-  }, [currentFolder, searchQuery])
+  }, [selectedLand, currentFolder, searchQuery])
 
   const fetchWorkspaceData = async (searchTerm = '') => {
+    if (!selectedLand) return
+
     try {
       setIsLoading(true)
       setError('')
-      await Promise.all([fetchDocuments(searchTerm), fetchFolders()])
+
+      await Promise.all([
+        fetchDocuments(searchTerm),
+        fetchFolders(searchTerm)
+      ])
     } catch (err) {
-      console.error('Error fetching workspace data:', err)
+      console.error(err)
     } finally {
       setIsLoading(false)
     }
   }
 
   const fetchDocuments = async (searchTerm = searchQuery.trim()) => {
+    if (!selectedLand) return
+
     try {
-      const url = searchTerm
-        ? `/api/documents?search=${encodeURIComponent(searchTerm)}`
-        : currentFolder 
-          ? `/api/documents?folderId=${currentFolder.id}` 
-          : '/api/documents'
+      const params = new URLSearchParams({
+        landId: selectedLand.id
+      })
+
+      if (searchTerm) {
+        params.set('search', searchTerm)
+      } else if (currentFolder) {
+        params.set('folderId', currentFolder.id.toString())
+      }
+
+      const url = `/api/documents?${params.toString()}`
       
       const response = await fetch(url)
       if (!response.ok) {
@@ -84,11 +139,22 @@ export default function Page() {
     }
   }
 
-  const fetchFolders = async () => {
+  const fetchFolders = async (searchTerm = searchQuery.trim()) => {
+    if (!selectedLand) return
+
     try {
-      const url = currentFolder 
-        ? `/api/folders?parentId=${currentFolder.id}` 
-        : '/api/folders'
+      const params = new URLSearchParams({
+        landId: selectedLand.id
+      })
+
+      if (searchTerm) {
+        params.set('search', searchTerm)
+        params.set('includeAll', 'true')
+      } else if (currentFolder) {
+        params.set('parentId', currentFolder.id.toString())
+      }
+
+      const url = `/api/folders?${params.toString()}`
       
       const response = await fetch(url)
       if (!response.ok) {
@@ -103,19 +169,22 @@ export default function Page() {
     }
   }
 
-  const handleUploadSuccess = () => {
-    fetchDocuments()
-  }
+const handleUploadSuccess = () => {
+  fetchWorkspaceData()
+}
 
   const handleDeleteSuccess = (deletedId: string) => {
     setDocuments(documents.filter(doc => doc.id !== deletedId))
   }
 
-  const handleEnterFolder = (id: number, name: string) => {
-    const newHistory = [...folderPathHistory, { id, name }]
-    setFolderPathHistory(newHistory)
-    setCurrentFolder({ id, name })
-  }
+const handleEnterFolder = (id: number, name: string) => {
+  console.log("MASUK FOLDER", id, name)
+
+  const newHistory = [...folderPathHistory, { id, name }]
+
+  setFolderPathHistory(newHistory)
+  setCurrentFolder({ id, name })
+}
 
   const handleNavigateBreadcrumb = (index: number) => {
     if (index === -1) {
@@ -159,16 +228,26 @@ export default function Page() {
       <AppHeader>
         <CreateFolderDialog 
           parentId={currentFolder ? currentFolder.id : null}
+          landId={selectedLand?.id ?? ""}
           onCreateSuccess={fetchFolders}
         />
         <UploadDialog 
           folderId={currentFolder ? currentFolder.id : null}
+          landId={selectedLand?.id ?? ""}
           onUploadSuccess={handleUploadSuccess}
         />
       </AppHeader>
 
       {/* Main Content */}
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="mb-6">
+          <LandSelector
+            value={selectedLand}
+            lands={lands}
+            onChange={handleLandChange}
+          />
+        </div>
+
         {/* Search Bar */}
         <div className="mb-6">
           <SearchBar

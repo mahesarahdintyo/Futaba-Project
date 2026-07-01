@@ -47,10 +47,18 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { name, parentId } = body
+
+    const {
+      name,
+      parentId,
+      landId
+    } = body
 
     if (!name) {
-      return NextResponse.json({ error: 'Folder name is required' }, { status: 400 })
+      return NextResponse.json(
+        { error: 'Folder name is required' },
+        { status: 400 }
+      )
     }
 
     const supabase = await createClient()
@@ -59,18 +67,25 @@ export async function POST(request: Request) {
       .from('folders')
       .insert({
         name,
-        parent_id: parentId ? parseInt(parentId) : null
+        parent_id: parentId ? parseInt(parentId) : null,
+        land_id: landId
       })
       .select()
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      return NextResponse.json(
+        { error: error.message },
+        { status: 500 }
+      )
     }
 
     return NextResponse.json(newFolder[0], { status: 201 })
   } catch (error) {
     console.error('Folders POST error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
   }
 }
 
@@ -81,7 +96,10 @@ export async function DELETE(request: Request) {
     const idStr = searchParams.get('id')
 
     if (!idStr) {
-      return NextResponse.json({ error: 'Folder ID is required' }, { status: 400 })
+      return NextResponse.json(
+        { error: 'Folder ID is required' },
+        { status: 400 }
+      )
     }
 
     const id = parseInt(idStr)
@@ -93,12 +111,21 @@ export async function DELETE(request: Request) {
       .eq('id', id)
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      return NextResponse.json(
+        { error: error.message },
+        { status: 500 }
+      )
     }
 
-    return NextResponse.json({ success: true, message: 'Folder deleted successfully' })
+    return NextResponse.json({
+      success: true,
+      message: 'Folder deleted successfully'
+    })
   } catch (error) {
     console.error('Folders DELETE error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
   }
 }
