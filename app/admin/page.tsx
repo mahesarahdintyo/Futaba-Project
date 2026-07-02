@@ -8,7 +8,6 @@ import { UploadDialog } from '@/components/upload-dialog'
 import { FolderCard } from '@/components/folder-card'
 import { CreateFolderDialog } from '@/components/create-folder-dialog'
 import { AppHeader } from '@/components/app-header'
-import LandSelector from '@/components/operator/LandSelector'
 import { getLands, type Land } from '@/lib/services/land'
 
 interface Document {
@@ -38,6 +37,7 @@ interface BreadcrumbItem {
 export default function Page() {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedLand, setSelectedLand] = useState<Land | null>(null)
+  const [showLandList, setShowLandList] = useState(true)
   const [lands, setLands] = useState<Land[]>([])
   const [documents, setDocuments] = useState<Document[]>([])
   const [folders, setFolders] = useState<Folder[]>([])
@@ -61,9 +61,8 @@ export default function Page() {
 
         setLands(data)
 
-        if (data.length > 0) {
-    setSelectedLand(data[0])
-}
+        // Jangan pilih land otomatis
+        setSelectedLand(null)
       } catch (err) {
         console.error(err)
       }
@@ -76,13 +75,15 @@ export default function Page() {
     }
   }, [])
 
-  const handleLandChange = (land: Land) => {
+  const handleEnterLand = (land: Land) => {
     setSelectedLand(land)
+    setShowLandList(false)
+
     setCurrentFolder(null)
     setFolderPathHistory([])
     setSearchQuery('')
   }
-
+  
   // Fetch documents and folders whenever the current folder or search changes
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
@@ -90,13 +91,18 @@ export default function Page() {
     }, searchQuery.trim() ? 300 : 0)
 
     return () => window.clearTimeout(timeoutId)
-  }, [selectedLand, currentFolder, searchQuery])
+  }, [selectedLand, showLandList, currentFolder, searchQuery])
 
   const fetchWorkspaceData = async (searchTerm = '') => {
   console.log("FETCH WORKSPACE")
   console.log("selectedLand =", selectedLand)
+  console.log("selectedLand =", selectedLand);
+  console.log("showLandList =", showLandList);
 
-  if (!selectedLand) return
+  if (showLandList || !selectedLand) {
+    setIsLoading(false)
+    return
+  }
 
   try {
     setIsLoading(true)
@@ -183,12 +189,6 @@ const handleUploadSuccess = () => {
 const handleEnterFolder = (id: number, name: string) => {
   console.log("MASUK FOLDER", id, name)
 
-  const handleEnterLand = (land: Land) => {
-  setSelectedLand(land)
-  setCurrentFolder(null)
-  setFolderPathHistory([])
-}
-
   const newHistory = [...folderPathHistory, { id, name }]
 
   setFolderPathHistory(newHistory)
@@ -196,14 +196,26 @@ const handleEnterFolder = (id: number, name: string) => {
 }
 
   const handleNavigateBreadcrumb = (index: number) => {
-    if (index === -1) {
-      setFolderPathHistory([])
-      setCurrentFolder(null)
-    } else {
-      const newHistory = folderPathHistory.slice(0, index + 1)
-      setFolderPathHistory(newHistory)
-      setCurrentFolder(folderPathHistory[index])
-    }
+  if (index === -1) {
+    setShowLandList(true)
+    setSelectedLand(null)
+    setCurrentFolder(null)
+    setFolderPathHistory([])
+    return
+  }
+
+  const newHistory = folderPathHistory.slice(0, index + 1)
+
+  console.log("NEW HISTORY", newHistory)
+  console.log("TARGET FOLDER", newHistory[newHistory.length - 1])
+
+  setFolderPathHistory(newHistory)
+  setCurrentFolder(newHistory[newHistory.length - 1])
+}
+
+  const handleNavigateLandRoot = () => {
+    setCurrentFolder(null)
+    setFolderPathHistory([])
   }
 
   const handleFolderDeleteSuccess = () => {
@@ -249,13 +261,6 @@ const handleEnterFolder = (id: number, name: string) => {
 
       {/* Main Content */}
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* <div className="mb-6">
-          <LandSelector
-            value={selectedLand}
-            lands={lands}
-            onChange={handleLandChange}
-          />
-        </div> */}
 
         {/* Search Bar */}
         <div className="mb-6">
@@ -267,33 +272,72 @@ const handleEnterFolder = (id: number, name: string) => {
         </div>
 
         {/* Breadcrumb Navigation */}
-        {folderPathHistory.length > 0 && (
-          <div className="flex items-center flex-wrap gap-2 text-sm text-gray-600 mb-6 bg-white p-3 rounded-lg border border-gray-200 shadow-sm select-none">
-            <button 
-              onClick={() => handleNavigateBreadcrumb(-1)}
-              className="hover:text-blue-600 font-semibold transition-colors text-blue-600"
-            >
-              Home
-            </button>
-            {folderPathHistory.map((folder, index) => (
-              <div key={folder.id} className="flex items-center gap-2">
-                <ChevronRight className="w-4 h-4 text-gray-400" />
-                <button 
-                  onClick={() => handleNavigateBreadcrumb(index)}
-                  className={`hover:text-blue-600 font-semibold transition-colors ${
-                    index === folderPathHistory.length - 1 ? 'text-gray-800 cursor-default' : 'text-blue-600'
-                  }`}
-                  disabled={index === folderPathHistory.length - 1}
-                >
-                  {folder.name}
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
+{(!showLandList && selectedLand) && (
+  <div className="flex items-center flex-wrap gap-2 text-sm text-gray-600 mb-6 bg-white p-3 rounded-lg border border-gray-200 shadow-sm select-none">
+
+    <button
+      onClick={() => handleNavigateBreadcrumb(-1)}
+      className="font-semibold text-blue-600 hover:text-blue-700 transition-colors"
+    >
+      Home
+    </button>
+
+    <ChevronRight className="w-4 h-4 text-gray-400" />
+
+    <button
+      onClick={handleNavigateLandRoot}
+      disabled={folderPathHistory.length === 0}
+      className={`font-semibold transition-colors ${
+        folderPathHistory.length === 0
+          ? 'text-gray-800 cursor-default'
+          : 'text-blue-600 hover:text-blue-700'
+      }`}
+    >
+      {selectedLand.name}
+    </button>
+
+    {folderPathHistory.map((folder, index) => (
+      <div key={folder.id} className="flex items-center gap-2">
+        <ChevronRight className="w-4 h-4 text-gray-400" />
+
+        <button
+          onClick={() => handleNavigateBreadcrumb(index)}
+          disabled={index === folderPathHistory.length - 1}
+          className={`font-semibold transition-colors ${
+            index === folderPathHistory.length - 1
+              ? 'text-gray-800 cursor-default'
+              : 'text-blue-600 hover:text-blue-700'
+          }`}
+        >
+          {folder.name}
+        </button>
+      </div>
+    ))}
+  </div>
+)}
+
+{showLandList && (
+  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+    {lands.map((land) => (
+      <div
+        key={land.id}
+        onClick={() => handleEnterLand(land)}
+        className="bg-white border border-gray-200 rounded-lg p-5 shadow-sm hover:shadow-md hover:border-blue-400 cursor-pointer transition-all"
+      >
+        <h3 className="text-lg font-semibold text-gray-900">
+          📁 {land.name}
+        </h3>
+
+        <p className="text-sm text-gray-500 mt-2">
+          Klik untuk membuka
+        </p>
+      </div>
+    ))}
+  </div>
+)}
 
         {/* Folder List Grid */}
-        {!isLoading && filteredFolders.length > 0 && (
+        {!showLandList && !isLoading && filteredFolders.length > 0 && (
           <div className="mb-8">
             <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">
               Folder ({filteredFolders.length})
@@ -314,7 +358,7 @@ const handleEnterFolder = (id: number, name: string) => {
 
         {/* Documents List */}
         <div className="space-y-3">
-          {!isLoading && filteredDocuments.length > 0 && (
+          {!showLandList && !isLoading && filteredDocuments.length > 0 && (
             <div className="flex items-center justify-between mb-2">
               <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">
                 Dokumen ({filteredDocuments.length})
@@ -328,12 +372,12 @@ const handleEnterFolder = (id: number, name: string) => {
             </div>
           )}
 
-          {isLoading ? (
+          {!showLandList && isLoading ? (
             <div className="text-center py-12">
               <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
               <p className="text-gray-600 mt-4 text-sm">Memuat data...</p>
             </div>
-          ) : filteredDocuments.length > 0 ? (
+          ) : !showLandList && filteredDocuments.length > 0 ? (
             <div className="space-y-3">
               {filteredDocuments.map((doc) => (
                 <DocumentCard
@@ -351,7 +395,7 @@ const handleEnterFolder = (id: number, name: string) => {
           ) : null}
 
           {/* Empty State */}
-          {!isLoading && showEmptyState && (
+          {!showLandList && !isLoading && showEmptyState && (
             <div className="text-center py-16 bg-white rounded-lg border border-gray-200 shadow-sm">
               <p className="text-gray-400 text-lg font-medium">
                 {searchQuery ? 'Tidak ada kecocokan pencarian' : 'Folder ini kosong'}
