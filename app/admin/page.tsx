@@ -62,8 +62,8 @@ export default function Page() {
         setLands(data)
 
         if (data.length > 0) {
-          setSelectedLand(data[0])
-        }
+    setSelectedLand(data[0])
+}
       } catch (err) {
         console.error(err)
       }
@@ -93,22 +93,25 @@ export default function Page() {
   }, [selectedLand, currentFolder, searchQuery])
 
   const fetchWorkspaceData = async (searchTerm = '') => {
-    if (!selectedLand) return
+  console.log("FETCH WORKSPACE")
+  console.log("selectedLand =", selectedLand)
 
-    try {
-      setIsLoading(true)
-      setError('')
+  if (!selectedLand) return
 
-      await Promise.all([
-        fetchDocuments(searchTerm),
-        fetchFolders(searchTerm)
-      ])
-    } catch (err) {
-      console.error(err)
-    } finally {
-      setIsLoading(false)
-    }
+  try {
+    setIsLoading(true)
+    setError('')
+
+    await Promise.all([
+      fetchDocuments(searchTerm),
+      fetchFolders(searchTerm)
+    ])
+  } catch (err) {
+    console.error(err)
+  } finally {
+    setIsLoading(false)
   }
+}
 
   const fetchDocuments = async (searchTerm = searchQuery.trim()) => {
     if (!selectedLand) return
@@ -180,6 +183,12 @@ const handleUploadSuccess = () => {
 const handleEnterFolder = (id: number, name: string) => {
   console.log("MASUK FOLDER", id, name)
 
+  const handleEnterLand = (land: Land) => {
+  setSelectedLand(land)
+  setCurrentFolder(null)
+  setFolderPathHistory([])
+}
+
   const newHistory = [...folderPathHistory, { id, name }]
 
   setFolderPathHistory(newHistory)
@@ -240,13 +249,13 @@ const handleEnterFolder = (id: number, name: string) => {
 
       {/* Main Content */}
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-6">
+        {/* <div className="mb-6">
           <LandSelector
             value={selectedLand}
             lands={lands}
             onChange={handleLandChange}
           />
-        </div>
+        </div> */}
 
         {/* Search Bar */}
         <div className="mb-6">
