@@ -10,10 +10,42 @@ import { getLands, type Land } from "@/lib/services/land";
 import { useEffect, useState } from "react";
 
 const LAND_STORAGE_KEY = "futaba.operator.selectedLand";
+const OPERATOR_LOCATION_STORAGE_KEY = "futaba.operator.location";
 
 interface BreadcrumbItem {
   id: number;
   name: string;
+}
+
+interface OperatorLocationState {
+  landId: string;
+  folderPathHistory: BreadcrumbItem[];
+}
+
+function readOperatorLocation(): OperatorLocationState | null {
+  try {
+    const rawLocation = window.localStorage.getItem(OPERATOR_LOCATION_STORAGE_KEY);
+    if (!rawLocation) return null;
+
+    const location = JSON.parse(rawLocation) as Partial<OperatorLocationState>;
+    const folderPathHistory = Array.isArray(location.folderPathHistory)
+      ? location.folderPathHistory.filter(
+          (folder): folder is BreadcrumbItem =>
+            typeof folder?.id === "number" && typeof folder?.name === "string"
+        )
+      : [];
+
+    if (typeof location.landId !== "string") {
+      return null;
+    }
+
+    return {
+      landId: location.landId,
+      folderPathHistory,
+    };
+  } catch {
+    return null;
+  }
 }
 
 export default function OperatorPage() {
@@ -26,6 +58,21 @@ export default function OperatorPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+
+  const persistOperatorLocation = (land: Land, history: BreadcrumbItem[]) => {
+    window.localStorage.setItem(LAND_STORAGE_KEY, land.id);
+    window.localStorage.setItem(
+      OPERATOR_LOCATION_STORAGE_KEY,
+      JSON.stringify({
+        landId: land.id,
+        folderPathHistory: history,
+      })
+    );
+  };
+
+  const clearOperatorFolderLocation = (land: Land) => {
+    persistOperatorLocation(land, []);
+  };
 
   useEffect(() => {
     let isMounted = true;
@@ -45,7 +92,9 @@ export default function OperatorPage() {
 
         setLands(activeLands);
 
-        const savedLandId = window.localStorage.getItem(LAND_STORAGE_KEY);
+        const savedLocation = readOperatorLocation();
+        const savedLandId =
+          savedLocation?.landId ?? window.localStorage.getItem(LAND_STORAGE_KEY);
         const savedLand = activeLands.find((land) => land.id === savedLandId);
 
         console.log("[operator-debug][OperatorPage] saved land lookup", {
@@ -55,6 +104,8 @@ export default function OperatorPage() {
         });
 
         if (savedLand) {
+          const nextHistory = savedLocation?.folderPathHistory ?? [];
+
           console.log("[operator-debug][OperatorPage] selectedLand from localStorage", {
             id: savedLand.id,
             isUuid:
@@ -64,6 +115,8 @@ export default function OperatorPage() {
             land: savedLand,
           });
           setSelectedLand(savedLand);
+          setFolderPathHistory(nextHistory);
+          setCurrentFolder(nextHistory[nextHistory.length - 1] ?? null);
           return;
         }
 
@@ -104,7 +157,7 @@ export default function OperatorPage() {
     setCurrentFolder(null);
     setFolderPathHistory([]);
     setSearchQuery("");
-    window.localStorage.setItem(LAND_STORAGE_KEY, land.id);
+    clearOperatorFolderLocation(land);
   };
 
   useEffect(() => {
@@ -219,9 +272,14 @@ export default function OperatorPage() {
     });
 
     const nextFolder = { id, name };
-    setFolderPathHistory((history) => [...history, nextFolder]);
+    const nextHistory = [...folderPathHistory, nextFolder];
+    setFolderPathHistory(nextHistory);
     setCurrentFolder(nextFolder);
     setSearchQuery("");
+
+    if (selectedLand) {
+      persistOperatorLocation(selectedLand, nextHistory);
+    }
   };
 
   const handleNavigateBreadcrumb = (index: number) => {
@@ -235,12 +293,18 @@ export default function OperatorPage() {
     if (index === -1) {
       setFolderPathHistory([]);
       setCurrentFolder(null);
+      if (selectedLand) {
+        clearOperatorFolderLocation(selectedLand);
+      }
       return;
     }
 
     const nextHistory = folderPathHistory.slice(0, index + 1);
     setFolderPathHistory(nextHistory);
     setCurrentFolder(nextHistory[index] ?? null);
+    if (selectedLand) {
+      persistOperatorLocation(selectedLand, nextHistory);
+    }
   };
 
   console.log("[operator-debug][OperatorPage] render", {

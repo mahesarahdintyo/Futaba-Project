@@ -7,6 +7,8 @@ import { SearchBar } from '@/components/search-bar'
 import { UploadDialog } from '@/components/upload-dialog'
 import { FolderCard } from '@/components/folder-card'
 import { CreateFolderDialog } from '@/components/create-folder-dialog'
+import { CreateLandDialog } from '@/components/create-land-dialog'
+import { AdminLandCard } from '@/components/admin-land-card'
 import { AppHeader } from '@/components/app-header'
 import { getLands, type Land } from '@/lib/services/land'
 
@@ -34,6 +36,39 @@ interface BreadcrumbItem {
   name: string
 }
 
+interface AdminLocationState {
+  landId: string
+  folderPathHistory: BreadcrumbItem[]
+}
+
+const ADMIN_LOCATION_STORAGE_KEY = 'futaba.admin.location'
+
+function readAdminLocation(): AdminLocationState | null {
+  try {
+    const rawLocation = window.localStorage.getItem(ADMIN_LOCATION_STORAGE_KEY)
+    if (!rawLocation) return null
+
+    const location = JSON.parse(rawLocation) as Partial<AdminLocationState>
+    const folderPathHistory = Array.isArray(location.folderPathHistory)
+      ? location.folderPathHistory.filter(
+          (folder): folder is BreadcrumbItem =>
+            typeof folder?.id === 'number' && typeof folder?.name === 'string'
+        )
+      : []
+
+    if (typeof location.landId !== 'string') {
+      return null
+    }
+
+    return {
+      landId: location.landId,
+      folderPathHistory,
+    }
+  } catch {
+    return null
+  }
+}
+
 export default function Page() {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedLand, setSelectedLand] = useState<Land | null>(null)
@@ -46,29 +81,74 @@ export default function Page() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
 
+  const persistAdminLocation = (land: Land, history: BreadcrumbItem[]) => {
+    window.localStorage.setItem(
+      ADMIN_LOCATION_STORAGE_KEY,
+      JSON.stringify({
+        landId: land.id,
+        folderPathHistory: history,
+      })
+    )
+  }
+
+  const clearAdminLocation = () => {
+    window.localStorage.removeItem(ADMIN_LOCATION_STORAGE_KEY)
+  }
+
+  const loadLands = async () => {
+    try {
+      setIsLoading(true)
+      const data = await getLands()
+
+      setLands(data)
+      setSelectedLand(null)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Gagal mengambil data card')
+      console.error(err)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   useEffect(() => {
     let mounted = true
 
-    async function loadLands() {
+    async function loadInitialLands() {
       try {
+        setIsLoading(true)
         const data = await getLands()
-
-        console.log('[ADMIN]', {
-  currentFolder,
-  folderPathHistory
-})
         if (!mounted) return
 
         setLands(data)
 
-        // Jangan pilih land otomatis
+        const savedLocation = readAdminLocation()
+        const savedLand = savedLocation
+          ? data.find((land) => land.id === savedLocation.landId)
+          : null
+
+        if (savedLand && savedLocation) {
+          const nextHistory = savedLocation.folderPathHistory
+
+          setSelectedLand(savedLand)
+          setShowLandList(false)
+          setFolderPathHistory(nextHistory)
+          setCurrentFolder(nextHistory[nextHistory.length - 1] ?? null)
+          setSearchQuery('')
+          return
+        }
+
+        clearAdminLocation()
         setSelectedLand(null)
       } catch (err) {
         console.error(err)
+      } finally {
+        if (mounted) {
+          setIsLoading(false)
+        }
       }
     }
 
-    loadLands()
+    loadInitialLands()
 
     return () => {
       mounted = false
@@ -82,6 +162,7 @@ export default function Page() {
     setCurrentFolder(null)
     setFolderPathHistory([])
     setSearchQuery('')
+    persistAdminLocation(land, [])
   }
   
   // Fetch documents and folders whenever the current folder or search changes
@@ -94,11 +175,6 @@ export default function Page() {
   }, [selectedLand, showLandList, currentFolder, searchQuery])
 
   const fetchWorkspaceData = async (searchTerm = '') => {
-  console.log("FETCH WORKSPACE")
-  console.log("selectedLand =", selectedLand)
-  console.log("selectedLand =", selectedLand);
-  console.log("showLandList =", showLandList);
-
   if (showLandList || !selectedLand) {
     setIsLoading(false)
     return
@@ -182,17 +258,24 @@ const handleUploadSuccess = () => {
   fetchWorkspaceData()
 }
 
+const handleCreateFolderSuccess = () => {
+  fetchWorkspaceData()
+}
+
   const handleDeleteSuccess = (deletedId: string) => {
     setDocuments(documents.filter(doc => doc.id !== deletedId))
   }
 
 const handleEnterFolder = (id: number, name: string) => {
-  console.log("MASUK FOLDER", id, name)
-
   const newHistory = [...folderPathHistory, { id, name }]
 
   setFolderPathHistory(newHistory)
   setCurrentFolder({ id, name })
+  setSearchQuery('')
+
+  if (selectedLand) {
+    persistAdminLocation(selectedLand, newHistory)
+  }
 }
 
   const handleNavigateBreadcrumb = (index: number) => {
@@ -201,21 +284,30 @@ const handleEnterFolder = (id: number, name: string) => {
     setSelectedLand(null)
     setCurrentFolder(null)
     setFolderPathHistory([])
+    setSearchQuery('')
+    clearAdminLocation()
     return
   }
 
   const newHistory = folderPathHistory.slice(0, index + 1)
 
-  console.log("NEW HISTORY", newHistory)
-  console.log("TARGET FOLDER", newHistory[newHistory.length - 1])
-
   setFolderPathHistory(newHistory)
   setCurrentFolder(newHistory[newHistory.length - 1])
+  setSearchQuery('')
+
+  if (selectedLand) {
+    persistAdminLocation(selectedLand, newHistory)
+  }
 }
 
   const handleNavigateLandRoot = () => {
     setCurrentFolder(null)
     setFolderPathHistory([])
+    setSearchQuery('')
+
+    if (selectedLand) {
+      persistAdminLocation(selectedLand, [])
+    }
   }
 
   const handleFolderDeleteSuccess = () => {
@@ -247,16 +339,22 @@ const handleEnterFolder = (id: number, name: string) => {
     <div className="min-h-screen bg-gray-50 text-gray-900">
       {/* Header */}
       <AppHeader>
-        <CreateFolderDialog 
-          parentId={currentFolder ? currentFolder.id : null}
-          landId={selectedLand?.id ?? ""}
-          onCreateSuccess={fetchFolders}
-        />
-        <UploadDialog 
-          folderId={currentFolder ? currentFolder.id : null}
-          landId={selectedLand?.id ?? ""}
-          onUploadSuccess={handleUploadSuccess}
-        />
+        {showLandList ? (
+          <CreateLandDialog onCreateSuccess={loadLands} />
+        ) : selectedLand ? (
+          <>
+            <CreateFolderDialog 
+              parentId={currentFolder ? currentFolder.id : null}
+              landId={selectedLand.id}
+              onCreateSuccess={handleCreateFolderSuccess}
+            />
+            <UploadDialog 
+              folderId={currentFolder ? currentFolder.id : null}
+              landId={selectedLand.id}
+              onUploadSuccess={handleUploadSuccess}
+            />
+          </>
+        ) : null}
       </AppHeader>
 
       {/* Main Content */}
@@ -319,19 +417,12 @@ const handleEnterFolder = (id: number, name: string) => {
 {showLandList && (
   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
     {lands.map((land) => (
-      <div
+      <AdminLandCard
         key={land.id}
-        onClick={() => handleEnterLand(land)}
-        className="bg-white border border-gray-200 rounded-lg p-5 shadow-sm hover:shadow-md hover:border-blue-400 cursor-pointer transition-all"
-      >
-        <h3 className="text-lg font-semibold text-gray-900">
-          📁 {land.name}
-        </h3>
-
-        <p className="text-sm text-gray-500 mt-2">
-          Klik untuk membuka
-        </p>
-      </div>
+        land={land}
+        onEnter={handleEnterLand}
+        onChangeSuccess={loadLands}
+      />
     ))}
   </div>
 )}
