@@ -26,6 +26,7 @@ export async function GET(request: Request) {
         file_size,
         created_at,
         folder_id,
+        land_id,
         folders (
           id,
           name,
@@ -34,9 +35,13 @@ export async function GET(request: Request) {
       `);
 
     // Filter berdasarkan folder
-    if (folderIdStr) {
-      query = query.eq("folder_id", folderId);
-    }
+ if (searchQuery) {
+  // Saat search, jangan filter folder
+} else if (folderIdStr) {
+  query = query.eq("folder_id", folderId);
+} else {
+  query = query.is("folder_id", null);
+}
 
     // Filter search
     if (searchQuery) {
@@ -61,8 +66,16 @@ export async function GET(request: Request) {
 
     // Filter land di sisi server (sementara)
     const documents = landId
-      ? data.filter((doc: any) => doc.folders?.land_id === landId)
-      : data;
+  ? data.filter((doc: any) => {
+      // Kalau dokumen ada di dalam folder
+      if (doc.folder_id) {
+        return doc.folders?.land_id === landId
+      }
+
+      // Kalau dokumen berada di root Land
+      return doc.land_id === landId
+    })
+  : data
 
     const transformedDocuments = documents.map((doc: any) => ({
       id: doc.id,
