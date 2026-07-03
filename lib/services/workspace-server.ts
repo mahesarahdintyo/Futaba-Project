@@ -52,6 +52,7 @@ export async function getInitialDocuments(landId: string): Promise<Document[]> {
         file_path,
         file_type,
         file_size,
+        target_time,
         created_at,
         folder_id,
         land_id,
@@ -82,5 +83,6 @@ export async function getInitialDocuments(landId: string): Promise<Document[]> {
       path: doc.file_path,
       size: doc.file_size,
     },
+    targetTime: doc.target_time,
   }));
 }

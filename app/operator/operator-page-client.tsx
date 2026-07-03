@@ -7,10 +7,12 @@ import DocumentList from "@/components/operator/DocumentList";
 import { getDocuments, type Document } from "@/lib/services/document";
 import { getFolders, type Folder } from "@/lib/services/folder";
 import { getLands, type Land } from "@/lib/services/land";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 const LAND_STORAGE_KEY = "futaba.operator.selectedLand";
 const OPERATOR_LOCATION_STORAGE_KEY = "futaba.operator.location";
+const WORKSPACE_REFRESH_INTERVAL_MS = 3000;
+const LAND_REFRESH_INTERVAL_MS = 3000;
 
 interface BreadcrumbItem {
   id: number;
@@ -68,6 +70,20 @@ export default function OperatorPage({
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(initialLands.length === 0);
   const [error, setError] = useState("");
+  const workspaceRequestIdRef = useRef(0);
+  const landsRequestIdRef = useRef(0);
+  const isMountedRef = useRef(true);
+  const folderPathHistoryRef = useRef<BreadcrumbItem[]>([]);
+
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    folderPathHistoryRef.current = folderPathHistory;
+  }, [folderPathHistory]);
 
   const persistOperatorLocation = (land: Land, history: BreadcrumbItem[]) => {
     window.localStorage.setItem(LAND_STORAGE_KEY, land.id);
@@ -84,16 +100,25 @@ export default function OperatorPage({
     persistOperatorLocation(land, []);
   };
 
-  useEffect(() => {
-    let isMounted = true;
+  const clearOperatorLocation = () => {
+    window.localStorage.removeItem(LAND_STORAGE_KEY);
+    window.localStorage.removeItem(OPERATOR_LOCATION_STORAGE_KEY);
+  };
 
-    async function loadLands() {
+  const loadLands = useCallback(
+    async ({
+      preferSavedLocation = false,
+      showError = false,
+    }: { preferSavedLocation?: boolean; showError?: boolean } = {}) => {
+      const requestId = landsRequestIdRef.current + 1;
+      landsRequestIdRef.current = requestId;
+
       try {
         console.log("[operator-debug][OperatorPage] loadLands:start");
 
         const activeLands = await getLands();
 
-        if (!isMounted) return;
+        if (!isMountedRef.current || landsRequestIdRef.current !== requestId) return;
 
         console.log("[operator-debug][OperatorPage] loadLands:result", {
           length: activeLands.length,
@@ -105,56 +130,92 @@ export default function OperatorPage({
         const savedLocation = readOperatorLocation();
         const savedLandId =
           savedLocation?.landId ?? window.localStorage.getItem(LAND_STORAGE_KEY);
-        const savedLand = activeLands.find((land) => land.id === savedLandId);
 
-        console.log("[operator-debug][OperatorPage] saved land lookup", {
-          savedLandId,
-          savedLand,
-          firstLand: activeLands[0] ?? null,
-        });
+        setSelectedLand((currentLand) => {
+          const preferredLandId = preferSavedLocation
+            ? savedLandId
+            : currentLand?.id ?? savedLandId;
+          const nextSelectedLand =
+            activeLands.find((land) => land.id === preferredLandId) ??
+            activeLands[0] ??
+            null;
 
-        if (savedLand) {
-          const nextHistory = savedLocation?.folderPathHistory ?? [];
-
-          console.log("[operator-debug][OperatorPage] selectedLand from localStorage", {
-            id: savedLand.id,
-            isUuid:
-              /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-                savedLand.id
-              ),
-            land: savedLand,
+          console.log("[operator-debug][OperatorPage] land sync selection", {
+            preferSavedLocation,
+            savedLandId,
+            currentLand,
+            nextSelectedLand,
+            firstLand: activeLands[0] ?? null,
           });
-          setSelectedLand(savedLand);
+
+          if (!nextSelectedLand) {
+            clearOperatorLocation();
+            setCurrentFolder(null);
+            setFolderPathHistory([]);
+            setSearchQuery("");
+            setFolders([]);
+            setDocuments([]);
+            return null;
+          }
+
+          const shouldKeepCurrentFolder =
+            currentLand?.id === nextSelectedLand.id ||
+            (preferSavedLocation && savedLocation?.landId === nextSelectedLand.id);
+          const nextHistory = shouldKeepCurrentFolder
+            ? preferSavedLocation
+              ? savedLocation?.folderPathHistory ?? []
+              : folderPathHistoryRef.current
+            : [];
+
+          if (!shouldKeepCurrentFolder) {
+            setSearchQuery("");
+          }
+
           setFolderPathHistory(nextHistory);
           setCurrentFolder(nextHistory[nextHistory.length - 1] ?? null);
-          return;
-        }
+          persistOperatorLocation(nextSelectedLand, nextHistory);
 
-        if (activeLands[0]) {
-          console.log("[operator-debug][OperatorPage] selectedLand from first land", {
-            id: activeLands[0].id,
-            isUuid:
-              /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-                activeLands[0].id
-              ),
-            land: activeLands[0],
-          });
-          setSelectedLand(activeLands[0]);
-        }
+          if (
+            currentLand?.id === nextSelectedLand.id &&
+            currentLand.name === nextSelectedLand.name &&
+            currentLand.description === nextSelectedLand.description &&
+            currentLand.is_active === nextSelectedLand.is_active
+          ) {
+            return currentLand;
+          }
+
+          return nextSelectedLand;
+        });
       } catch (error) {
-        if (isMounted) {
+        if (showError && isMountedRef.current) {
           setError(error instanceof Error ? error.message : "Gagal memuat card");
         }
         console.error("Failed to load lands", error);
       }
-    }
+    },
+    []
+  );
 
-    loadLands();
+  useEffect(() => {
+    loadLands({ preferSavedLocation: true, showError: true });
+  }, [loadLands]);
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      loadLands();
+    }, LAND_REFRESH_INTERVAL_MS);
+
+    const handleWindowFocus = () => {
+      loadLands();
+    };
+
+    window.addEventListener("focus", handleWindowFocus);
 
     return () => {
-      isMounted = false;
+      window.clearInterval(intervalId);
+      window.removeEventListener("focus", handleWindowFocus);
     };
-  }, []);
+  }, [loadLands]);
 
   const handleLandChange = (land: Land) => {
     console.log("[operator-debug][OperatorPage] handleLandChange", {
@@ -173,14 +234,11 @@ export default function OperatorPage({
     clearOperatorFolderLocation(land);
   };
 
-  useEffect(() => {
-    let isMounted = true;
+  const loadWorkspaceData = useCallback(
+    async ({ showLoading = true }: { showLoading?: boolean } = {}) => {
+      const requestId = workspaceRequestIdRef.current + 1;
+      workspaceRequestIdRef.current = requestId;
 
-    const timeoutId = window.setTimeout(() => {
-      loadWorkspaceData();
-    }, searchQuery.trim() ? 300 : 0);
-
-    async function loadWorkspaceData() {
       if (!selectedLand) {
         console.log("[operator-debug][OperatorPage] loadWorkspaceData:skip no selectedLand", {
           selectedLand,
@@ -192,7 +250,9 @@ export default function OperatorPage({
       }
 
       try {
-        setIsLoading(true);
+        if (showLoading) {
+          setIsLoading(true);
+        }
         setError("");
 
         const search = searchQuery.trim();
@@ -208,6 +268,7 @@ export default function OperatorPage({
           currentFolder,
           search,
           folderParentId,
+          showLoading,
           folderArgs: {
             landId: selectedLand.id,
             parentId: folderParentId,
@@ -235,7 +296,7 @@ export default function OperatorPage({
           }),
         ]);
 
-        if (!isMounted) return;
+        if (!isMountedRef.current || workspaceRequestIdRef.current !== requestId) return;
 
         console.log("[operator-debug][OperatorPage] loadWorkspaceData:result before setState", {
           foldersIsArray: Array.isArray(landFolders),
@@ -256,7 +317,9 @@ export default function OperatorPage({
       } catch (error) {
         console.error("Failed to load operator workspace", error);
 
-        if (isMounted) {
+        if (!isMountedRef.current || workspaceRequestIdRef.current !== requestId) return;
+
+        if (showLoading) {
           setFolders([]);
           setDocuments([]);
           setError(
@@ -266,17 +329,42 @@ export default function OperatorPage({
           );
         }
       } finally {
-        if (isMounted) {
+        if (isMountedRef.current && workspaceRequestIdRef.current === requestId) {
           setIsLoading(false);
         }
       }
-    }
+    },
+    [currentFolder, searchQuery, selectedLand]
+  );
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      loadWorkspaceData();
+    }, searchQuery.trim() ? 300 : 0);
 
     return () => {
-      isMounted = false;
       window.clearTimeout(timeoutId);
     };
-  }, [currentFolder, searchQuery, selectedLand]);
+  }, [loadWorkspaceData, searchQuery]);
+
+  useEffect(() => {
+    if (!selectedLand) return;
+
+    const intervalId = window.setInterval(() => {
+      loadWorkspaceData({ showLoading: false });
+    }, WORKSPACE_REFRESH_INTERVAL_MS);
+
+    const handleWindowFocus = () => {
+      loadWorkspaceData({ showLoading: false });
+    };
+
+    window.addEventListener("focus", handleWindowFocus);
+
+    return () => {
+      window.clearInterval(intervalId);
+      window.removeEventListener("focus", handleWindowFocus);
+    };
+  }, [loadWorkspaceData, selectedLand]);
 
   const handleEnterFolder = (id: number, name: string) => {
     console.log("[operator-debug][OperatorPage] handleEnterFolder", {

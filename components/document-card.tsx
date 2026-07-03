@@ -1,5 +1,6 @@
-import { useState, type CSSProperties } from 'react'
+import { useEffect, useState, type CSSProperties } from 'react'
 import {
+  Clock,
   Eye,
   FileArchive,
   FileCode,
@@ -11,6 +12,7 @@ import {
   Loader2,
   MonitorUp,
   Presentation,
+  Save,
   Trash2,
   type LucideIcon,
 } from 'lucide-react'
@@ -29,6 +31,7 @@ interface DocumentCardProps {
     path: string
     size?: number
   }
+  targetTime?: string | null
   onDelete?: (id: string) => void | Promise<void>
   showOperatorActions?: boolean
 }
@@ -198,6 +201,78 @@ function formatFileSize(size?: number) {
   return `${formattedValue} ${units[unitIndex]}`
 }
 
+function formatTargetTime(targetTime?: string | null) {
+  if (!targetTime) return null
+
+  const date = new Date(targetTime)
+  if (Number.isNaN(date.getTime())) return null
+
+  const pad = (value: number) => value.toString().padStart(2, '0')
+
+  return `${pad(date.getHours())}.${pad(date.getMinutes())}`
+}
+
+function toLocalDateTimeInputValue(targetTime?: string | null) {
+  if (!targetTime) return ''
+
+  const date = new Date(targetTime)
+  if (Number.isNaN(date.getTime())) return ''
+
+  const pad = (value: number) => value.toString().padStart(2, '0')
+
+  return [
+    `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`,
+    `${pad(date.getHours())}:${pad(date.getMinutes())}`,
+  ].join('T')
+}
+
+function getLocalDateInputValue(localDateTime: string) {
+  return localDateTime.split('T')[0] ?? ''
+}
+
+function getLocalClockInputValue(localDateTime: string) {
+  return localDateTime.split('T')[1] ?? ''
+}
+
+function getClockHourValue(clockValue: string) {
+  return clockValue.split(':')[0] ?? ''
+}
+
+function getClockMinuteValue(clockValue: string) {
+  return clockValue.split(':')[1] ?? ''
+}
+
+function mergeLocalDateTimeInputValue(localDateTime: string, part: 'date' | 'clock', value: string) {
+  const dateValue = part === 'date' ? value : getLocalDateInputValue(localDateTime)
+  const clockValue = part === 'clock' ? value : getLocalClockInputValue(localDateTime)
+
+  if (!dateValue && !clockValue) return ''
+
+  return `${dateValue}T${clockValue}`
+}
+
+function formatTwoDigitInput(value: string) {
+  return value.replace(/\D/g, '').slice(0, 2)
+}
+
+function mergeClockInputValue(clockValue: string, part: 'hour' | 'minute', value: string) {
+  const hourValue = part === 'hour' ? formatTwoDigitInput(value) : getClockHourValue(clockValue)
+  const minuteValue = part === 'minute' ? formatTwoDigitInput(value) : getClockMinuteValue(clockValue)
+
+  if (!hourValue && !minuteValue) return ''
+
+  return `${hourValue}:${minuteValue}`
+}
+
+function isValidLocalDateTimeInputValue(localDateTime: string) {
+  const [dateValue = '', clockValue = ''] = localDateTime.split('T')
+
+  return (
+    /^\d{4}-\d{2}-\d{2}$/.test(dateValue) &&
+    /^([01]\d|2[0-3]):[0-5]\d$/.test(clockValue)
+  )
+}
+
 export function DocumentCard({
   id,
   title,
@@ -205,14 +280,29 @@ export function DocumentCard({
   category,
   type,
   file,
+  targetTime,
   onDelete,
   showOperatorActions = false
 }: DocumentCardProps) {
   const [isDeleting, setIsDeleting] = useState(false)
   const [isViewing, setIsViewing] = useState(false)
   const [isDisplaying, setIsDisplaying] = useState(false)
+  const [isSavingTargetTime, setIsSavingTargetTime] = useState(false)
+  const [currentTargetTime, setCurrentTargetTime] = useState<string | null>(targetTime ?? null)
+  const [targetTimeInput, setTargetTimeInput] = useState(() => toLocalDateTimeInputValue(targetTime))
   const fileIconMeta = getFileIconMeta(type, file.name)
   const TypeIcon = fileIconMeta.Icon
+  const formattedTargetTime = formatTargetTime(currentTargetTime)
+  const showTargetTimeEditor = Boolean(onDelete && !showOperatorActions)
+  const isTargetTimeInputValid = !targetTimeInput || isValidLocalDateTimeInputValue(targetTimeInput)
+  const targetTimeError = targetTimeInput && !isTargetTimeInputValid
+    ? 'Isi tanggal dan jam format 24 jam, contoh 14:30'
+    : ''
+
+  useEffect(() => {
+    setCurrentTargetTime(targetTime ?? null)
+    setTargetTimeInput(toLocalDateTimeInputValue(targetTime))
+  }, [targetTime])
 
   console.log("[operator-debug][DocumentCard] render", {
     id,
@@ -273,6 +363,7 @@ export function DocumentCard({
         category,
         type,
         file,
+        targetTime: currentTargetTime,
         updatedAt: Date.now(),
       }
 
@@ -336,6 +427,48 @@ export function DocumentCard({
     }
   }
 
+  const handleSaveTargetTime = async (e: React.MouseEvent) => {
+    e.stopPropagation()
+
+    try {
+      setIsSavingTargetTime(true)
+
+      if (targetTimeInput && !isValidLocalDateTimeInputValue(targetTimeInput)) {
+        return
+      }
+
+      const nextTargetTime = targetTimeInput
+        ? new Date(targetTimeInput).toISOString()
+        : null
+
+      const response = await fetch(`/api/documents/${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          target_time: nextTargetTime,
+        }),
+      })
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => null)
+        throw new Error(data?.error ?? 'Gagal menyimpan target waktu')
+      }
+
+      const data = await response.json()
+      const savedTargetTime = data.document?.targetTime ?? nextTargetTime
+
+      setCurrentTargetTime(savedTargetTime)
+      setTargetTimeInput(toLocalDateTimeInputValue(savedTargetTime))
+    } catch (error) {
+      console.error('Target time update error:', error)
+      alert(error instanceof Error ? error.message : 'Gagal menyimpan target waktu')
+    } finally {
+      setIsSavingTargetTime(false)
+    }
+  }
+
   return (
     <div
       onClick={showOperatorActions ? undefined : handleView}
@@ -384,7 +517,105 @@ export function DocumentCard({
                 <HardDrive className="h-3.5 w-3.5 text-gray-400" />
                 {formatFileSize(file.size)}
               </span>
+              {formattedTargetTime && (
+                <span className="inline-flex items-center gap-1.5">
+                  <Clock className="h-3.5 w-3.5 text-gray-400" />
+                  Target {formattedTargetTime}
+                </span>
+              )}
             </div>
+
+            {showTargetTimeEditor && (
+              <div
+                className="mt-4 flex flex-col gap-2 rounded-lg border border-gray-200 bg-gray-50 p-3 sm:flex-row sm:items-end"
+                onClick={(event) => event.stopPropagation()}
+              >
+                <label className="flex-1">
+                  <span className="mb-1 block text-xs font-semibold text-gray-600">
+                    Target Waktu
+                  </span>
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                    <input
+                      type="date"
+                      value={getLocalDateInputValue(targetTimeInput)}
+                      onChange={(event) => {
+                        setTargetTimeInput((currentValue) =>
+                          mergeLocalDateTimeInputValue(currentValue, 'date', event.target.value)
+                        )
+                      }}
+                      className="h-9 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                      disabled={isSavingTargetTime}
+                    />
+                    <div className="flex h-9 items-center rounded-lg border border-gray-300 bg-white px-2 text-sm text-gray-900 transition focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-100">
+                      <input
+                        type="text"
+                        value={getClockHourValue(getLocalClockInputValue(targetTimeInput))}
+                        onChange={(event) => {
+                          setTargetTimeInput((currentValue) => {
+                            const clockValue = mergeClockInputValue(
+                              getLocalClockInputValue(currentValue),
+                              'hour',
+                              event.target.value
+                            )
+
+                            return mergeLocalDateTimeInputValue(currentValue, 'clock', clockValue)
+                          })
+                        }}
+                        placeholder="HH"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        maxLength={2}
+                        aria-label="Jam"
+                        className="h-full w-10 bg-transparent text-center outline-none placeholder:text-gray-400"
+                        disabled={isSavingTargetTime}
+                      />
+                      <span className="px-1 font-semibold text-gray-500">:</span>
+                      <input
+                        type="text"
+                        value={getClockMinuteValue(getLocalClockInputValue(targetTimeInput))}
+                        onChange={(event) => {
+                          setTargetTimeInput((currentValue) => {
+                            const clockValue = mergeClockInputValue(
+                              getLocalClockInputValue(currentValue),
+                              'minute',
+                              event.target.value
+                            )
+
+                            return mergeLocalDateTimeInputValue(currentValue, 'clock', clockValue)
+                          })
+                        }}
+                        placeholder="MM"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        maxLength={2}
+                        aria-label="Menit"
+                        className="h-full w-10 bg-transparent text-center outline-none placeholder:text-gray-400"
+                        disabled={isSavingTargetTime}
+                      />
+                    </div>
+                  </div>
+                  {targetTimeError && (
+                    <span className="mt-1 block text-xs font-medium text-red-600">
+                      {targetTimeError}
+                    </span>
+                  )}
+                </label>
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={handleSaveTargetTime}
+                  disabled={isSavingTargetTime || !isTargetTimeInputValid}
+                  className="h-9 bg-blue-600 text-white hover:bg-blue-700"
+                >
+                  {isSavingTargetTime ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Save className="w-4 h-4" />
+                  )}
+                  Simpan
+                </Button>
+              </div>
+            )}
           </div>
         </div>
 

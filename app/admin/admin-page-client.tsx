@@ -23,6 +23,7 @@ interface Document {
     path: string
     size?: number
   }
+  targetTime?: string | null
 }
 
 interface Folder {
@@ -517,6 +518,7 @@ const handleEnterFolder = (id: number, name: string) => {
                   category={doc.category}
                   type={doc.type}
                   file={doc.file}
+                  targetTime={doc.targetTime}
                   onDelete={handleDeleteSuccess}
                 />
               ))}

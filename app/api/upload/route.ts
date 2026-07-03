@@ -9,6 +9,7 @@ export async function POST(request: Request) {
     const description = formData.get('description') as string
     const folderId = formData.get('folderId') as string
     const landId = formData.get('landId') as string
+    const targetTime = formData.get('targetTime') as string | null
 
     if (!file) {
       return NextResponse.json(
@@ -58,6 +59,7 @@ export async function POST(request: Request) {
   file_path: uploadData.path,
   file_size: file.size,
   file_type: file.type,
+  target_time: targetTime || null,
 }
 
 console.log('[UPLOAD] payload =', payload)

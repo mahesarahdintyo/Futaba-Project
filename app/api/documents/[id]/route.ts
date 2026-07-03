@@ -1,6 +1,67 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 
+export async function PATCH(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params
+    const body = await request.json()
+
+    if (!id) {
+      return NextResponse.json(
+        { error: 'Document ID is required' },
+        { status: 400 }
+      )
+    }
+
+    const targetTime = body.target_time
+
+    if (
+      typeof targetTime !== 'undefined' &&
+      targetTime !== null &&
+      typeof targetTime !== 'string'
+    ) {
+      return NextResponse.json(
+        { error: 'Target time must be a string or null' },
+        { status: 400 }
+      )
+    }
+
+    const supabase = await createClient()
+
+    const { data, error } = await supabase
+      .from('documents')
+      .update({
+        target_time: targetTime || null,
+      })
+      .eq('id', id)
+      .select('id, target_time')
+      .single()
+
+    if (error) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: 500 }
+      )
+    }
+
+    return NextResponse.json({
+      success: true,
+      document: {
+        id: data.id,
+        targetTime: data.target_time,
+      },
+    })
+  } catch (error) {
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}
+
 export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> }

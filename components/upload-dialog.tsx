@@ -10,6 +10,27 @@ interface UploadDialogProps {
   onUploadSuccess?: () => void
 }
 
+function formatTwoDigitInput(value: string) {
+  return value.replace(/\D/g, '').slice(0, 2)
+}
+
+function getClockHourValue(clockValue: string) {
+  return clockValue.split(':')[0] ?? ''
+}
+
+function getClockMinuteValue(clockValue: string) {
+  return clockValue.split(':')[1] ?? ''
+}
+
+function mergeClockInputValue(clockValue: string, part: 'hour' | 'minute', value: string) {
+  const hourValue = part === 'hour' ? formatTwoDigitInput(value) : getClockHourValue(clockValue)
+  const minuteValue = part === 'minute' ? formatTwoDigitInput(value) : getClockMinuteValue(clockValue)
+
+  if (!hourValue && !minuteValue) return ''
+
+  return `${hourValue}:${minuteValue}`
+}
+
 export function UploadDialog({
   folderId,
   landId,
@@ -20,7 +41,12 @@ export function UploadDialog({
   const [file, setFile] = useState<File | null>(null)
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
+  const [targetDate, setTargetDate] = useState('')
+  const [targetClock, setTargetClock] = useState('')
   const [error, setError] = useState('')
+
+  const isValidTargetClock = /^([01]\d|2[0-3]):[0-5]\d$/.test(targetClock)
+  const isTargetTimeValid = (!targetDate && !targetClock) || (Boolean(targetDate) && isValidTargetClock)
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0]
@@ -44,6 +70,11 @@ export function UploadDialog({
       return
     }
 
+    if ((targetDate || targetClock) && (!targetDate || !isValidTargetClock)) {
+      setError('Target waktu harus diisi dengan tanggal dan jam format 24 jam, contoh 14:30')
+      return
+    }
+
     try {
       setIsLoading(true)
       const formData = new FormData()
@@ -51,6 +82,9 @@ export function UploadDialog({
       formData.append('title', title)
       formData.append('description', description)
       formData.append('landId', landId)
+      if (targetDate && isValidTargetClock) {
+        formData.append('targetTime', new Date(`${targetDate}T${targetClock}`).toISOString())
+      }
       if (folderId !== null) {
         formData.append('folderId', folderId.toString())
       }
@@ -69,6 +103,8 @@ export function UploadDialog({
       setFile(null)
       setTitle('')
       setDescription('')
+      setTargetDate('')
+      setTargetClock('')
       setIsOpen(false)
 
       // Call callback
@@ -145,6 +181,52 @@ export function UploadDialog({
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Target Waktu
+                </label>
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                  <input
+                    type="date"
+                    value={targetDate}
+                    onChange={(e) => setTargetDate(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                    disabled={isLoading}
+                  />
+                  <div className="flex h-10 items-center rounded-lg border border-gray-300 bg-white px-2 text-gray-900 transition focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500">
+                    <input
+                      type="text"
+                      value={getClockHourValue(targetClock)}
+                      onChange={(e) => setTargetClock((currentValue) =>
+                        mergeClockInputValue(currentValue, 'hour', e.target.value)
+                      )}
+                      placeholder="HH"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      maxLength={2}
+                      aria-label="Jam"
+                      className="h-full w-10 bg-transparent text-center outline-none placeholder:text-gray-400"
+                      disabled={isLoading}
+                    />
+                    <span className="px-1 font-semibold text-gray-500">:</span>
+                    <input
+                      type="text"
+                      value={getClockMinuteValue(targetClock)}
+                      onChange={(e) => setTargetClock((currentValue) =>
+                        mergeClockInputValue(currentValue, 'minute', e.target.value)
+                      )}
+                      placeholder="MM"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      maxLength={2}
+                      aria-label="Menit"
+                      className="h-full w-10 bg-transparent text-center outline-none placeholder:text-gray-400"
+                      disabled={isLoading}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   File *
                 </label>
                 <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
@@ -185,7 +267,7 @@ export function UploadDialog({
                 </Button>
                 <Button
                   type="submit"
-                  disabled={isLoading || !file || !title}
+                  disabled={isLoading || !file || !title || !isTargetTimeValid}
                   className="flex-1 bg-green-600 hover:bg-green-700"
                 >
                   {isLoading ? (

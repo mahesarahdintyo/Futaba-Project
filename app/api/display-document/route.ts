@@ -1,3 +1,4 @@
+import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 
 interface DisplayDocument {
@@ -11,12 +12,30 @@ interface DisplayDocument {
     path: string
     size?: number
   }
+  targetTime?: string | null
   updatedAt: number
 }
 
 declare global {
   // eslint-disable-next-line no-var
   var futabaDisplayDocument: DisplayDocument | null | undefined
+}
+
+async function getDocumentTargetTime(id: string) {
+  const supabase = await createClient()
+
+  const { data, error } = await supabase
+    .from('documents')
+    .select('target_time')
+    .eq('id', id)
+    .single()
+
+  if (error) {
+    console.error('Display target time lookup error:', error)
+    return undefined
+  }
+
+  return data?.target_time ?? null
 }
 
 function isDisplayDocument(value: unknown): value is Omit<DisplayDocument, 'updatedAt'> {
@@ -32,11 +51,28 @@ function isDisplayDocument(value: unknown): value is Omit<DisplayDocument, 'upda
     typeof document.file?.path === 'string' &&
     (typeof document.description === 'undefined' || typeof document.description === 'string') &&
     (typeof document.category === 'undefined' || typeof document.category === 'string') &&
+    (
+      typeof document.targetTime === 'undefined' ||
+      document.targetTime === null ||
+      typeof document.targetTime === 'string'
+    ) &&
     (typeof document.file.size === 'undefined' || typeof document.file.size === 'number')
   )
 }
 
 export async function GET() {
+  const document = globalThis.futabaDisplayDocument ?? null
+
+  if (document) {
+    const targetTime = await getDocumentTargetTime(document.id)
+    if (typeof targetTime !== 'undefined') {
+      globalThis.futabaDisplayDocument = {
+        ...document,
+        targetTime,
+      }
+    }
+  }
+
   return NextResponse.json({
     document: globalThis.futabaDisplayDocument ?? null,
   })
@@ -53,6 +89,8 @@ export async function POST(request: Request) {
       )
     }
 
+    const targetTime = body.targetTime ?? await getDocumentTargetTime(body.id)
+
     const nextDocument: DisplayDocument = {
       id: body.id,
       title: body.title,
@@ -64,6 +102,7 @@ export async function POST(request: Request) {
         path: body.file.path,
         size: body.file.size,
       },
+      targetTime,
       updatedAt: Date.now(),
     }
 

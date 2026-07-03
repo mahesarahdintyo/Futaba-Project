@@ -16,6 +16,7 @@ interface DisplayDocument {
     path: string
     size?: number
   }
+  targetTime?: string | null
   updatedAt?: number
 }
 
@@ -46,6 +47,7 @@ function readDisplayDocument(): DisplayDocument | null {
         path: document.file.path,
         size: document.file.size,
       },
+      targetTime: document.targetTime,
       updatedAt: document.updatedAt,
     }
   } catch {
@@ -80,13 +82,34 @@ function getTypeLabel(document: DisplayDocument) {
   return subtype ? subtype.toUpperCase() : 'FILE'
 }
 
+function formatDateTime(date: Date) {
+  const pad = (value: number) => value.toString().padStart(2, '0')
+  const formattedDate = new Intl.DateTimeFormat('id-ID', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  }).format(date)
+
+  return `${formattedDate}, ${pad(date.getHours())}.${pad(date.getMinutes())}`
+}
+
 function formatDisplayTime(updatedAt?: number) {
   if (!updatedAt) return '-'
 
-  return new Intl.DateTimeFormat('id-ID', {
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(updatedAt)
+  const date = new Date(updatedAt)
+  if (Number.isNaN(date.getTime())) return '-'
+
+  return formatDateTime(date)
+}
+
+function formatTargetTime(targetTime?: string | null) {
+  if (!targetTime) return '-'
+
+  const date = new Date(targetTime)
+  if (Number.isNaN(date.getTime())) return '-'
+
+  return formatDateTime(date)
 }
 
 export default function DisplayPageClient() {
@@ -102,10 +125,10 @@ export default function DisplayPageClient() {
   )
   const sideRailClassName = 'top-[72px] h-[calc(100%-72px)] py-6'
   const leftSideRailBackgroundClassName = displayMode === 'frame'
-    ? 'bg-transparent'
+    ? 'bg-black/80'
     : 'bg-gradient-to-r from-black via-black/85 to-transparent'
   const rightSideRailBackgroundClassName = displayMode === 'frame'
-    ? 'bg-transparent'
+    ? 'bg-black/80'
     : 'bg-gradient-to-l from-black via-black/85 to-transparent'
 
   useEffect(() => {
@@ -272,7 +295,7 @@ export default function DisplayPageClient() {
         )}
       </section>
 
-      <aside className={`pointer-events-none absolute left-0 z-10 hidden w-[clamp(120px,10vw,210px)] flex-col justify-between px-4 lg:flex ${sideRailClassName} ${leftSideRailBackgroundClassName}`}>
+      <aside className={`pointer-events-none absolute left-0 z-10 flex w-[clamp(120px,24vw,210px)] flex-col justify-between px-4 lg:w-[clamp(120px,10vw,210px)] ${sideRailClassName} ${leftSideRailBackgroundClassName}`}>
         <div className="space-y-4">
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/45">
@@ -284,9 +307,20 @@ export default function DisplayPageClient() {
           </div>
 
           {document && (
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-semibold text-white">
-              <FileText className="h-3.5 w-3.5 text-[#67e8f9]" />
-              {getTypeLabel(document)}
+            <div className="space-y-3">
+              <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-semibold text-white">
+                <FileText className="h-3.5 w-3.5 text-[#67e8f9]" />
+                {getTypeLabel(document)}
+              </div>
+
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/45">
+                  Target Waktu
+                </p>
+                <p className="mt-2 text-sm font-semibold capitalize leading-snug text-[#34d399]">
+                  {formatTargetTime(document.targetTime)}
+                </p>
+              </div>
             </div>
           )}
         </div>
@@ -318,9 +352,11 @@ export default function DisplayPageClient() {
 
         <div className="space-y-3 text-[11px] text-white/55">
           <div className="ml-auto h-px w-12 bg-white/25" />
-          <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-white/75">
+          <div className="inline-flex max-w-full items-center gap-2 rounded-lg border border-white/15 bg-white/10 px-3 py-2 text-white/75">
             <Clock className="h-3.5 w-3.5" />
-            {formatDisplayTime(currentTime)}
+            <span className="capitalize leading-snug">
+              {formatDisplayTime(currentTime)}
+            </span>
           </div>
           <p className="leading-relaxed">
             Tekan Tampilkan pada halaman operator untuk mengganti layar ini.

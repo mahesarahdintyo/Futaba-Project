@@ -24,6 +24,7 @@ export async function GET(request: Request) {
         file_path,
         file_type,
         file_size,
+        target_time,
         created_at,
         folder_id,
         land_id,
@@ -88,6 +89,7 @@ export async function GET(request: Request) {
         path: doc.file_path,
         size: doc.file_size,
       },
+      targetTime: doc.target_time,
     }));
 
     return NextResponse.json(transformedDocuments);
@@ -113,7 +115,8 @@ export async function POST(request: Request) {
       file_name,
       file_path,
       file_size,
-      file_type
+      file_type,
+      target_time
     } = body;
 
     if (!title || !file_name || !file_path) {
@@ -135,6 +138,7 @@ export async function POST(request: Request) {
         file_path,
         file_size,
         file_type,
+        target_time: target_time || null,
       })
       .select();
 

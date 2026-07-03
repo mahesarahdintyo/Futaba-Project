@@ -9,6 +9,7 @@ export interface Document {
     path: string;
     size?: number;
   };
+  targetTime?: string | null;
 }
 
 interface DocumentQuery {

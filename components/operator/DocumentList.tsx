@@ -106,6 +106,7 @@ export default function DocumentList({
                 category={document.category}
                 type={document.type}
                 file={document.file}
+                targetTime={document.targetTime}
                 showOperatorActions
               />
             ))}
