@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 interface FolderCardProps {
   id: number
   name: string
+  itemCount?: number
   onEnter: (id: number, name: string) => void
   onDeleteSuccess?: () => void
 }
@@ -14,20 +15,27 @@ interface FolderCardProps {
 export function FolderCard({
   id,
   name,
+  itemCount,
   onEnter,
   onDeleteSuccess
 }: FolderCardProps) {
   const [isDeleting, setIsDeleting] = useState(false)
+  const canDelete = typeof onDeleteSuccess === 'function'
 
   console.log("[operator-debug][FolderCard] render", {
     id,
     name,
+    itemCount,
     hasOnEnter: typeof onEnter === "function",
     hasOnDeleteSuccess: typeof onDeleteSuccess === "function",
   })
 
   const handleDelete = async (e: React.MouseEvent) => {
     e.stopPropagation() // Prevent entering the folder
+
+    if (!canDelete) {
+      return
+    }
     
     if (!window.confirm(`Apakah Anda yakin ingin menghapus folder "${name}" beserta semua isinya?`)) {
       return
@@ -43,9 +51,7 @@ export function FolderCard({
         throw new Error('Gagal menghapus folder')
       }
 
-      if (onDeleteSuccess) {
-        onDeleteSuccess()
-      }
+      onDeleteSuccess()
     } catch (error) {
       console.error('Delete folder error:', error)
       alert('Gagal menghapus folder')
@@ -71,24 +77,28 @@ export function FolderCard({
           <h4 className="font-semibold text-gray-900 truncate group-hover:text-blue-600 transition-colors">
             {name}
           </h4>
-          <p className="text-xs text-gray-500">Folder</p>
+          <p className="text-xs text-gray-500">
+            {typeof itemCount === 'number' ? `${itemCount} isi` : 'Folder'}
+          </p>
         </div>
       </div>
       
-      <Button
-        size="sm"
-        variant="ghost"
-        className="text-red-500 hover:text-red-700 hover:bg-red-50"
-        onClick={handleDelete}
-        disabled={isDeleting}
-        title="Hapus Folder"
-      >
-        {isDeleting ? (
-          <Loader2 className="w-4 h-4 animate-spin" />
-        ) : (
-          <Trash2 className="w-4 h-4" />
-        )}
-      </Button>
+      {canDelete && (
+        <Button
+          size="sm"
+          variant="ghost"
+          className="text-red-500 hover:text-red-700 hover:bg-red-50"
+          onClick={handleDelete}
+          disabled={isDeleting}
+          title="Hapus Folder"
+        >
+          {isDeleting ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <Trash2 className="w-4 h-4" />
+          )}
+        </Button>
+      )}
     </div>
   )
 }

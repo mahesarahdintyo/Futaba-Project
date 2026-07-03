@@ -7,28 +7,39 @@ import type { ReactNode } from 'react'
 interface AppHeaderProps {
   children?: ReactNode
   logoAside?: ReactNode
+  disableLogoLink?: boolean
 }
 
-export function AppHeader({ children, logoAside }: AppHeaderProps) {
+export function AppHeader({ children, logoAside, disableLogoLink = false }: AppHeaderProps) {
+  const logo = (
+    <Image
+      src="/futaba-logo.png"
+      alt="FUTABA Logo"
+      width={150}
+      height={52}
+      className="object-contain h-10 sm:h-11 lg:h-12 w-auto"
+      priority
+    />
+  )
+
   return (
     <header className="bg-white border-b border-gray-200 shadow-sm">
       <div className="w-full px-4 sm:px-6 lg:px-8 py-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-            <Link
-              href="/"
-              aria-label="Kembali ke landing page"
-              className="inline-flex w-fit"
-            >
-              <Image
-                src="/futaba-logo.png"
-                alt="FUTABA Logo"
-                width={150}
-                height={52}
-                className="object-contain h-10 sm:h-11 lg:h-12 w-auto"
-                priority
-              />
-            </Link>
+            {disableLogoLink ? (
+              <div className="inline-flex w-fit" aria-label="FUTABA Logo">
+                {logo}
+              </div>
+            ) : (
+              <Link
+                href="/"
+                aria-label="Kembali ke landing page"
+                className="inline-flex w-fit"
+              >
+                {logo}
+              </Link>
+            )}
             {logoAside}
           </div>
 

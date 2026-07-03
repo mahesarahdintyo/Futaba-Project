@@ -1,0 +1,86 @@
+import { createClient } from "@/lib/supabase/server";
+import type { Document } from "@/lib/services/document";
+import type { Folder } from "@/lib/services/folder";
+import type { Land } from "@/lib/services/land";
+
+export async function getInitialLands(): Promise<Land[]> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("lands")
+    .select("*")
+    .eq("is_active", true)
+    .order("name", { ascending: true });
+
+  if (error) {
+    console.error("Initial lands error:", error);
+    return [];
+  }
+
+  return data ?? [];
+}
+
+export async function getInitialFolders(landId: string): Promise<Folder[]> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("folders")
+    .select("*")
+    .eq("land_id", landId)
+    .is("parent_id", null)
+    .order("name", { ascending: true });
+
+  if (error) {
+    console.error("Initial folders error:", error);
+    return [];
+  }
+
+  return data ?? [];
+}
+
+export async function getInitialDocuments(landId: string): Promise<Document[]> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("documents")
+    .select(
+      `
+        id,
+        title,
+        description,
+        file_name,
+        file_path,
+        file_type,
+        file_size,
+        created_at,
+        folder_id,
+        land_id,
+        folders (
+          id,
+          name,
+          land_id
+        )
+      `
+    )
+    .is("folder_id", null)
+    .eq("land_id", landId)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Initial documents error:", error);
+    return [];
+  }
+
+  return (data ?? []).map((doc: any) => ({
+    id: doc.id,
+    title: doc.title,
+    description: doc.description,
+    category: "Lainnya",
+    type: doc.file_type,
+    file: {
+      name: doc.file_name,
+      path: doc.file_path,
+      size: doc.file_size,
+    },
+  }));
+}

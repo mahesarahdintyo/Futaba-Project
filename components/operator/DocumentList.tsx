@@ -83,6 +83,7 @@ export default function DocumentList({
                 key={folder.id}
                 id={folder.id}
                 name={folder.name}
+                itemCount={folder.item_count}
                 onEnter={onEnterFolder}
               />
             ))}
@@ -105,6 +106,7 @@ export default function DocumentList({
                 category={document.category}
                 type={document.type}
                 file={document.file}
+                showOperatorActions
               />
             ))}
           </div>

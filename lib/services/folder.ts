@@ -4,6 +4,7 @@ export interface Folder {
   parent_id: number | null;
   land_id: string;
   created_at: string;
+  item_count?: number;
 }
 
 interface FolderQuery {
