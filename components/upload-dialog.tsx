@@ -1,8 +1,13 @@
 'use client'
 
 import { useState } from 'react'
-import { Upload, X, Loader2 } from 'lucide-react'
+import { Upload, X, Loader2, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+
+const ALLOWED_FILE_TYPES = ['application/pdf', 'image/jpeg', 'image/png']
+const ALLOWED_FILE_EXTENSIONS = ['pdf', 'jpg', 'jpeg', 'png']
+const ALLOWED_FILE_FORMAT_LABEL = 'PDF, JPG, JPEG, atau PNG'
+const MAX_FILE_COUNT = 5
 
 interface UploadDialogProps {
   folderId: number | null
@@ -31,6 +36,14 @@ function mergeClockInputValue(clockValue: string, part: 'hour' | 'minute', value
   return `${hourValue}:${minuteValue}`
 }
 
+function isAllowedFile(file: File) {
+  const extension = file.name.split('.').pop()?.toLowerCase() ?? ''
+  const hasAllowedExtension = ALLOWED_FILE_EXTENSIONS.includes(extension)
+  const hasAllowedType = file.type ? ALLOWED_FILE_TYPES.includes(file.type) : true
+
+  return hasAllowedExtension && hasAllowedType
+}
+
 export function UploadDialog({
   folderId,
   landId,
@@ -38,7 +51,7 @@ export function UploadDialog({
 }: UploadDialogProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
-  const [file, setFile] = useState<File | null>(null)
+  const [files, setFiles] = useState<File[]>([])
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [targetDate, setTargetDate] = useState('')
@@ -49,15 +62,56 @@ export function UploadDialog({
   const isTargetTimeValid = (!targetDate && !targetClock) || (Boolean(targetDate) && isValidTargetClock)
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0]
-    if (selectedFile) {
-      // Limit file size to 50MB
-      if (selectedFile.size > 50 * 1024 * 1024) {
-        setError('File size must be less than 50MB')
+    const selectedFiles = e.target.files ? Array.from(e.target.files) : []
+    if (selectedFiles.length > 0) {
+      setError('')
+
+      if (files.length + selectedFiles.length > MAX_FILE_COUNT) {
+        setError(`Maksimal upload adalah ${MAX_FILE_COUNT} file sekaligus.`)
+        e.target.value = ''
         return
       }
-      setFile(selectedFile)
-      setError('')
+
+      const validFiles: File[] = []
+      for (const selectedFile of selectedFiles) {
+        if (!isAllowedFile(selectedFile)) {
+          setError(`Format file tidak diperbolehkan. Upload hanya menerima file ${ALLOWED_FILE_FORMAT_LABEL}.`)
+          e.target.value = ''
+          return
+        }
+
+        if (selectedFile.size > 50 * 1024 * 1024) {
+          setError(`Ukuran file "${selectedFile.name}" melebihi batas 50MB.`)
+          e.target.value = ''
+          return
+        }
+        validFiles.push(selectedFile)
+      }
+
+      const nextFiles = [...files, ...validFiles]
+      setFiles(nextFiles)
+
+      if (nextFiles.length === 1) {
+        const defaultTitle = nextFiles[0].name.substring(0, nextFiles[0].name.lastIndexOf('.')) || nextFiles[0].name
+        setTitle(defaultTitle)
+      } else {
+        setTitle('')
+      }
+
+      e.target.value = ''
+    }
+  }
+
+  const handleRemoveFile = (indexToRemove: number) => {
+    const nextFiles = files.filter((_, index) => index !== indexToRemove)
+    setFiles(nextFiles)
+    setError('')
+
+    if (nextFiles.length === 1) {
+      const defaultTitle = nextFiles[0].name.substring(0, nextFiles[0].name.lastIndexOf('.')) || nextFiles[0].name
+      setTitle(defaultTitle)
+    } else {
+      setTitle('')
     }
   }
 
@@ -65,8 +119,13 @@ export function UploadDialog({
     e.preventDefault()
     setError('')
 
-    if (!file || !title) {
-      setError('Please provide a title and select a file')
+    if (files.length === 0) {
+      setError('Silakan pilih minimal 1 file.')
+      return
+    }
+
+    if (files.length === 1 && !title) {
+      setError('Please provide a title')
       return
     }
 
@@ -77,37 +136,46 @@ export function UploadDialog({
 
     try {
       setIsLoading(true)
-      const formData = new FormData()
-      formData.append('file', file)
-      formData.append('title', title)
-      formData.append('description', description)
-      formData.append('landId', landId)
-      if (targetDate && isValidTargetClock) {
-        formData.append('targetTime', new Date(`${targetDate}T${targetClock}`).toISOString())
-      }
-      if (folderId !== null) {
-        formData.append('folderId', folderId.toString())
-      }
 
-      const response = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData
-      })
+      for (let i = 0; i < files.length; i++) {
+        const fileToUpload = files[i]
+        
+        let fileTitle = title
+        if (files.length > 1) {
+          fileTitle = fileToUpload.name.substring(0, fileToUpload.name.lastIndexOf('.')) || fileToUpload.name
+        }
 
-      if (!response.ok) {
-        const data = await response.json()
-        throw new Error(data.error || 'Upload failed')
+        const formData = new FormData()
+        formData.append('file', fileToUpload)
+        formData.append('title', fileTitle)
+        formData.append('description', description)
+        formData.append('landId', landId)
+        if (targetDate && isValidTargetClock) {
+          formData.append('targetTime', new Date(`${targetDate}T${targetClock}`).toISOString())
+        }
+        if (folderId !== null) {
+          formData.append('folderId', folderId.toString())
+        }
+
+        const response = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData
+        })
+
+        if (!response.ok) {
+          const data = await response.json()
+          throw new Error(`Gagal mengunggah "${fileToUpload.name}": ${data.error || 'Upload failed'}`)
+        }
       }
 
       // Reset form
-      setFile(null)
+      setFiles([])
       setTitle('')
       setDescription('')
       setTargetDate('')
       setTargetClock('')
       setIsOpen(false)
 
-      // Call callback
       if (onUploadSuccess) {
         onUploadSuccess()
       }
@@ -129,7 +197,10 @@ export function UploadDialog({
       </Button>
 
       {isOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div 
+          className="fixed inset-0 flex items-center justify-center z-50 p-4 backdrop-blur-sm"
+          style={{ backgroundColor: 'rgba(0, 0, 0, 0.4)' }}
+        >
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
             <div className="flex items-center justify-between p-6 border-b border-gray-200">
               <h2 className="text-xl font-semibold text-gray-900">
@@ -151,19 +222,26 @@ export function UploadDialog({
                 </div>
               )}
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Document Title *
-                </label>
-                <input
-                  type="text"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder="e.g., SOP Customer Service"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
-                  disabled={isLoading}
-                />
-              </div>
+              {files.length <= 1 ? (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Document Title *
+                  </label>
+                  <input
+                    type="text"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder="e.g., SOP Customer Service"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                    disabled={isLoading}
+                  />
+                </div>
+              ) : (
+                <div className="bg-blue-50 border border-blue-200 text-blue-800 px-4 py-3 rounded-lg text-xs">
+                  <p className="font-medium">Mengunggah {files.length} file sekaligus</p>
+                  <p className="mt-0.5 text-blue-600">Judul dokumen masing-masing file akan otomatis menggunakan nama file asli (tanpa ekstensi).</p>
+                </div>
+              )}
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -227,47 +305,60 @@ export function UploadDialog({
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  File *
+                  File * <span className="text-xs font-normal text-gray-500">(Maksimal {MAX_FILE_COUNT} file)</span>
                 </label>
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:bg-gray-50 transition">
                   <input
                     type="file"
+                    multiple
+                    accept=".pdf,.jpg,.jpeg,.png"
                     onChange={handleFileChange}
                     className="hidden"
                     id="file-input"
                     disabled={isLoading}
                   />
-                  <label htmlFor="file-input" className="cursor-pointer">
-                    {file ? (
-                      <div className="text-sm text-gray-700">
-                        <p className="font-medium">{file.name}</p>
-                        <p className="text-gray-500">
-                          {(file.size / 1024 / 1024).toFixed(2)} MB
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="text-sm text-gray-600">
-                        <p className="font-medium">Click to select a file</p>
-                        <p className="text-gray-500">or drag and drop</p>
-                      </div>
-                    )}
+                  <label htmlFor="file-input" className="cursor-pointer block w-full h-full">
+                    <div className="text-sm text-gray-600">
+                      <p className="font-medium">Click to select files</p>
+                      <p className="text-gray-500">or drag and drop</p>
+                    </div>
                   </label>
                 </div>
+
+                {files.length > 0 && (
+                  <div className="mt-3 space-y-2 max-h-36 overflow-y-auto border border-gray-200 rounded-lg p-3 bg-gray-50">
+                    {files.map((f, index) => (
+                      <div key={index} className="flex items-center justify-between text-sm text-gray-700 bg-white p-2 rounded border border-gray-100">
+                        <div className="truncate flex-1 pr-2">
+                          <p className="font-medium truncate text-xs text-gray-900">{f.name}</p>
+                          <p className="text-[10px] text-gray-500">{(f.size / 1024 / 1024).toFixed(2)} MB</p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveFile(index)}
+                          className="text-red-500 hover:text-red-700 disabled:opacity-50 p-1 hover:bg-red-50 rounded"
+                          disabled={isLoading}
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div className="flex gap-3 pt-4">
-                <Button
+                <button
                   type="button"
-                  variant="outline"
                   onClick={() => setIsOpen(false)}
                   disabled={isLoading}
-                  className="flex-1"
+                  className="flex-1 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 hover:text-gray-900 rounded-lg py-2 text-sm font-medium transition disabled:opacity-50"
                 >
                   Cancel
-                </Button>
+                </button>
                 <Button
                   type="submit"
-                  disabled={isLoading || !file || !title || !isTargetTimeValid}
+                  disabled={isLoading || files.length === 0 || (files.length === 1 && !title) || !isTargetTimeValid}
                   className="flex-1 bg-green-600 hover:bg-green-700"
                 >
                   {isLoading ? (

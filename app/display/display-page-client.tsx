@@ -125,10 +125,10 @@ export default function DisplayPageClient() {
   )
   const sideRailClassName = 'top-[72px] h-[calc(100%-72px)] py-6'
   const leftSideRailBackgroundClassName = displayMode === 'frame'
-    ? 'bg-black/80'
+    ? 'bg-transparent'
     : 'bg-gradient-to-r from-black via-black/85 to-transparent'
   const rightSideRailBackgroundClassName = displayMode === 'frame'
-    ? 'bg-black/80'
+    ? 'bg-transparent'
     : 'bg-gradient-to-l from-black via-black/85 to-transparent'
 
   useEffect(() => {

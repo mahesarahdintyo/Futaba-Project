@@ -1,6 +1,18 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 
+const ALLOWED_FILE_TYPES = ['application/pdf', 'image/jpeg', 'image/png']
+const ALLOWED_FILE_EXTENSIONS = ['pdf', 'jpg', 'jpeg', 'png']
+const ALLOWED_FILE_FORMAT_LABEL = 'PDF, JPG, JPEG, atau PNG'
+
+function isAllowedFile(file: File) {
+  const extension = file.name.split('.').pop()?.toLowerCase() ?? ''
+  const hasAllowedExtension = ALLOWED_FILE_EXTENSIONS.includes(extension)
+  const hasAllowedType = file.type ? ALLOWED_FILE_TYPES.includes(file.type) : true
+
+  return hasAllowedExtension && hasAllowedType
+}
+
 export async function POST(request: Request) {
   try {
     const formData = await request.formData()
@@ -14,6 +26,13 @@ export async function POST(request: Request) {
     if (!file) {
       return NextResponse.json(
         { error: 'No file provided' },
+        { status: 400 }
+      )
+    }
+
+    if (!isAllowedFile(file)) {
+      return NextResponse.json(
+        { error: `Format file tidak diperbolehkan. Upload hanya menerima file ${ALLOWED_FILE_FORMAT_LABEL}.` },
         { status: 400 }
       )
     }
