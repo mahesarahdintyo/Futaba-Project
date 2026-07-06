@@ -11,6 +11,7 @@ import {
   HardDrive,
   Loader2,
   MonitorUp,
+  RotateCcw,
   Presentation,
   Save,
   Trash2,
@@ -427,19 +428,9 @@ export function DocumentCard({
     }
   }
 
-  const handleSaveTargetTime = async (e: React.MouseEvent) => {
-    e.stopPropagation()
-
+  const saveTargetTime = async (nextTargetTime: string | null) => {
     try {
       setIsSavingTargetTime(true)
-
-      if (targetTimeInput && !isValidLocalDateTimeInputValue(targetTimeInput)) {
-        return
-      }
-
-      const nextTargetTime = targetTimeInput
-        ? new Date(targetTimeInput).toISOString()
-        : null
 
       const response = await fetch(`/api/documents/${id}`, {
         method: 'PATCH',
@@ -467,6 +458,23 @@ export function DocumentCard({
     } finally {
       setIsSavingTargetTime(false)
     }
+  }
+
+  const handleSaveTargetTime = async (e: React.MouseEvent) => {
+    e.stopPropagation()
+
+    if (targetTimeInput && !isValidLocalDateTimeInputValue(targetTimeInput)) {
+      return
+    }
+
+    await saveTargetTime(
+      targetTimeInput ? new Date(targetTimeInput).toISOString() : null
+    )
+  }
+
+  const handleResetTargetTime = async (e: React.MouseEvent) => {
+    e.stopPropagation()
+    await saveTargetTime(null)
   }
 
   return (
@@ -613,6 +621,21 @@ export function DocumentCard({
                     <Save className="w-4 h-4" />
                   )}
                   Simpan
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={handleResetTargetTime}
+                  disabled={isSavingTargetTime || (!currentTargetTime && !targetTimeInput)}
+                  className="h-9 border-gray-300 bg-white text-gray-700 hover:bg-gray-100"
+                >
+                  {isSavingTargetTime ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <RotateCcw className="w-4 h-4" />
+                  )}
+                  Reset
                 </Button>
               </div>
             )}

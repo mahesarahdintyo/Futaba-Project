@@ -170,7 +170,10 @@ export default function DisplayPageClient() {
             return null
           }
 
-          if (currentDocument?.updatedAt === nextDocument.updatedAt) {
+          if (
+            currentDocument?.updatedAt === nextDocument.updatedAt &&
+            currentDocument?.targetTime === nextDocument.targetTime
+          ) {
             return currentDocument
           }
 

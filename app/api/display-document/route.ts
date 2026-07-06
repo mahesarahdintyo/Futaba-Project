@@ -69,6 +69,7 @@ export async function GET() {
       globalThis.futabaDisplayDocument = {
         ...document,
         targetTime,
+        updatedAt: targetTime === document.targetTime ? document.updatedAt : Date.now(),
       }
     }
   }
