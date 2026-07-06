@@ -1,15 +1,22 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const includeHidden = searchParams.get("includeHidden") === "true";
     const supabase = await createClient();
 
-    const { data: lands, error } = await supabase
+    let query = supabase
       .from("lands")
       .select("*")
-      .eq("is_active", true)
-      .order("name", { ascending: true });
+      .eq("is_active", true);
+
+    if (!includeHidden) {
+      query = query.eq("hidden_from_operator", false);
+    }
+
+    const { data: lands, error } = await query.order("name", { ascending: true });
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
@@ -104,6 +111,48 @@ export async function PUT(request: Request) {
     return NextResponse.json(updatedLand);
   } catch (error) {
     console.error("Lands PUT error:", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
+}
+
+export async function PATCH(request: Request) {
+  try {
+    const body = await request.json();
+    const id = typeof body.id === "string" ? body.id : "";
+    const hiddenFromOperator = body.hidden_from_operator;
+
+    if (!id) {
+      return NextResponse.json(
+        { error: "Land ID is required" },
+        { status: 400 }
+      );
+    }
+
+    if (typeof hiddenFromOperator !== "boolean") {
+      return NextResponse.json(
+        { error: "Hidden from operator must be a boolean" },
+        { status: 400 }
+      );
+    }
+
+    const supabase = await createClient();
+
+    const { data: updatedLand, error } = await supabase
+      .from("lands")
+      .update({
+        hidden_from_operator: hiddenFromOperator,
+      })
+      .eq("id", id)
+      .select()
+      .single();
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json(updatedLand);
+  } catch (error) {
+    console.error("Lands PATCH error:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

@@ -60,6 +60,15 @@ function isDisplayDocument(value: unknown): value is Omit<DisplayDocument, 'upda
   )
 }
 
+function getRequestedAt(value: unknown) {
+  if (!value || typeof value !== 'object') return Date.now()
+
+  const document = value as Partial<DisplayDocument>
+  return typeof document.updatedAt === 'number' && Number.isFinite(document.updatedAt)
+    ? document.updatedAt
+    : Date.now()
+}
+
 export async function GET() {
   const document = globalThis.futabaDisplayDocument ?? null
 
@@ -91,6 +100,15 @@ export async function POST(request: Request) {
     }
 
     const targetTime = body.targetTime ?? await getDocumentTargetTime(body.id)
+    const requestedAt = getRequestedAt(body)
+    const currentDocument = globalThis.futabaDisplayDocument ?? null
+
+    if (currentDocument && requestedAt < currentDocument.updatedAt) {
+      return NextResponse.json({
+        success: true,
+        document: currentDocument,
+      })
+    }
 
     const nextDocument: DisplayDocument = {
       id: body.id,
@@ -104,7 +122,7 @@ export async function POST(request: Request) {
         size: body.file.size,
       },
       targetTime,
-      updatedAt: Date.now(),
+      updatedAt: requestedAt,
     }
 
     globalThis.futabaDisplayDocument = nextDocument

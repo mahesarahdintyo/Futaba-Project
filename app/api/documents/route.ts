@@ -11,6 +11,7 @@ export async function GET(request: Request) {
 
     const landId = searchParams.get("landId");
     const searchQuery = searchParams.get("search")?.trim();
+    const includeHidden = searchParams.get("includeHidden") === "true";
 
     const supabase = await createClient();
 
@@ -25,6 +26,7 @@ export async function GET(request: Request) {
         file_type,
         file_size,
         target_time,
+        hidden_from_operator,
         created_at,
         folder_id,
         land_id,
@@ -51,6 +53,10 @@ export async function GET(request: Request) {
       query = query.or(
         `title.ilike.%${escapedSearch}%,description.ilike.%${escapedSearch}%,file_name.ilike.%${escapedSearch}%`
       );
+    }
+
+    if (!includeHidden) {
+      query = query.eq("hidden_from_operator", false);
     }
 
     const { data, error } = await query.order("created_at", {
@@ -90,6 +96,7 @@ export async function GET(request: Request) {
         size: doc.file_size,
       },
       targetTime: doc.target_time,
+      hiddenFromOperator: doc.hidden_from_operator,
     }));
 
     return NextResponse.json(transformedDocuments);

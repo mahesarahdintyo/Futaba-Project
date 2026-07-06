@@ -10,6 +10,7 @@ export interface Document {
     size?: number;
   };
   targetTime?: string | null;
+  hiddenFromOperator?: boolean;
 }
 
 interface DocumentQuery {

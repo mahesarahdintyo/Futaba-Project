@@ -112,6 +112,26 @@ function formatTargetTime(targetTime?: string | null) {
   return formatDateTime(date)
 }
 
+function isSameDisplayDocument(
+  currentDocument: DisplayDocument | null,
+  nextDocument: DisplayDocument | null
+) {
+  if (!currentDocument || !nextDocument) return currentDocument === nextDocument
+
+  return (
+    currentDocument.id === nextDocument.id &&
+    currentDocument.title === nextDocument.title &&
+    currentDocument.description === nextDocument.description &&
+    currentDocument.category === nextDocument.category &&
+    currentDocument.type === nextDocument.type &&
+    currentDocument.file.name === nextDocument.file.name &&
+    currentDocument.file.path === nextDocument.file.path &&
+    currentDocument.file.size === nextDocument.file.size &&
+    currentDocument.targetTime === nextDocument.targetTime &&
+    currentDocument.updatedAt === nextDocument.updatedAt
+  )
+}
+
 export default function DisplayPageClient() {
   const [document, setDocument] = useState<DisplayDocument | null>(null)
   const [fileUrl, setFileUrl] = useState('')
@@ -170,10 +190,7 @@ export default function DisplayPageClient() {
             return null
           }
 
-          if (
-            currentDocument?.updatedAt === nextDocument.updatedAt &&
-            currentDocument?.targetTime === nextDocument.targetTime
-          ) {
+          if (isSameDisplayDocument(currentDocument, nextDocument)) {
             return currentDocument
           }
 
@@ -225,6 +242,7 @@ export default function DisplayPageClient() {
       try {
         setIsLoading(true)
         setError('')
+        setFileUrl('')
 
         const response = await fetch('/api/download', {
           method: 'POST',
@@ -274,6 +292,7 @@ export default function DisplayPageClient() {
       <section className="h-full w-full overflow-hidden">
         {document && fileUrl && !isLoading && !error && displayMode === 'image' && (
           <img
+            key={`${document.id}-${document.file.path}-${document.updatedAt}`}
             src={fileUrl}
             alt={document.title}
             className="h-screen w-screen object-contain"
@@ -282,6 +301,7 @@ export default function DisplayPageClient() {
 
         {document && fileUrl && !isLoading && !error && displayMode === 'video' && (
           <video
+            key={`${document.id}-${document.file.path}-${document.updatedAt}`}
             src={fileUrl}
             className="h-screen w-screen object-contain"
             controls
@@ -291,6 +311,7 @@ export default function DisplayPageClient() {
 
         {document && fileUrl && !isLoading && !error && displayMode === 'frame' && (
           <iframe
+            key={`${document.id}-${document.file.path}-${document.updatedAt}`}
             src={fileUrl}
             title={document.title}
             className="block h-screen w-screen border-0 bg-white"

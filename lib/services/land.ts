@@ -3,10 +3,22 @@ export interface Land {
   name: string;
   description?: string;
   is_active: boolean;
+  hidden_from_operator?: boolean;
 }
 
-export async function getLands(): Promise<Land[]> {
-  const url = "/api/lands";
+interface LandQuery {
+  includeHidden?: boolean;
+}
+
+export async function getLands({ includeHidden = false }: LandQuery = {}): Promise<Land[]> {
+  const params = new URLSearchParams();
+
+  if (includeHidden) {
+    params.set("includeHidden", "true");
+  }
+
+  const query = params.toString();
+  const url = `/api/lands${query ? `?${query}` : ""}`;
 
   console.log("[operator-debug][getLands] fetching:", url);
 

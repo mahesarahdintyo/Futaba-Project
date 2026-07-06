@@ -17,6 +17,7 @@ export async function PATCH(
     }
 
     const targetTime = body.target_time
+    const hiddenFromOperator = body.hidden_from_operator
 
     if (
       typeof targetTime !== 'undefined' &&
@@ -29,15 +30,43 @@ export async function PATCH(
       )
     }
 
+    if (
+      typeof hiddenFromOperator !== 'undefined' &&
+      typeof hiddenFromOperator !== 'boolean'
+    ) {
+      return NextResponse.json(
+        { error: 'Hidden from operator must be a boolean' },
+        { status: 400 }
+      )
+    }
+
+    const updateFields: {
+      target_time?: string | null
+      hidden_from_operator?: boolean
+    } = {}
+
+    if (typeof targetTime !== 'undefined') {
+      updateFields.target_time = targetTime || null
+    }
+
+    if (typeof hiddenFromOperator !== 'undefined') {
+      updateFields.hidden_from_operator = hiddenFromOperator
+    }
+
+    if (Object.keys(updateFields).length === 0) {
+      return NextResponse.json(
+        { error: 'No document fields to update' },
+        { status: 400 }
+      )
+    }
+
     const supabase = await createClient()
 
     const { data, error } = await supabase
       .from('documents')
-      .update({
-        target_time: targetTime || null,
-      })
+      .update(updateFields)
       .eq('id', id)
-      .select('id, target_time')
+      .select('id, target_time, hidden_from_operator')
       .single()
 
     if (error) {
@@ -52,6 +81,7 @@ export async function PATCH(
       document: {
         id: data.id,
         targetTime: data.target_time,
+        hiddenFromOperator: data.hidden_from_operator,
       },
     })
   } catch (error) {

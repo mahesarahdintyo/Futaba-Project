@@ -24,6 +24,7 @@ interface Document {
     size?: number
   }
   targetTime?: string | null
+  hiddenFromOperator?: boolean
 }
 
 interface Folder {
@@ -104,7 +105,7 @@ export default function Page({ initialLands = [] }: AdminPageProps) {
   const loadLands = async () => {
     try {
       setIsLoading(true)
-      const data = await getLands()
+      const data = await getLands({ includeHidden: true })
 
       setLands(data)
       setSelectedLand(null)
@@ -122,7 +123,7 @@ export default function Page({ initialLands = [] }: AdminPageProps) {
     async function loadInitialLands() {
       try {
         setIsLoading(true)
-        const data = await getLands()
+        const data = await getLands({ includeHidden: true })
         if (!mounted) return
 
         setLands(data)
@@ -209,7 +210,8 @@ export default function Page({ initialLands = [] }: AdminPageProps) {
 
     try {
       const params = new URLSearchParams({
-        landId: selectedLand.id
+        landId: selectedLand.id,
+        includeHidden: 'true'
       })
 
       if (searchTerm) {
@@ -273,6 +275,16 @@ const handleCreateFolderSuccess = () => {
 
   const handleDeleteSuccess = (deletedId: string) => {
     setDocuments(documents.filter(doc => doc.id !== deletedId))
+  }
+
+  const handleVisibilityChange = (documentId: string, hiddenFromOperator: boolean) => {
+    setDocuments((currentDocuments) =>
+      currentDocuments.map((doc) =>
+        doc.id === documentId
+          ? { ...doc, hiddenFromOperator }
+          : doc
+      )
+    )
   }
 
 const handleEnterFolder = (id: number, name: string) => {
@@ -519,7 +531,9 @@ const handleEnterFolder = (id: number, name: string) => {
                   type={doc.type}
                   file={doc.file}
                   targetTime={doc.targetTime}
+                  hiddenFromOperator={doc.hiddenFromOperator}
                   onDelete={handleDeleteSuccess}
+                  onVisibilityChange={handleVisibilityChange}
                 />
               ))}
             </div>

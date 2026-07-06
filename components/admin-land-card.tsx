@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Folder, Loader2, Pencil, Trash2, X } from 'lucide-react'
+import { Eye, EyeOff, Folder, Loader2, Pencil, Trash2, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import type { Land } from '@/lib/services/land'
 
@@ -20,8 +20,10 @@ export function AdminLandCard({
   const [name, setName] = useState(land.name)
   const [description, setDescription] = useState(land.description ?? '')
   const [isSaving, setIsSaving] = useState(false)
+  const [isSavingVisibility, setIsSavingVisibility] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [error, setError] = useState('')
+  const isHiddenFromOperator = Boolean(land.hidden_from_operator)
 
   const resetEditForm = () => {
     setName(land.name)
@@ -100,11 +102,45 @@ export function AdminLandCard({
     }
   }
 
+  const handleToggleVisibility = async (event: React.MouseEvent) => {
+    event.stopPropagation()
+
+    try {
+      setIsSavingVisibility(true)
+
+      const response = await fetch('/api/lands', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: land.id,
+          hidden_from_operator: !isHiddenFromOperator,
+        }),
+      })
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => null)
+        throw new Error(data?.error || 'Gagal mengubah visibilitas card')
+      }
+
+      onChangeSuccess?.()
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Gagal mengubah visibilitas card')
+    } finally {
+      setIsSavingVisibility(false)
+    }
+  }
+
   return (
     <>
       <div
         onClick={() => onEnter(land)}
-        className="bg-white border border-gray-200 rounded-lg p-5 shadow-sm hover:shadow-md hover:border-blue-400 cursor-pointer transition-all"
+        className={`bg-white border rounded-lg p-5 shadow-sm hover:shadow-md cursor-pointer transition-all ${
+          isHiddenFromOperator
+            ? 'border-amber-200 bg-amber-50/40 hover:border-amber-300'
+            : 'border-gray-200 hover:border-blue-400'
+        }`}
         title={`Klik untuk membuka ${land.name}`}
       >
         <div className="flex items-start justify-between gap-3">
@@ -119,10 +155,37 @@ export function AdminLandCard({
               <p className="text-sm text-gray-500 mt-1 line-clamp-2">
                 {land.description || 'Klik untuk membuka'}
               </p>
+              {isHiddenFromOperator && (
+                <span className="mt-2 inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-700">
+                  <EyeOff className="h-3.5 w-3.5" />
+                  Disembunyikan dari operator
+                </span>
+              )}
             </div>
           </div>
 
           <div className="flex items-center gap-1 flex-shrink-0">
+            <Button
+              size="icon-sm"
+              variant="ghost"
+              onClick={handleToggleVisibility}
+              disabled={isSavingVisibility}
+              title={isHiddenFromOperator ? 'Tampilkan ke Operator' : 'Sembunyikan dari Operator'}
+              aria-label={isHiddenFromOperator ? `Tampilkan card ${land.name} ke operator` : `Sembunyikan card ${land.name} dari operator`}
+              className={
+                isHiddenFromOperator
+                  ? 'text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50'
+                  : 'text-amber-600 hover:text-amber-700 hover:bg-amber-50'
+              }
+            >
+              {isSavingVisibility ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : isHiddenFromOperator ? (
+                <Eye className="w-4 h-4" />
+              ) : (
+                <EyeOff className="w-4 h-4" />
+              )}
+            </Button>
             <Button
               size="icon-sm"
               variant="ghost"

@@ -2,6 +2,7 @@ import { useEffect, useState, type CSSProperties } from 'react'
 import {
   Clock,
   Eye,
+  EyeOff,
   FileArchive,
   FileCode,
   FileImage,
@@ -33,7 +34,9 @@ interface DocumentCardProps {
     size?: number
   }
   targetTime?: string | null
+  hiddenFromOperator?: boolean
   onDelete?: (id: string) => void | Promise<void>
+  onVisibilityChange?: (id: string, hiddenFromOperator: boolean) => void
   showOperatorActions?: boolean
 }
 
@@ -282,14 +285,18 @@ export function DocumentCard({
   type,
   file,
   targetTime,
+  hiddenFromOperator = false,
   onDelete,
+  onVisibilityChange,
   showOperatorActions = false
 }: DocumentCardProps) {
   const [isDeleting, setIsDeleting] = useState(false)
   const [isViewing, setIsViewing] = useState(false)
   const [isDisplaying, setIsDisplaying] = useState(false)
   const [isSavingTargetTime, setIsSavingTargetTime] = useState(false)
+  const [isSavingVisibility, setIsSavingVisibility] = useState(false)
   const [currentTargetTime, setCurrentTargetTime] = useState<string | null>(targetTime ?? null)
+  const [currentHiddenFromOperator, setCurrentHiddenFromOperator] = useState(hiddenFromOperator)
   const [targetTimeInput, setTargetTimeInput] = useState(() => toLocalDateTimeInputValue(targetTime))
   const fileIconMeta = getFileIconMeta(type, file.name)
   const TypeIcon = fileIconMeta.Icon
@@ -304,6 +311,10 @@ export function DocumentCard({
     setCurrentTargetTime(targetTime ?? null)
     setTargetTimeInput(toLocalDateTimeInputValue(targetTime))
   }, [targetTime])
+
+  useEffect(() => {
+    setCurrentHiddenFromOperator(hiddenFromOperator)
+  }, [hiddenFromOperator])
 
   console.log("[operator-debug][DocumentCard] render", {
     id,
@@ -477,11 +488,53 @@ export function DocumentCard({
     await saveTargetTime(null)
   }
 
+  const handleToggleOperatorVisibility = async (e: React.MouseEvent) => {
+    e.stopPropagation()
+
+    const nextHiddenFromOperator = !currentHiddenFromOperator
+
+    try {
+      setIsSavingVisibility(true)
+
+      const response = await fetch(`/api/documents/${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          hidden_from_operator: nextHiddenFromOperator,
+        }),
+      })
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => null)
+        throw new Error(data?.error ?? 'Gagal mengubah visibilitas operator')
+      }
+
+      const data = await response.json()
+      const savedHiddenFromOperator = Boolean(
+        data.document?.hiddenFromOperator ?? nextHiddenFromOperator
+      )
+
+      setCurrentHiddenFromOperator(savedHiddenFromOperator)
+      onVisibilityChange?.(id, savedHiddenFromOperator)
+    } catch (error) {
+      console.error('Operator visibility update error:', error)
+      alert(error instanceof Error ? error.message : 'Gagal mengubah visibilitas operator')
+    } finally {
+      setIsSavingVisibility(false)
+    }
+  }
+
   return (
     <div
       onClick={showOperatorActions ? undefined : handleView}
-      className={`bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md hover:border-blue-400 transition-all group select-none text-gray-900 ${
+      className={`bg-white border rounded-lg p-4 shadow-sm hover:shadow-md transition-all group select-none text-gray-900 ${
         showOperatorActions ? '' : 'cursor-pointer'
+      } ${
+        currentHiddenFromOperator
+          ? 'border-amber-200 bg-amber-50/40 hover:border-amber-300'
+          : 'border-gray-200 hover:border-blue-400'
       }`}
       title={showOperatorActions ? undefined : 'Klik kartu ini untuk melihat/membuka dokumen'}
     >
@@ -515,6 +568,12 @@ export function DocumentCard({
               >
                 {getTypeLabel(type, file.name)}
               </span>
+              {currentHiddenFromOperator && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-700">
+                  <EyeOff className="h-3.5 w-3.5" />
+                  Disembunyikan dari operator
+                </span>
+              )}
             </div>
             <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-500">
               <span className="inline-flex min-w-0 max-w-full items-center gap-1.5">
@@ -688,6 +747,29 @@ export function DocumentCard({
 
         {onDelete && (
           <div className="flex gap-2 sm:flex-shrink-0 self-end sm:self-start justify-end w-full sm:w-auto border-t sm:border-t-0 pt-3 sm:pt-0 mt-1 sm:mt-0">
+            <Button
+              size="sm"
+              variant="ghost"
+              className={`flex-1 sm:flex-initial flex items-center justify-center gap-1.5 ${
+                currentHiddenFromOperator
+                  ? 'text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800'
+                  : 'text-amber-700 hover:bg-amber-50 hover:text-amber-800'
+              }`}
+              onClick={handleToggleOperatorVisibility}
+              disabled={isSavingVisibility}
+              title={currentHiddenFromOperator ? 'Tampilkan ke Operator' : 'Sembunyikan dari Operator'}
+            >
+              {isSavingVisibility ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : currentHiddenFromOperator ? (
+                <Eye className="w-4 h-4" />
+              ) : (
+                <EyeOff className="w-4 h-4" />
+              )}
+              <span className="sm:hidden text-xs font-medium">
+                {currentHiddenFromOperator ? 'Tampilkan' : 'Sembunyikan'}
+              </span>
+            </Button>
             <Button
               size="sm"
               variant="ghost"

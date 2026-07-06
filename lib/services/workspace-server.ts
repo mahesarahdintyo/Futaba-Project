@@ -10,6 +10,7 @@ export async function getInitialLands(): Promise<Land[]> {
     .from("lands")
     .select("*")
     .eq("is_active", true)
+    .eq("hidden_from_operator", false)
     .order("name", { ascending: true });
 
   if (error) {
@@ -53,6 +54,7 @@ export async function getInitialDocuments(landId: string): Promise<Document[]> {
         file_type,
         file_size,
         target_time,
+        hidden_from_operator,
         created_at,
         folder_id,
         land_id,
@@ -65,6 +67,7 @@ export async function getInitialDocuments(landId: string): Promise<Document[]> {
     )
     .is("folder_id", null)
     .eq("land_id", landId)
+    .eq("hidden_from_operator", false)
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -84,5 +87,6 @@ export async function getInitialDocuments(landId: string): Promise<Document[]> {
       size: doc.file_size,
     },
     targetTime: doc.target_time,
+    hiddenFromOperator: doc.hidden_from_operator,
   }));
 }
