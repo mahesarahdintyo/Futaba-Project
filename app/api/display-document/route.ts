@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 
 interface DisplayDocument {
   id: string
+  landId?: string
   title: string
   description?: string
   category?: string
@@ -18,7 +19,44 @@ interface DisplayDocument {
 
 declare global {
   // eslint-disable-next-line no-var
-  var futabaDisplayDocument: DisplayDocument | null | undefined
+  var futabaDisplayDocumentsByLand: Record<string, DisplayDocument | null> | undefined
+}
+
+const LEGACY_DISPLAY_LAND_KEY = '__default__'
+
+function getDisplayLandKey(landId?: string | null) {
+  return landId || LEGACY_DISPLAY_LAND_KEY
+}
+
+function getMemoryDisplayDocument(landId?: string | null) {
+  const displayDocuments = globalThis.futabaDisplayDocumentsByLand ?? {}
+  return displayDocuments[getDisplayLandKey(landId)] ?? null
+}
+
+function setMemoryDisplayDocument(landId: string | undefined, document: DisplayDocument) {
+  globalThis.futabaDisplayDocumentsByLand = {
+    ...(globalThis.futabaDisplayDocumentsByLand ?? {}),
+    [getDisplayLandKey(landId)]: document,
+  }
+}
+
+function toIsoDateTime(value: number) {
+  const date = new Date(value)
+  return Number.isNaN(date.getTime()) ? new Date().toISOString() : date.toISOString()
+}
+
+function toUpdatedAt(value?: string | null) {
+  if (!value) return Date.now()
+
+  const time = new Date(value).getTime()
+  return Number.isNaN(time) ? Date.now() : time
+}
+
+function isMissingDisplayTableError(error: { code?: string; message?: string } | null) {
+  return (
+    error?.code === '42P01' ||
+    error?.message?.toLowerCase().includes('display_documents') === true
+  )
 }
 
 async function getDocumentTargetTime(id: string) {
@@ -38,6 +76,70 @@ async function getDocumentTargetTime(id: string) {
   return data?.target_time ?? null
 }
 
+async function getDatabaseDisplayDocument(landId: string | null) {
+  const supabase = await createClient()
+  const landKey = getDisplayLandKey(landId)
+
+  const { data, error } = await supabase
+    .from('display_documents')
+    .select('document, updated_at')
+    .eq('land_key', landKey)
+    .maybeSingle()
+
+  if (error) {
+    if (isMissingDisplayTableError(error)) {
+      return { document: getMemoryDisplayDocument(landId), hasDatabase: false }
+    }
+
+    throw error
+  }
+
+  if (!data?.document || !isDisplayDocument(data.document)) {
+    return { document: null, hasDatabase: true }
+  }
+
+  return {
+    document: {
+      ...data.document,
+      updatedAt: toUpdatedAt(data.updated_at),
+    },
+    hasDatabase: true,
+  }
+}
+
+async function saveDatabaseDisplayDocument(
+  landId: string | undefined,
+  document: DisplayDocument
+) {
+  const supabase = await createClient()
+  const landKey = getDisplayLandKey(landId)
+
+  const { error } = await supabase
+    .from('display_documents')
+    .upsert(
+      {
+        land_key: landKey,
+        land_id: landId || null,
+        document,
+        updated_at: toIsoDateTime(document.updatedAt),
+      },
+      {
+        onConflict: 'land_key',
+      }
+    )
+
+  if (error) {
+    if (isMissingDisplayTableError(error)) {
+      setMemoryDisplayDocument(landId, document)
+      return { hasDatabase: false }
+    }
+
+    throw error
+  }
+
+  return { hasDatabase: true }
+}
+
 function isDisplayDocument(value: unknown): value is Omit<DisplayDocument, 'updatedAt'> {
   if (!value || typeof value !== 'object') return false
 
@@ -45,6 +147,7 @@ function isDisplayDocument(value: unknown): value is Omit<DisplayDocument, 'upda
 
   return (
     typeof document.id === 'string' &&
+    (typeof document.landId === 'undefined' || typeof document.landId === 'string') &&
     typeof document.title === 'string' &&
     typeof document.type === 'string' &&
     typeof document.file?.name === 'string' &&
@@ -69,23 +172,41 @@ function getRequestedAt(value: unknown) {
     : Date.now()
 }
 
-export async function GET() {
-  const document = globalThis.futabaDisplayDocument ?? null
+export async function GET(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url)
+    const landId = searchParams.get('landId')
+    const result = await getDatabaseDisplayDocument(landId)
+    let document = result.document
 
-  if (document) {
-    const targetTime = await getDocumentTargetTime(document.id)
-    if (typeof targetTime !== 'undefined') {
-      globalThis.futabaDisplayDocument = {
-        ...document,
-        targetTime,
-        updatedAt: targetTime === document.targetTime ? document.updatedAt : Date.now(),
+    if (document) {
+      const targetTime = await getDocumentTargetTime(document.id)
+      if (typeof targetTime !== 'undefined' && targetTime !== document.targetTime) {
+        document = {
+          ...document,
+          targetTime,
+          updatedAt: Date.now(),
+        }
+
+        if (result.hasDatabase) {
+          await saveDatabaseDisplayDocument(document.landId, document)
+        } else {
+          setMemoryDisplayDocument(document.landId, document)
+        }
       }
     }
-  }
 
-  return NextResponse.json({
-    document: globalThis.futabaDisplayDocument ?? null,
-  })
+    return NextResponse.json({
+      document,
+    })
+  } catch (error) {
+    console.error('Display document GET error:', error)
+
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
+  }
 }
 
 export async function POST(request: Request) {
@@ -101,7 +222,9 @@ export async function POST(request: Request) {
 
     const targetTime = body.targetTime ?? await getDocumentTargetTime(body.id)
     const requestedAt = getRequestedAt(body)
-    const currentDocument = globalThis.futabaDisplayDocument ?? null
+    const landId = body.landId
+    const currentResult = await getDatabaseDisplayDocument(landId ?? null)
+    const currentDocument = currentResult.document
 
     if (currentDocument && requestedAt < currentDocument.updatedAt) {
       return NextResponse.json({
@@ -112,6 +235,7 @@ export async function POST(request: Request) {
 
     const nextDocument: DisplayDocument = {
       id: body.id,
+      landId,
       title: body.title,
       description: body.description,
       category: body.category,
@@ -125,7 +249,11 @@ export async function POST(request: Request) {
       updatedAt: requestedAt,
     }
 
-    globalThis.futabaDisplayDocument = nextDocument
+    const saveResult = await saveDatabaseDisplayDocument(landId, nextDocument)
+
+    if (!saveResult.hasDatabase) {
+      console.warn('display_documents table is missing; using in-memory display state')
+    }
 
     return NextResponse.json({
       success: true,

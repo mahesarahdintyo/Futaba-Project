@@ -2,11 +2,17 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { Clock, FileText, Monitor } from 'lucide-react'
+import { useSearchParams } from 'next/navigation'
 
 const DISPLAY_DOCUMENT_STORAGE_KEY = 'futaba.display.document'
 
+function getDisplayDocumentStorageKey(landId?: string | null) {
+  return landId ? `${DISPLAY_DOCUMENT_STORAGE_KEY}.${landId}` : DISPLAY_DOCUMENT_STORAGE_KEY
+}
+
 interface DisplayDocument {
   id: string
+  landId?: string
   title: string
   description?: string
   category?: string
@@ -20,9 +26,9 @@ interface DisplayDocument {
   updatedAt?: number
 }
 
-function readDisplayDocument(): DisplayDocument | null {
+function readDisplayDocument(landId?: string | null): DisplayDocument | null {
   try {
-    const rawDocument = window.localStorage.getItem(DISPLAY_DOCUMENT_STORAGE_KEY)
+    const rawDocument = window.localStorage.getItem(getDisplayDocumentStorageKey(landId))
     if (!rawDocument) return null
 
     const document = JSON.parse(rawDocument) as Partial<DisplayDocument>
@@ -38,6 +44,7 @@ function readDisplayDocument(): DisplayDocument | null {
 
     return {
       id: document.id,
+      landId: document.landId,
       title: document.title,
       description: document.description,
       category: document.category,
@@ -132,7 +139,13 @@ function isSameDisplayDocument(
   )
 }
 
-export default function DisplayPageClient() {
+interface DisplayPageClientProps {
+  landId?: string
+}
+
+export default function DisplayPageClient({ landId: routeLandId }: DisplayPageClientProps = {}) {
+  const searchParams = useSearchParams()
+  const landId = routeLandId ?? searchParams.get('landId')
   const [document, setDocument] = useState<DisplayDocument | null>(null)
   const [fileUrl, setFileUrl] = useState('')
   const [isLoading, setIsLoading] = useState(false)
@@ -175,7 +188,12 @@ export default function DisplayPageClient() {
   useEffect(() => {
     async function loadServerDisplayDocument() {
       try {
-        const response = await fetch('/api/display-document', {
+        const params = new URLSearchParams()
+        if (landId) {
+          params.set('landId', landId)
+        }
+
+        const response = await fetch(`/api/display-document${params.toString() ? `?${params.toString()}` : ''}`, {
           cache: 'no-store',
         })
 
@@ -187,6 +205,7 @@ export default function DisplayPageClient() {
         setDocument((currentDocument) => {
           if (!nextDocument) {
             window.localStorage.removeItem(DISPLAY_DOCUMENT_STORAGE_KEY)
+            window.localStorage.removeItem(getDisplayDocumentStorageKey(landId))
             return null
           }
 
@@ -195,7 +214,7 @@ export default function DisplayPageClient() {
           }
 
           window.localStorage.setItem(
-            DISPLAY_DOCUMENT_STORAGE_KEY,
+            getDisplayDocumentStorageKey(landId),
             JSON.stringify(nextDocument)
           )
 
@@ -207,13 +226,13 @@ export default function DisplayPageClient() {
     }
 
     const handleStorage = (event: StorageEvent) => {
-      if (event.key === DISPLAY_DOCUMENT_STORAGE_KEY) {
-        setDocument(readDisplayDocument())
+      if (event.key === getDisplayDocumentStorageKey(landId)) {
+        setDocument(readDisplayDocument(landId))
       }
     }
 
     const handleLocalChange = () => {
-      setDocument(readDisplayDocument())
+      setDocument(readDisplayDocument(landId))
     }
 
     window.addEventListener('storage', handleStorage)
@@ -227,7 +246,7 @@ export default function DisplayPageClient() {
       window.removeEventListener('futaba-display-document-change', handleLocalChange)
       window.clearInterval(intervalId)
     }
-  }, [])
+  }, [landId])
 
   useEffect(() => {
     let isMounted = true

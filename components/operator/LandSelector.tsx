@@ -1,4 +1,5 @@
 import type { Land } from "@/lib/services/land";
+import { MonitorUp } from "lucide-react";
 
 interface LandSelectorProps {
   value: Land | null;
@@ -13,9 +14,23 @@ export default function LandSelector({
 }: LandSelectorProps) {
   return (
     <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-      <label className="mb-2 block font-semibold text-slate-800">
-        Line
-      </label>
+      <div className="mb-2 flex flex-wrap items-center justify-between gap-3">
+        <label className="block font-semibold text-slate-800">
+          Line
+        </label>
+
+        {value && (
+          <a
+            href={`/display/${encodeURIComponent(value.id)}`}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex h-9 items-center gap-2 rounded-lg border border-emerald-600 bg-white px-3 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-50"
+          >
+            <MonitorUp className="h-4 w-4" />
+            Display
+          </a>
+        )}
+      </div>
 
       <div className="flex flex-wrap gap-2">
         {lands.length === 0 ? (

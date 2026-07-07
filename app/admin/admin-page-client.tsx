@@ -14,6 +14,7 @@ import { getLands, type Land } from '@/lib/services/land'
 
 interface Document {
   id: string
+  landId?: string
   title: string
   description: string
   category: string
@@ -525,6 +526,7 @@ const handleEnterFolder = (id: number, name: string) => {
                 <DocumentCard
                   key={doc.id}
                   id={doc.id}
+                  landId={doc.landId}
                   title={doc.title}
                   description={doc.description}
                   category={doc.category}

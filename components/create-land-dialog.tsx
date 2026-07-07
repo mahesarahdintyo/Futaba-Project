@@ -65,7 +65,10 @@ export function CreateLandDialog({ onCreateSuccess }: CreateLandDialogProps) {
       </Button>
 
       {isOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div
+          className="fixed inset-0 flex items-center justify-center z-50 p-4 backdrop-blur-sm"
+          style={{ backgroundColor: 'rgba(0, 0, 0, 0.4)' }}
+        >
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
             <div className="flex items-center justify-between p-6 border-b border-gray-200">
               <h2 className="text-xl font-semibold text-gray-900">
@@ -123,7 +126,7 @@ export function CreateLandDialog({ onCreateSuccess }: CreateLandDialogProps) {
                   variant="outline"
                   onClick={() => setIsOpen(false)}
                   disabled={isLoading}
-                  className="flex-1"
+                  className="flex-1 border-gray-300 bg-white text-gray-700 hover:bg-gray-50 hover:text-gray-900"
                 >
                   Batal
                 </Button>

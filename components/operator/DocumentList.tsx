@@ -98,11 +98,12 @@ export default function DocumentList({
           </h2>
           <div className="space-y-3">
             {documents.map((document) => (
-              <DocumentCard
-                key={document.id}
-                id={document.id}
-                title={document.title}
-                description={document.description}
+                <DocumentCard
+                  key={document.id}
+                  id={document.id}
+                  landId={document.landId}
+                  title={document.title}
+                  description={document.description}
                 category={document.category}
                 type={document.type}
                 file={document.file}

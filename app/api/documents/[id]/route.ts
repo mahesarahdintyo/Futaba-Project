@@ -18,6 +18,8 @@ export async function PATCH(
 
     const targetTime = body.target_time
     const hiddenFromOperator = body.hidden_from_operator
+    const fileName = body.file_name
+    const title = body.title
 
     if (
       typeof targetTime !== 'undefined' &&
@@ -40,9 +42,31 @@ export async function PATCH(
       )
     }
 
+    if (
+      typeof fileName !== 'undefined' &&
+      typeof fileName !== 'string'
+    ) {
+      return NextResponse.json(
+        { error: 'File name must be a string' },
+        { status: 400 }
+      )
+    }
+
+    if (
+      typeof title !== 'undefined' &&
+      typeof title !== 'string'
+    ) {
+      return NextResponse.json(
+        { error: 'Title must be a string' },
+        { status: 400 }
+      )
+    }
+
     const updateFields: {
       target_time?: string | null
       hidden_from_operator?: boolean
+      file_name?: string
+      title?: string
     } = {}
 
     if (typeof targetTime !== 'undefined') {
@@ -51,6 +75,14 @@ export async function PATCH(
 
     if (typeof hiddenFromOperator !== 'undefined') {
       updateFields.hidden_from_operator = hiddenFromOperator
+    }
+
+    if (typeof fileName !== 'undefined') {
+      updateFields.file_name = fileName
+    }
+
+    if (typeof title !== 'undefined') {
+      updateFields.title = title
     }
 
     if (Object.keys(updateFields).length === 0) {
@@ -66,7 +98,7 @@ export async function PATCH(
       .from('documents')
       .update(updateFields)
       .eq('id', id)
-      .select('id, target_time, hidden_from_operator')
+      .select('id, target_time, hidden_from_operator, file_name, title')
       .single()
 
     if (error) {
@@ -82,6 +114,8 @@ export async function PATCH(
         id: data.id,
         targetTime: data.target_time,
         hiddenFromOperator: data.hidden_from_operator,
+        fileName: data.file_name,
+        title: data.title,
       },
     })
   } catch (error) {

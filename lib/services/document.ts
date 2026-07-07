@@ -1,5 +1,6 @@
 export interface Document {
   id: string;
+  landId?: string;
   title: string;
   description: string;
   category: string;

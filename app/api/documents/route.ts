@@ -86,6 +86,7 @@ export async function GET(request: Request) {
 
     const transformedDocuments = documents.map((doc: any) => ({
       id: doc.id,
+      landId: doc.land_id ?? doc.folders?.land_id ?? undefined,
       title: doc.title,
       description: doc.description,
       category: "Lainnya",

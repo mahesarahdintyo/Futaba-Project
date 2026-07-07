@@ -77,6 +77,7 @@ export async function getInitialDocuments(landId: string): Promise<Document[]> {
 
   return (data ?? []).map((doc: any) => ({
     id: doc.id,
+    landId: doc.land_id ?? doc.folders?.land_id ?? undefined,
     title: doc.title,
     description: doc.description,
     category: "Lainnya",

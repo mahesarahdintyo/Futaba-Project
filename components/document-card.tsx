@@ -12,18 +12,25 @@ import {
   HardDrive,
   Loader2,
   MonitorUp,
+  Pencil,
   RotateCcw,
   Presentation,
   Save,
   Trash2,
+  X,
   type LucideIcon,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 const DISPLAY_DOCUMENT_STORAGE_KEY = 'futaba.display.document'
 
+function getDisplayDocumentStorageKey(landId?: string) {
+  return landId ? `${DISPLAY_DOCUMENT_STORAGE_KEY}.${landId}` : DISPLAY_DOCUMENT_STORAGE_KEY
+}
+
 interface DocumentCardProps {
   id: string
+  landId?: string
   title: string
   description: string
   category: string
@@ -279,6 +286,7 @@ function isValidLocalDateTimeInputValue(localDateTime: string) {
 
 export function DocumentCard({
   id,
+  landId,
   title,
   description,
   category,
@@ -298,10 +306,22 @@ export function DocumentCard({
   const [currentTargetTime, setCurrentTargetTime] = useState<string | null>(targetTime ?? null)
   const [currentHiddenFromOperator, setCurrentHiddenFromOperator] = useState(hiddenFromOperator)
   const [targetTimeInput, setTargetTimeInput] = useState(() => toLocalDateTimeInputValue(targetTime))
-  const fileIconMeta = getFileIconMeta(type, file.name)
+  
+  const [currentFileName, setCurrentFileName] = useState(file.name)
+  const [isEditingFileName, setIsEditingFileName] = useState(false)
+  const [fileNameInput, setFileNameInput] = useState('')
+  const [isSavingFileName, setIsSavingFileName] = useState(false)
+
+  const [currentTitle, setCurrentTitle] = useState(title)
+  const [isEditingTitle, setIsEditingTitle] = useState(false)
+  const [titleInput, setTitleInput] = useState('')
+  const [isSavingTitle, setIsSavingTitle] = useState(false)
+
+  const fileIconMeta = getFileIconMeta(type, currentFileName)
   const TypeIcon = fileIconMeta.Icon
   const formattedTargetTime = formatTargetTime(currentTargetTime)
   const showTargetTimeEditor = Boolean(onDelete && !showOperatorActions)
+  const isAdmin = Boolean(onDelete && !showOperatorActions)
   const isTargetTimeInputValid = !targetTimeInput || isValidLocalDateTimeInputValue(targetTimeInput)
   const targetTimeError = targetTimeInput && !isTargetTimeInputValid
     ? 'Isi tanggal dan jam format 24 jam, contoh 14:30'
@@ -315,6 +335,14 @@ export function DocumentCard({
   useEffect(() => {
     setCurrentHiddenFromOperator(hiddenFromOperator)
   }, [hiddenFromOperator])
+
+  useEffect(() => {
+    setCurrentFileName(file.name)
+  }, [file.name])
+
+  useEffect(() => {
+    setCurrentTitle(title)
+  }, [title])
 
   console.log("[operator-debug][DocumentCard] render", {
     id,
@@ -370,7 +398,8 @@ export function DocumentCard({
 
       const displayDocument = {
         id,
-        title,
+        landId,
+        title: currentTitle,
         description,
         category,
         type,
@@ -395,7 +424,7 @@ export function DocumentCard({
       const nextDisplayDocument = data.document ?? displayDocument
 
       window.localStorage.setItem(
-        DISPLAY_DOCUMENT_STORAGE_KEY,
+        getDisplayDocumentStorageKey(nextDisplayDocument.landId),
         JSON.stringify(nextDisplayDocument)
       )
 
@@ -414,7 +443,7 @@ export function DocumentCard({
 
   const handleDelete = async (e: React.MouseEvent) => {
     e.stopPropagation() // Prevent triggering card's onClick view
-    if (!window.confirm(`Are you sure you want to delete "${title}"?`)) {
+    if (!window.confirm(`Are you sure you want to delete "${currentTitle}"?`)) {
       return
     }
 
@@ -526,6 +555,133 @@ export function DocumentCard({
     }
   }
 
+  const handleSaveFileName = async () => {
+    if (!fileNameInput.trim()) return
+
+    const lastDotIndex = currentFileName.lastIndexOf('.')
+    const extension = lastDotIndex !== -1 ? currentFileName.substring(lastDotIndex + 1) : ''
+    const nextFileName = extension
+      ? `${fileNameInput.trim()}.${extension}`
+      : fileNameInput.trim()
+
+    if (nextFileName === currentFileName) {
+      setIsEditingFileName(false)
+      return
+    }
+
+    try {
+      setIsSavingFileName(true)
+
+      const response = await fetch(`/api/documents/${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          file_name: nextFileName,
+        }),
+      })
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => null)
+        throw new Error(data?.error ?? 'Gagal menyimpan nama file')
+      }
+
+      const data = await response.json()
+      const savedFileName = data.document?.fileName ?? nextFileName
+
+      setCurrentFileName(savedFileName)
+
+      // Update local storage representation if it is currently displayed
+      const displayStorageKey = getDisplayDocumentStorageKey(landId)
+      const rawDisplayDoc = window.localStorage.getItem(displayStorageKey)
+      if (rawDisplayDoc) {
+        try {
+          const displayDoc = JSON.parse(rawDisplayDoc)
+          if (displayDoc.id === id) {
+            displayDoc.file.name = savedFileName
+            window.localStorage.setItem(displayStorageKey, JSON.stringify(displayDoc))
+            window.dispatchEvent(
+              new CustomEvent('futaba-display-document-change', {
+                detail: displayDoc,
+              })
+            )
+          }
+        } catch (e) {
+          console.error(e)
+        }
+      }
+
+      setIsEditingFileName(false)
+    } catch (error) {
+      console.error('File name update error:', error)
+      alert(error instanceof Error ? error.message : 'Gagal menyimpan nama file')
+    } finally {
+      setIsSavingFileName(false)
+    }
+  }
+
+  const handleSaveTitle = async () => {
+    if (!titleInput.trim()) return
+
+    const nextTitle = titleInput.trim()
+    if (nextTitle === currentTitle) {
+      setIsEditingTitle(false)
+      return
+    }
+
+    try {
+      setIsSavingTitle(true)
+
+      const response = await fetch(`/api/documents/${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: nextTitle,
+        }),
+      })
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => null)
+        throw new Error(data?.error ?? 'Gagal menyimpan judul dokumen')
+      }
+
+      const data = await response.json()
+      const savedTitle = data.document?.title ?? nextTitle
+
+      setCurrentTitle(savedTitle)
+
+      // Update local storage representation if it is currently displayed
+      const displayStorageKey = getDisplayDocumentStorageKey(landId)
+      const rawDisplayDoc = window.localStorage.getItem(displayStorageKey)
+      if (rawDisplayDoc) {
+        try {
+          const displayDoc = JSON.parse(rawDisplayDoc)
+          if (displayDoc.id === id) {
+            displayDoc.title = savedTitle
+            window.localStorage.setItem(displayStorageKey, JSON.stringify(displayDoc))
+            window.dispatchEvent(
+              new CustomEvent('futaba-display-document-change', {
+                detail: displayDoc,
+              })
+            )
+          }
+        } catch (e) {
+          console.error(e)
+        }
+      }
+
+      setIsEditingTitle(false)
+    } catch (error) {
+      console.error('Title update error:', error)
+      alert(error instanceof Error ? error.message : 'Gagal menyimpan judul dokumen')
+    } finally {
+      setIsSavingTitle(false)
+    }
+  }
+
   return (
     <div
       onClick={showOperatorActions ? undefined : handleView}
@@ -553,9 +709,66 @@ export function DocumentCard({
             </div>
           </div>
           <div className="min-w-0 flex-1">
-            <h3 className="text-lg font-semibold text-gray-900 truncate group-hover:text-blue-600 transition-colors">
-              {title}
-            </h3>
+            {isEditingTitle ? (
+              <div 
+                className="flex items-center gap-1.5 w-full max-w-sm mb-1"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <input
+                  type="text"
+                  value={titleInput}
+                  onChange={(e) => setTitleInput(e.target.value)}
+                  className="h-8 px-2 flex-1 rounded border border-gray-300 bg-white text-base font-semibold text-gray-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-100"
+                  placeholder="Judul dokumen"
+                  disabled={isSavingTitle}
+                  autoFocus
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      handleSaveTitle()
+                    } else if (e.key === 'Escape') {
+                      setIsEditingTitle(false)
+                    }
+                  }}
+                />
+                <button
+                  onClick={handleSaveTitle}
+                  disabled={isSavingTitle || !titleInput.trim()}
+                  className="p-1.5 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 transition-colors flex items-center justify-center"
+                  title="Simpan"
+                >
+                  {isSavingTitle ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <Save className="w-3.5 h-3.5" />
+                  )}
+                </button>
+                <button
+                  onClick={() => setIsEditingTitle(false)}
+                  disabled={isSavingTitle}
+                  className="p-1.5 bg-gray-100 text-gray-600 rounded hover:bg-gray-200 transition-colors flex items-center justify-center"
+                  title="Batal"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            ) : (
+              <h3 className="text-lg font-semibold text-gray-900 truncate group-hover:text-blue-600 transition-colors inline-flex items-center gap-1.5 max-w-full">
+                <span className="truncate">{currentTitle}</span>
+                {isAdmin && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setTitleInput(currentTitle)
+                      setIsEditingTitle(true)
+                    }}
+                    className="p-1 text-gray-400 hover:text-blue-600 rounded transition-colors flex-shrink-0"
+                    title="Ubah judul dokumen"
+                  >
+                    <Pencil className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </h3>
+            )}
             {description && (
               <p className="text-sm text-gray-600 mt-1 line-clamp-2">
                 {description}
@@ -566,7 +779,7 @@ export function DocumentCard({
                 className={`inline-block px-2.5 py-0.5 text-xs font-medium rounded-full ${fileIconMeta.labelClassName}`}
                 style={fileIconMeta.labelStyle}
               >
-                {getTypeLabel(type, file.name)}
+                {getTypeLabel(type, currentFileName)}
               </span>
               {currentHiddenFromOperator && (
                 <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-700">
@@ -576,19 +789,88 @@ export function DocumentCard({
               )}
             </div>
             <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-500">
-              <span className="inline-flex min-w-0 max-w-full items-center gap-1.5">
-                <FileText className="h-3.5 w-3.5 flex-shrink-0 text-gray-400" />
-                <span className="truncate">{file.name}</span>
-              </span>
-              <span className="inline-flex items-center gap-1.5">
-                <HardDrive className="h-3.5 w-3.5 text-gray-400" />
-                {formatFileSize(file.size)}
-              </span>
-              {formattedTargetTime && (
-                <span className="inline-flex items-center gap-1.5">
-                  <Clock className="h-3.5 w-3.5 text-gray-400" />
-                  Target {formattedTargetTime}
-                </span>
+              {isEditingFileName ? (
+                <div 
+                  className="flex items-center gap-1.5 w-full"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <FileText className="h-3.5 w-3.5 flex-shrink-0 text-gray-400" />
+                  <div className="flex flex-1 items-center gap-1 max-w-sm">
+                    <input
+                      type="text"
+                      value={fileNameInput}
+                      onChange={(e) => setFileNameInput(e.target.value)}
+                      className="h-7 px-2 flex-1 rounded border border-gray-300 bg-white text-xs text-gray-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-100"
+                      placeholder="Nama file"
+                      disabled={isSavingFileName}
+                      autoFocus
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          handleSaveFileName()
+                        } else if (e.key === 'Escape') {
+                          setIsEditingFileName(false)
+                        }
+                      }}
+                    />
+                    {currentFileName.lastIndexOf('.') !== -1 && (
+                      <span className="text-xs text-gray-500 select-none pr-1">
+                        .{currentFileName.substring(currentFileName.lastIndexOf('.') + 1)}
+                      </span>
+                    )}
+                    <button
+                      onClick={handleSaveFileName}
+                      disabled={isSavingFileName || !fileNameInput.trim()}
+                      className="p-1.5 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 transition-colors flex items-center justify-center"
+                      title="Simpan"
+                    >
+                      {isSavingFileName ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        <Save className="w-3.5 h-3.5" />
+                      )}
+                    </button>
+                    <button
+                      onClick={() => setIsEditingFileName(false)}
+                      disabled={isSavingFileName}
+                      className="p-1.5 bg-gray-100 text-gray-600 rounded hover:bg-gray-200 transition-colors flex items-center justify-center"
+                      title="Batal"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <span className="inline-flex min-w-0 max-w-full items-center gap-1.5">
+                    <FileText className="h-3.5 w-3.5 flex-shrink-0 text-gray-400" />
+                    <span className="truncate">{currentFileName}</span>
+                    {isAdmin && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          const lastDotIndex = currentFileName.lastIndexOf('.')
+                          const base = lastDotIndex !== -1 ? currentFileName.substring(0, lastDotIndex) : currentFileName
+                          setFileNameInput(base)
+                          setIsEditingFileName(true)
+                        }}
+                        className="p-1 text-gray-400 hover:text-blue-600 rounded transition-colors"
+                        title="Ubah nama file"
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </span>
+                  <span className="inline-flex items-center gap-1.5">
+                    <HardDrive className="h-3.5 w-3.5 text-gray-400" />
+                    {formatFileSize(file.size)}
+                  </span>
+                  {formattedTargetTime && (
+                    <span className="inline-flex items-center gap-1.5">
+                      <Clock className="h-3.5 w-3.5 text-gray-400" />
+                      Target {formattedTargetTime}
+                    </span>
+                  )}
+                </>
               )}
             </div>
 
