@@ -103,6 +103,36 @@ export default function SystemPageClient() {
     );
   }, [health]);
 
+  const systemAlerts = useMemo(() => {
+    const alerts: string[] = [];
+    
+    if (error) {
+      if (typeof window !== "undefined" && !navigator.onLine) {
+        alerts.push("Koneksi Internet Terputus: Browser Anda terdeteksi offline. Pastikan koneksi Wi-Fi atau kabel LAN terhubung.");
+      } else {
+        alerts.push(`Koneksi Server Gagal: Tidak dapat mengambil status dari server (${error}).`);
+      }
+      return alerts;
+    }
+
+    if (!health) return alerts;
+
+    if (!health.database.connected) {
+      alerts.push("Database Supabase Terputus: Aplikasi tidak dapat membaca/menyimpan data lands, folders, dan documents.");
+    }
+
+    if (!health.storage.connected) {
+      alerts.push("Supabase Storage Terputus: Berkas dokumen (PDF/Gambar) tidak dapat diunggah atau diakses.");
+    }
+
+    const offlineDisplays = health.displays.filter((d) => !d.online).map((d) => d.name);
+    if (offlineDisplays.length > 0) {
+      alerts.push(`TV Display Offline: Layar TV pada Land [ ${offlineDisplays.join(", ")} ] terdeteksi tidak aktif.`);
+    }
+
+    return alerts;
+  }, [health, error]);
+
   const loadHealth = async () => {
     try {
       setIsRefreshing(true);
@@ -113,14 +143,20 @@ export default function SystemPageClient() {
       });
 
       if (!response.ok) {
-        throw new Error(`Health check failed (${response.status})`);
+        throw new Error(`Koneksi HTTP bermasalah (status: ${response.status})`);
       }
 
       const data = await response.json();
       setHealth(data);
     } catch (error) {
       console.error("System health load error:", error);
-      setError(error instanceof Error ? error.message : "Gagal memuat status sistem");
+      setError(
+        error instanceof Error 
+          ? error.message === "Failed to fetch" || error.message.includes("fetch failed")
+            ? "Koneksi jaringan gagal"
+            : error.message
+          : "Gagal memuat status sistem"
+      );
     } finally {
       setIsRefreshing(false);
     }
@@ -158,25 +194,38 @@ export default function SystemPageClient() {
         </header>
 
         <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="mb-2 flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-4">
+          <div className="mb-6 flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-4">
             <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700">
+              <div className={`flex h-11 w-11 items-center justify-center rounded-lg ${
+                allSystemsOk ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"
+              }`}>
                 <Server className="h-5 w-5" />
               </div>
               <div>
                 <p className="text-base font-bold text-slate-950">
-                  {allSystemsOk ? "All Systems Operational" : "System Needs Attention"}
+                  {allSystemsOk ? "Semua Sistem Berjalan Normal" : "Sistem Memerlukan Perhatian"}
                 </p>
                 <p className="mt-1 text-sm text-slate-500">
-                  Last checked {formatDateTime(health?.checkedAt)}
+                  Terakhir diperiksa: {formatDateTime(health?.checkedAt)}
                 </p>
               </div>
             </div>
           </div>
 
-          {error && (
-            <div className="my-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
-              {error}
+          {systemAlerts.length > 0 && (
+            <div className="mb-6 space-y-2.5">
+              {systemAlerts.map((alertText, idx) => (
+                <div 
+                  key={idx} 
+                  className="flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800 shadow-sm animate-pulse-slow"
+                >
+                  <Activity className="h-5 w-5 shrink-0 text-red-600 mt-0.5" />
+                  <div>
+                    <span className="font-bold">Masalah Terdeteksi: </span>
+                    {alertText}
+                  </div>
+                </div>
+              ))}
             </div>
           )}
 
@@ -184,8 +233,8 @@ export default function SystemPageClient() {
             icon={<Database className="h-5 w-5" />}
             label="Database"
             active={Boolean(health?.database.connected)}
-            activeText="Connected"
-            inactiveText="Disconnected"
+            activeText="Terkoneksi"
+            inactiveText="Terputus"
             detail={health?.database.error}
           />
 
@@ -193,8 +242,8 @@ export default function SystemPageClient() {
             icon={<HardDrive className="h-5 w-5" />}
             label="Supabase Storage"
             active={Boolean(health?.storage.connected)}
-            activeText="Connected"
-            inactiveText="Disconnected"
+            activeText="Terkoneksi"
+            inactiveText="Terputus"
             detail={health?.storage.error}
           />
 
@@ -207,7 +256,7 @@ export default function SystemPageClient() {
                 active={display.online}
                 activeText="Online"
                 inactiveText="Offline"
-                detail={`Last seen ${formatDateTime(display.lastSeenAt)}`}
+                detail={display.lastSeenAt ? `Terakhir aktif: ${formatDateTime(display.lastSeenAt)}` : "Belum pernah aktif"}
               />
             ))
           ) : (
@@ -216,7 +265,7 @@ export default function SystemPageClient() {
               label="Display"
               active={false}
               activeText="Online"
-              inactiveText="No line detected"
+              inactiveText="Tidak ada display terdeteksi"
             />
           )}
         </section>
@@ -225,7 +274,7 @@ export default function SystemPageClient() {
           <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
             <div className="flex items-center gap-3">
               <Activity className="h-5 w-5 text-emerald-700" />
-              <h2 className="text-sm font-bold text-slate-900">Version</h2>
+              <h2 className="text-sm font-bold text-slate-900">Versi Aplikasi</h2>
             </div>
             <p className="mt-4 text-2xl font-bold text-slate-950">
               {health?.version ?? "v1.0.0"}
@@ -235,10 +284,10 @@ export default function SystemPageClient() {
           <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
             <div className="flex items-center gap-3">
               <Clock className="h-5 w-5 text-slate-600" />
-              <h2 className="text-sm font-bold text-slate-900">Auto Refresh</h2>
+              <h2 className="text-sm font-bold text-slate-900">Pembaruan Otomatis</h2>
             </div>
             <p className="mt-4 text-sm font-medium text-slate-600">
-              Status diperbarui otomatis setiap 5 detik.
+              Status monitor ini diperbarui otomatis setiap 5 detik.
             </p>
           </div>
         </section>
