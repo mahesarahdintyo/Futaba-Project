@@ -188,10 +188,30 @@ export default function DisplayPageClient({ landId: routeLandId }: DisplayPageCl
   useEffect(() => {
     if (!landId) return
 
+    const sendHeartbeat = () => {
+      fetch('/api/system/display-heartbeat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ landId }),
+        keepalive: true,
+      }).catch((error) => {
+        console.error('Display heartbeat error:', error)
+      })
+    }
+
     const clearDisplayDocument = () => {
       const params = new URLSearchParams({ landId })
 
       window.localStorage.removeItem(getDisplayDocumentStorageKey(landId))
+
+      fetch(`/api/system/display-heartbeat?${params.toString()}`, {
+        method: 'DELETE',
+        keepalive: true,
+      }).catch((error) => {
+        console.error('Display heartbeat clear error:', error)
+      })
 
       fetch(`/api/display-document?${params.toString()}`, {
         method: 'DELETE',
@@ -201,10 +221,14 @@ export default function DisplayPageClient({ landId: routeLandId }: DisplayPageCl
       })
     }
 
+    sendHeartbeat()
+    const heartbeatIntervalId = window.setInterval(sendHeartbeat, 5000)
+
     window.addEventListener('pagehide', clearDisplayDocument)
 
     return () => {
       window.removeEventListener('pagehide', clearDisplayDocument)
+      window.clearInterval(heartbeatIntervalId)
     }
   }, [landId])
 

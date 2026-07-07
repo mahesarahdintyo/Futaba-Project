@@ -1,10 +1,5 @@
-import DisplayPageClient from "@/app/display/display-page-client";
-import { Suspense } from "react";
+import { redirect } from "next/navigation";
 
 export default function DisplayPage() {
-  return (
-    <Suspense fallback={null}>
-      <DisplayPageClient />
-    </Suspense>
-  );
+  redirect("/system");
 }
