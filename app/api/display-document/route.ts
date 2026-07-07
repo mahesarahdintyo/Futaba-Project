@@ -40,6 +40,13 @@ function setMemoryDisplayDocument(landId: string | undefined, document: DisplayD
   }
 }
 
+function clearMemoryDisplayDocument(landId?: string | null) {
+  globalThis.futabaDisplayDocumentsByLand = {
+    ...(globalThis.futabaDisplayDocumentsByLand ?? {}),
+    [getDisplayLandKey(landId)]: null,
+  }
+}
+
 function toIsoDateTime(value: number) {
   const date = new Date(value)
   return Number.isNaN(date.getTime()) ? new Date().toISOString() : date.toISOString()
@@ -137,6 +144,28 @@ async function saveDatabaseDisplayDocument(
     throw error
   }
 
+  return { hasDatabase: true }
+}
+
+async function clearDatabaseDisplayDocument(landId: string | null) {
+  const supabase = await createClient()
+  const landKey = getDisplayLandKey(landId)
+
+  const { error } = await supabase
+    .from('display_documents')
+    .delete()
+    .eq('land_key', landKey)
+
+  if (error) {
+    if (isMissingDisplayTableError(error)) {
+      clearMemoryDisplayDocument(landId)
+      return { hasDatabase: false }
+    }
+
+    throw error
+  }
+
+  clearMemoryDisplayDocument(landId)
   return { hasDatabase: true }
 }
 
@@ -261,6 +290,30 @@ export async function POST(request: Request) {
     })
   } catch (error) {
     console.error('Display document handler error:', error)
+
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}
+
+export async function DELETE(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url)
+    const landId = searchParams.get('landId')
+    const clearResult = await clearDatabaseDisplayDocument(landId)
+
+    if (!clearResult.hasDatabase) {
+      console.warn('display_documents table is missing; cleared in-memory display state')
+    }
+
+    return NextResponse.json({
+      success: true,
+      document: null,
+    })
+  } catch (error) {
+    console.error('Display document DELETE error:', error)
 
     return NextResponse.json(
       { error: 'Internal server error' },

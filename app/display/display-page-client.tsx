@@ -186,6 +186,29 @@ export default function DisplayPageClient({ landId: routeLandId }: DisplayPageCl
   }, [])
 
   useEffect(() => {
+    if (!landId) return
+
+    const clearDisplayDocument = () => {
+      const params = new URLSearchParams({ landId })
+
+      window.localStorage.removeItem(getDisplayDocumentStorageKey(landId))
+
+      fetch(`/api/display-document?${params.toString()}`, {
+        method: 'DELETE',
+        keepalive: true,
+      }).catch((error) => {
+        console.error('Display clear error:', error)
+      })
+    }
+
+    window.addEventListener('pagehide', clearDisplayDocument)
+
+    return () => {
+      window.removeEventListener('pagehide', clearDisplayDocument)
+    }
+  }, [landId])
+
+  useEffect(() => {
     async function loadServerDisplayDocument() {
       try {
         const params = new URLSearchParams()
