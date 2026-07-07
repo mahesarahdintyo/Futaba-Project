@@ -42,21 +42,8 @@ export async function getDocuments({
   const query = params.toString();
   const url = `/api/documents${query ? `?${query}` : ""}`;
 
-  console.log("[operator-debug][getDocuments] params:", {
-    landId,
-    folderId,
-    search,
-  });
-  console.log("[operator-debug][getDocuments] fetching:", url);
-
   const response = await fetch(url, {
     cache: "no-store",
-  });
-
-  console.log("[operator-debug][getDocuments] response:", {
-    url,
-    ok: response.ok,
-    status: response.status,
   });
 
   if (!response.ok) {
@@ -65,12 +52,6 @@ export async function getDocuments({
   }
 
   const data = await response.json();
-
-  console.log("[operator-debug][getDocuments] data:", {
-    isArray: Array.isArray(data),
-    length: Array.isArray(data) ? data.length : null,
-    data,
-  });
 
   return data;
 }

@@ -41,22 +41,8 @@ export async function getFolders({
   const query = params.toString();
   const url = `/api/folders${query ? `?${query}` : ""}`;
 
-  console.log("[operator-debug][getFolders] params:", {
-    landId,
-    parentId,
-    includeAll,
-    search,
-  });
-  console.log("[operator-debug][getFolders] fetching:", url);
-
   const response = await fetch(url, {
     cache: "no-store",
-  });
-
-  console.log("[operator-debug][getFolders] response:", {
-    url,
-    ok: response.ok,
-    status: response.status,
   });
 
   if (!response.ok) {
@@ -65,12 +51,6 @@ export async function getFolders({
   }
 
   const data = await response.json();
-
-  console.log("[operator-debug][getFolders] data:", {
-    isArray: Array.isArray(data),
-    length: Array.isArray(data) ? data.length : null,
-    data,
-  });
 
   return data;
 }

@@ -114,16 +114,9 @@ export default function OperatorPage({
       landsRequestIdRef.current = requestId;
 
       try {
-        console.log("[operator-debug][OperatorPage] loadLands:start");
-
         const activeLands = await getLands();
 
         if (!isMountedRef.current || landsRequestIdRef.current !== requestId) return;
-
-        console.log("[operator-debug][OperatorPage] loadLands:result", {
-          length: activeLands.length,
-          lands: activeLands,
-        });
 
         setLands(activeLands);
 
@@ -139,14 +132,6 @@ export default function OperatorPage({
             activeLands.find((land) => land.id === preferredLandId) ??
             activeLands[0] ??
             null;
-
-          console.log("[operator-debug][OperatorPage] land sync selection", {
-            preferSavedLocation,
-            savedLandId,
-            currentLand,
-            nextSelectedLand,
-            firstLand: activeLands[0] ?? null,
-          });
 
           if (!nextSelectedLand) {
             clearOperatorLocation();
@@ -218,15 +203,6 @@ export default function OperatorPage({
   }, [loadLands]);
 
   const handleLandChange = (land: Land) => {
-    console.log("[operator-debug][OperatorPage] handleLandChange", {
-      id: land.id,
-      isUuid:
-        /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-          land.id
-        ),
-      land,
-    });
-
     setSelectedLand(land);
     setCurrentFolder(null);
     setFolderPathHistory([]);
@@ -240,9 +216,6 @@ export default function OperatorPage({
       workspaceRequestIdRef.current = requestId;
 
       if (!selectedLand) {
-        console.log("[operator-debug][OperatorPage] loadWorkspaceData:skip no selectedLand", {
-          selectedLand,
-        });
         setFolders([]);
         setDocuments([]);
         setIsLoading(false);
@@ -258,30 +231,6 @@ export default function OperatorPage({
         const search = searchQuery.trim();
         const folderParentId = search ? null : currentFolder?.id ?? null;
 
-        console.log("[operator-debug][OperatorPage] loadWorkspaceData:start", {
-          selectedLand,
-          selectedLandId: selectedLand.id,
-          selectedLandIdIsUuid:
-            /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-              selectedLand.id
-            ),
-          currentFolder,
-          search,
-          folderParentId,
-          showLoading,
-          folderArgs: {
-            landId: selectedLand.id,
-            parentId: folderParentId,
-            includeAll: Boolean(search),
-            search,
-          },
-          documentArgs: {
-            landId: selectedLand.id,
-            folderId: folderParentId,
-            search,
-          },
-        });
-
         const [landFolders, landDocuments] = await Promise.all([
           getFolders({
             landId: selectedLand.id,
@@ -296,24 +245,8 @@ export default function OperatorPage({
           }),
         ]);
 
-        if (!isMountedRef.current || workspaceRequestIdRef.current !== requestId) return;
-
-        console.log("[operator-debug][OperatorPage] loadWorkspaceData:result before setState", {
-          foldersIsArray: Array.isArray(landFolders),
-          foldersLength: landFolders.length,
-          folders: landFolders,
-          documentsIsArray: Array.isArray(landDocuments),
-          documentsLength: landDocuments.length,
-          documents: landDocuments,
-        });
-
         setFolders(landFolders);
         setDocuments(landDocuments);
-
-        console.log("[operator-debug][OperatorPage] setState called", {
-          foldersLength: landFolders.length,
-          documentsLength: landDocuments.length,
-        });
       } catch (error) {
         console.error("Failed to load operator workspace", error);
 
@@ -365,13 +298,7 @@ export default function OperatorPage({
       window.removeEventListener("focus", handleWindowFocus);
     };
   }, [loadWorkspaceData, selectedLand]);
-
   const handleEnterFolder = (id: number, name: string) => {
-    console.log("[operator-debug][OperatorPage] handleEnterFolder", {
-      id,
-      name,
-    });
-
     const nextFolder = { id, name };
     const nextHistory = [...folderPathHistory, nextFolder];
     setFolderPathHistory(nextHistory);
@@ -384,11 +311,6 @@ export default function OperatorPage({
   };
 
   const handleNavigateBreadcrumb = (index: number) => {
-    console.log("[operator-debug][OperatorPage] handleNavigateBreadcrumb", {
-      index,
-      folderPathHistory,
-    });
-
     setSearchQuery("");
 
     if (index === -1) {
@@ -408,28 +330,6 @@ export default function OperatorPage({
     }
   };
 
-  console.log("[operator-debug][OperatorPage] render", {
-    selectedLand,
-    selectedLandId: selectedLand?.id ?? null,
-    selectedLandIdIsUuid: selectedLand
-      ? /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-          selectedLand.id
-        )
-      : false,
-    landsLength: lands.length,
-    foldersLength: folders.length,
-    documentsLength: documents.length,
-    currentFolder,
-    searchQuery,
-    isLoading,
-    error,
-    documentListProps: {
-      folders,
-      documents,
-      isLoading,
-      error,
-    },
-  });
 
   return (
     <main className="min-h-screen bg-slate-100 text-slate-900">

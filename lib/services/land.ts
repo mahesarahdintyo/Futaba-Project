@@ -20,16 +20,8 @@ export async function getLands({ includeHidden = false }: LandQuery = {}): Promi
   const query = params.toString();
   const url = `/api/lands${query ? `?${query}` : ""}`;
 
-  console.log("[operator-debug][getLands] fetching:", url);
-
   const response = await fetch(url, {
     cache: "no-store",
-  });
-
-  console.log("[operator-debug][getLands] response:", {
-    url,
-    ok: response.ok,
-    status: response.status,
   });
 
   if (!response.ok) {
@@ -38,12 +30,6 @@ export async function getLands({ includeHidden = false }: LandQuery = {}): Promi
   }
 
   const data = await response.json();
-
-  console.log("[operator-debug][getLands] data:", {
-    isArray: Array.isArray(data),
-    length: Array.isArray(data) ? data.length : null,
-    data,
-  });
 
   return data;
 }

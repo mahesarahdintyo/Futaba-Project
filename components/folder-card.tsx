@@ -22,14 +22,6 @@ export function FolderCard({
   const [isDeleting, setIsDeleting] = useState(false)
   const canDelete = typeof onDeleteSuccess === 'function'
 
-  console.log("[operator-debug][FolderCard] render", {
-    id,
-    name,
-    itemCount,
-    hasOnEnter: typeof onEnter === "function",
-    hasOnDeleteSuccess: typeof onDeleteSuccess === "function",
-  })
-
   const handleDelete = async (e: React.MouseEvent) => {
     e.stopPropagation() // Prevent entering the folder
 
@@ -63,7 +55,6 @@ export function FolderCard({
   return (
 <div
   onClick={() => {
-    console.log("CLICK FOLDER", id, name)
     onEnter(id, name)
   }}
   className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md hover:border-blue-400 transition-all cursor-pointer group flex items-center justify-between text-gray-900"

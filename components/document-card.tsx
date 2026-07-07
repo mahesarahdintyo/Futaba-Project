@@ -344,16 +344,6 @@ export function DocumentCard({
     setCurrentTitle(title)
   }, [title])
 
-  console.log("[operator-debug][DocumentCard] render", {
-    id,
-    title,
-    description,
-    category,
-    type,
-    file,
-    hasOnDelete: typeof onDelete === "function",
-  })
-
   const handleView = async () => {
     try {
       setIsViewing(true)

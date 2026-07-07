@@ -18,21 +18,7 @@ export default function DocumentList({
   error = "",
   onEnterFolder,
 }: DocumentListProps) {
-  console.log("[operator-debug][DocumentList] props received", {
-    foldersIsArray: Array.isArray(folders),
-    foldersLength: folders.length,
-    folders,
-    documentsIsArray: Array.isArray(documents),
-    documentsLength: documents.length,
-    documents,
-    isLoading,
-    error,
-    hasOnEnterFolder: typeof onEnterFolder === "function",
-  });
-
   if (isLoading) {
-    console.log("[operator-debug][DocumentList] render branch: loading");
-
     return (
       <div className="rounded-xl border border-slate-200 bg-white p-10 text-center text-slate-500 shadow-sm">
         Memuat data...
@@ -41,10 +27,6 @@ export default function DocumentList({
   }
 
   if (error) {
-    console.log("[operator-debug][DocumentList] render branch: error", {
-      error,
-    });
-
     return (
       <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
         {error}
@@ -53,22 +35,12 @@ export default function DocumentList({
   }
 
   if (folders.length === 0 && documents.length === 0) {
-    console.log("[operator-debug][DocumentList] render branch: empty", {
-      foldersLength: folders.length,
-      documentsLength: documents.length,
-    });
-
     return (
       <div className="rounded-xl border border-slate-200 bg-white p-10 text-center text-slate-500 shadow-sm">
         Data tidak ditemukan.
       </div>
     );
   }
-
-  console.log("[operator-debug][DocumentList] render branch: data", {
-    foldersLength: folders.length,
-    documentsLength: documents.length,
-  });
 
   return (
     <div className="space-y-8">
