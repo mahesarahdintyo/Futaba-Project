@@ -4,9 +4,11 @@ import OperatorHeader from "@/components/operator/OperatorHeader";
 import LandSelector from "@/components/operator/LandSelector";
 import SearchBar from "@/components/operator/SearchBar";
 import DocumentList from "@/components/operator/DocumentList";
+import ProductionReportForm from "@/components/operator/ProductionReportForm";
 import { getDocuments, type Document } from "@/lib/services/document";
 import { getFolders, type Folder } from "@/lib/services/folder";
 import { getLands, type Land } from "@/lib/services/land";
+import { ClipboardList, Tv } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 const LAND_STORAGE_KEY = "futaba.operator.selectedLand";
@@ -70,6 +72,7 @@ export default function OperatorPage({
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(initialLands.length === 0);
   const [error, setError] = useState("");
+  const [activeTab, setActiveTab] = useState<"display" | "report">("display");
   const workspaceRequestIdRef = useRef(0);
   const landsRequestIdRef = useRef(0);
   const isMountedRef = useRef(true);
@@ -342,42 +345,84 @@ export default function OperatorPage({
           onChange={handleLandChange}
         />
 
-        <SearchBar value={searchQuery} onChange={setSearchQuery} />
+        {/* Menu Tabs Switcher */}
+        <div className="flex border-b border-slate-200">
+          <button
+            onClick={() => setActiveTab("display")}
+            className={`flex items-center gap-2 border-b-2 px-6 py-3 text-sm font-bold transition-all focus:outline-none cursor-pointer ${
+              activeTab === "display"
+                ? "border-emerald-600 text-emerald-700"
+                : "border-transparent text-slate-500 hover:text-slate-600"
+            }`}
+            type="button"
+          >
+            <Tv className="h-4.5 w-4.5" />
+            Display TV
+          </button>
+          <button
+            onClick={() => setActiveTab("report")}
+            className={`flex items-center gap-2 border-b-2 px-6 py-3 text-sm font-bold transition-all focus:outline-none cursor-pointer ${
+              activeTab === "report"
+                ? "border-emerald-600 text-emerald-700"
+                : "border-transparent text-slate-500 hover:text-slate-600"
+            }`}
+            type="button"
+          >
+            <ClipboardList className="h-4.5 w-4.5" />
+            Laporan Produksi
+          </button>
+        </div>
 
-        {folderPathHistory.length > 0 && !searchQuery && (
-          <div className="flex flex-wrap items-center gap-2 rounded-xl border border-slate-200 bg-white p-3 text-sm text-slate-600 shadow-sm">
-            <button
-              onClick={() => handleNavigateBreadcrumb(-1)}
-              className="font-semibold text-emerald-700 transition hover:text-emerald-800"
-              type="button"
-            >
-              Home
-            </button>
+        {activeTab === "display" ? (
+          <div className="space-y-6">
+            <SearchBar value={searchQuery} onChange={setSearchQuery} />
 
-            {folderPathHistory.map((folder, index) => (
-              <div key={folder.id} className="flex items-center gap-2">
-                <span className="text-slate-400">/</span>
-
+            {folderPathHistory.length > 0 && !searchQuery && (
+              <div className="flex flex-wrap items-center gap-2 rounded-xl border border-slate-200 bg-white p-3 text-sm text-slate-600 shadow-sm">
                 <button
-                  onClick={() => handleNavigateBreadcrumb(index)}
-                  className="font-semibold text-slate-800 transition enabled:text-emerald-700 enabled:hover:text-emerald-800"
-                  disabled={index === folderPathHistory.length - 1}
+                  onClick={() => handleNavigateBreadcrumb(-1)}
+                  className="font-semibold text-emerald-700 transition hover:text-emerald-800"
                   type="button"
                 >
-                  {folder.name}
+                  Home
                 </button>
-              </div>
-            ))}
-          </div>
-        )}
 
-        <DocumentList
-          folders={folders}
-          documents={documents}
-          isLoading={isLoading}
-          error={error}
-          onEnterFolder={handleEnterFolder}
-        />
+                {folderPathHistory.map((folder, index) => (
+                  <div key={folder.id} className="flex items-center gap-2">
+                    <span className="text-slate-400">/</span>
+
+                    <button
+                      onClick={() => handleNavigateBreadcrumb(index)}
+                      className="font-semibold text-slate-800 transition enabled:text-emerald-700 enabled:hover:text-emerald-800"
+                      disabled={index === folderPathHistory.length - 1}
+                      type="button"
+                    >
+                      {folder.name}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <DocumentList
+              folders={folders}
+              documents={documents}
+              isLoading={isLoading}
+              error={error}
+              onEnterFolder={handleEnterFolder}
+            />
+          </div>
+        ) : (
+          selectedLand ? (
+            <div>
+              <ProductionReportForm landId={selectedLand.id} />
+            </div>
+          ) : (
+            <div className="rounded-xl border border-slate-200 bg-white p-10 text-center text-slate-500 shadow-sm">
+              Silakan pilih Line terlebih dahulu untuk mengisi laporan produksi.
+            </div>
+          )
+        )}
       </div>
     </main>
   );
