@@ -13,10 +13,31 @@ export interface ProductionReport {
   break_minutes: number;
   created_at: string;
   updated_at: string;
+  land?: {
+    name: string;
+  } | null;
 }
 
-export async function getProductionReports(landId: string): Promise<ProductionReport[]> {
-  const url = `/api/production-reports?landId=${encodeURIComponent(landId)}`;
+export interface ProductionReportQuery {
+  landId?: string;
+  startDate?: string;
+  endDate?: string;
+}
+
+export async function getProductionReports(query?: ProductionReportQuery): Promise<ProductionReport[]> {
+  const params = new URLSearchParams();
+  if (query?.landId) {
+    params.set("landId", query.landId);
+  }
+  if (query?.startDate) {
+    params.set("startDate", query.startDate);
+  }
+  if (query?.endDate) {
+    params.set("endDate", query.endDate);
+  }
+
+  const queryString = params.toString();
+  const url = `/api/production-reports${queryString ? `?${queryString}` : ""}`;
 
   const response = await fetch(url, {
     cache: "no-store",

@@ -1,25 +1,37 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
-// GET - Fetch production reports for a specific land
+// GET - Fetch production reports with optional filtering (for operator or admin)
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const landId = searchParams.get("landId");
-
-    if (!landId) {
-      return NextResponse.json(
-        { error: "Land ID is required" },
-        { status: 400 }
-      );
-    }
+    const startDate = searchParams.get("startDate");
+    const endDate = searchParams.get("endDate");
 
     const supabase = await createClient();
 
-    const { data: reports, error } = await supabase
+    let query = supabase
       .from("production_reports")
-      .select("*")
-      .eq("land_id", landId)
+      .select(`
+        *,
+        land:lands(name)
+      `);
+
+    // Only filter by land if landId is specified and is not "all"
+    if (landId && landId !== "all" && landId !== "undefined") {
+      query = query.eq("land_id", landId);
+    }
+
+    // Filter by date range if provided
+    if (startDate) {
+      query = query.gte("report_date", startDate);
+    }
+    if (endDate) {
+      query = query.lte("report_date", endDate);
+    }
+
+    const { data: reports, error } = await query
       .order("report_date", { ascending: false })
       .order("created_at", { ascending: false });
 

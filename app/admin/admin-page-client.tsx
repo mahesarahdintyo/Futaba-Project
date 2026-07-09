@@ -11,6 +11,7 @@ import { CreateLandDialog } from '@/components/create-land-dialog'
 import { AdminLandCard } from '@/components/admin-land-card'
 import { AppHeader } from '@/components/app-header'
 import { getLands, type Land } from '@/lib/services/land'
+import ProductionReportsDashboard from '@/components/admin/ProductionReportsDashboard'
 
 interface Document {
   id: string
@@ -88,6 +89,7 @@ export default function Page({ initialLands = [] }: AdminPageProps) {
   const [folderPathHistory, setFolderPathHistory] = useState<BreadcrumbItem[]>([])
   const [isLoading, setIsLoading] = useState(initialLands.length === 0)
   const [error, setError] = useState('')
+  const [activeView, setActiveView] = useState<'workspace' | 'reports'>('workspace')
 
   const persistAdminLocation = (land: Land, history: BreadcrumbItem[]) => {
     window.localStorage.setItem(
@@ -372,187 +374,219 @@ export default function Page({ initialLands = [] }: AdminPageProps) {
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900">
       {/* Header */}
-      <AppHeader>
-        {showLandList ? (
-          <CreateLandDialog onCreateSuccess={loadLands} />
-        ) : selectedLand ? (
-          <>
-            <CreateFolderDialog
-              parentId={currentFolder ? currentFolder.id : null}
-              landId={selectedLand.id}
-              onCreateSuccess={handleCreateFolderSuccess}
-            />
-            <UploadDialog
-              folderId={currentFolder ? currentFolder.id : null}
-              landId={selectedLand.id}
-              onUploadSuccess={handleUploadSuccess}
-            />
-          </>
-        ) : null}
+      <AppHeader
+        logoAside={
+          <div className="flex items-center gap-1 sm:gap-2 ml-2 sm:ml-4 border-l border-gray-200 pl-2 sm:pl-4 select-none">
+            <button
+              onClick={() => setActiveView('workspace')}
+              className={`px-3 py-1.5 rounded-lg text-sm font-bold transition duration-200 cursor-pointer ${
+                activeView === 'workspace'
+                  ? 'bg-blue-50 text-blue-700 font-extrabold border border-blue-100'
+                  : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'
+              }`}
+            >
+              Workspace
+            </button>
+            <button
+              onClick={() => setActiveView('reports')}
+              className={`px-3 py-1.5 rounded-lg text-sm font-bold transition duration-200 cursor-pointer ${
+                activeView === 'reports'
+                  ? 'bg-blue-50 text-blue-700 font-extrabold border border-blue-100'
+                  : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'
+              }`}
+            >
+              Laporan Produksi
+            </button>
+          </div>
+        }
+      >
+        {activeView === 'workspace' && (
+          showLandList ? (
+            <CreateLandDialog onCreateSuccess={loadLands} />
+          ) : selectedLand ? (
+            <>
+              <CreateFolderDialog
+                parentId={currentFolder ? currentFolder.id : null}
+                landId={selectedLand.id}
+                onCreateSuccess={handleCreateFolderSuccess}
+              />
+              <UploadDialog
+                folderId={currentFolder ? currentFolder.id : null}
+                landId={selectedLand.id}
+                onUploadSuccess={handleUploadSuccess}
+              />
+            </>
+          ) : null
+        )}
       </AppHeader>
 
       {/* Main Content */}
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {activeView === 'reports' ? (
+          <ProductionReportsDashboard />
+        ) : (
+          <>
+            {/* Search Bar */}
+            <div className="mb-6">
+              <SearchBar
+                value={searchQuery}
+                onChange={setSearchQuery}
+                placeholder={
+                  showLandList
+                    ? 'Cari card berdasarkan nama atau deskripsi...'
+                    : 'Cari folder atau dokumen berdasarkan nama...'
+                }
+              />
+            </div>
 
-        {/* Search Bar */}
-        <div className="mb-6">
-          <SearchBar
-            value={searchQuery}
-            onChange={setSearchQuery}
-            placeholder={
-              showLandList
-                ? 'Cari card berdasarkan nama atau deskripsi...'
-                : 'Cari folder atau dokumen berdasarkan nama...'
-            }
-          />
-        </div>
+            {/* Breadcrumb Navigation */}
+            {(!showLandList && selectedLand) && (
+              <div className="flex items-center flex-wrap gap-2 text-sm text-gray-600 mb-6 bg-white p-3 rounded-lg border border-gray-200 shadow-sm select-none">
 
-        {/* Breadcrumb Navigation */}
-        {(!showLandList && selectedLand) && (
-          <div className="flex items-center flex-wrap gap-2 text-sm text-gray-600 mb-6 bg-white p-3 rounded-lg border border-gray-200 shadow-sm select-none">
+                <button
+                  onClick={() => handleNavigateBreadcrumb(-1)}
+                  className="font-semibold text-blue-600 hover:text-blue-700 transition-colors"
+                >
+                  Home
+                </button>
 
-            <button
-              onClick={() => handleNavigateBreadcrumb(-1)}
-              className="font-semibold text-blue-600 hover:text-blue-700 transition-colors"
-            >
-              Home
-            </button>
-
-            <ChevronRight className="w-4 h-4 text-gray-400" />
-
-            <button
-              onClick={handleNavigateLandRoot}
-              disabled={folderPathHistory.length === 0}
-              className={`font-semibold transition-colors ${folderPathHistory.length === 0
-                  ? 'text-gray-800 cursor-default'
-                  : 'text-blue-600 hover:text-blue-700'
-                }`}
-            >
-              {selectedLand.name}
-            </button>
-
-            {folderPathHistory.map((folder, index) => (
-              <div key={folder.id} className="flex items-center gap-2">
                 <ChevronRight className="w-4 h-4 text-gray-400" />
 
                 <button
-                  onClick={() => handleNavigateBreadcrumb(index)}
-                  disabled={index === folderPathHistory.length - 1}
-                  className={`font-semibold transition-colors ${index === folderPathHistory.length - 1
+                  onClick={handleNavigateLandRoot}
+                  disabled={folderPathHistory.length === 0}
+                  className={`font-semibold transition-colors ${folderPathHistory.length === 0
                       ? 'text-gray-800 cursor-default'
                       : 'text-blue-600 hover:text-blue-700'
                     }`}
                 >
-                  {folder.name}
+                  {selectedLand.name}
                 </button>
+
+                {folderPathHistory.map((folder, index) => (
+                  <div key={folder.id} className="flex items-center gap-2">
+                    <ChevronRight className="w-4 h-4 text-gray-400" />
+
+                    <button
+                      onClick={() => handleNavigateBreadcrumb(index)}
+                      disabled={index === folderPathHistory.length - 1}
+                      className={`font-semibold transition-colors ${index === folderPathHistory.length - 1
+                          ? 'text-gray-800 cursor-default'
+                          : 'text-blue-600 hover:text-blue-700'
+                        }`}
+                    >
+                      {folder.name}
+                    </button>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-        )}
-
-        {showLandList && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-            {filteredLands.map((land) => (
-              <AdminLandCard
-                key={land.id}
-                land={land}
-                onEnter={handleEnterLand}
-                onChangeSuccess={loadLands}
-              />
-            ))}
-          </div>
-        )}
-
-        {showLandList && !isLoading && filteredLands.length === 0 && (
-          <div className="text-center py-16 bg-white rounded-lg border border-gray-200 shadow-sm">
-            <p className="text-gray-400 text-lg font-medium">
-              {searchQuery ? 'Tidak ada card yang cocok' : 'Belum ada card'}
-            </p>
-            {!searchQuery && (
-              <p className="text-gray-400 text-xs mt-1">
-                Buat card baru untuk memulai
-              </p>
             )}
-          </div>
-        )}
 
-        {/* Folder List Grid */}
-        {!showLandList && !isLoading && filteredFolders.length > 0 && (
-          <div className="mb-8">
-            <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">
-              Folder ({filteredFolders.length})
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-              {filteredFolders.map((folder) => (
-                <FolderCard
-                  key={folder.id}
-                  id={folder.id}
-                  name={folder.name}
-                  itemCount={folder.item_count}
-                  onEnter={handleEnterFolder}
-                  onDeleteSuccess={handleFolderDeleteSuccess}
-                />
-              ))}
-            </div>
-          </div>
-        )}
+            {showLandList && (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                {filteredLands.map((land) => (
+                  <AdminLandCard
+                    key={land.id}
+                    land={land}
+                    onEnter={handleEnterLand}
+                    onChangeSuccess={loadLands}
+                  />
+                ))}
+              </div>
+            )}
 
-        {/* Documents List */}
-        <div className="space-y-3">
-          {!showLandList && !isLoading && filteredDocuments.length > 0 && (
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">
-                Dokumen ({filteredDocuments.length})
-              </h3>
-            </div>
-          )}
-
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm mb-4">
-              {error}
-            </div>
-          )}
-
-          {!showLandList && isLoading ? (
-            <div className="text-center py-12">
-              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-              <p className="text-gray-600 mt-4 text-sm">Memuat data...</p>
-            </div>
-          ) : !showLandList && filteredDocuments.length > 0 ? (
-            <div className="space-y-3">
-              {filteredDocuments.map((doc) => (
-                <DocumentCard
-                  key={doc.id}
-                  id={doc.id}
-                  landId={doc.landId}
-                  title={doc.title}
-                  description={doc.description}
-                  category={doc.category}
-                  type={doc.type}
-                  file={doc.file}
-                  targetTime={doc.targetTime}
-                  hiddenFromOperator={doc.hiddenFromOperator}
-                  onDelete={handleDeleteSuccess}
-                  onVisibilityChange={handleVisibilityChange}
-                />
-              ))}
-            </div>
-          ) : null}
-
-          {/* Empty State */}
-          {!showLandList && !isLoading && showEmptyState && (
-            <div className="text-center py-16 bg-white rounded-lg border border-gray-200 shadow-sm">
-              <p className="text-gray-400 text-lg font-medium">
-                {searchQuery ? 'Tidak ada kecocokan pencarian' : 'Folder ini kosong'}
-              </p>
-              {!searchQuery && (
-                <p className="text-gray-400 text-xs mt-1">
-                  Buat folder baru atau unggah dokumen di atas untuk memulai
+            {showLandList && !isLoading && filteredLands.length === 0 && (
+              <div className="text-center py-16 bg-white rounded-lg border border-gray-200 shadow-sm">
+                <p className="text-gray-400 text-lg font-medium">
+                  {searchQuery ? 'Tidak ada card yang cocok' : 'Belum ada card'}
                 </p>
+                {!searchQuery && (
+                  <p className="text-gray-400 text-xs mt-1">
+                    Buat card baru untuk memulai
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* Folder List Grid */}
+            {!showLandList && !isLoading && filteredFolders.length > 0 && (
+              <div className="mb-8">
+                <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">
+                  Folder ({filteredFolders.length})
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                  {filteredFolders.map((folder) => (
+                    <FolderCard
+                      key={folder.id}
+                      id={folder.id}
+                      name={folder.name}
+                      itemCount={folder.item_count}
+                      onEnter={handleEnterFolder}
+                      onDeleteSuccess={handleFolderDeleteSuccess}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Documents List */}
+            <div className="space-y-3">
+              {!showLandList && !isLoading && filteredDocuments.length > 0 && (
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">
+                    Dokumen ({filteredDocuments.length})
+                  </h3>
+                </div>
+              )}
+
+              {error && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm mb-4">
+                  {error}
+                </div>
+              )}
+
+              {!showLandList && isLoading ? (
+                <div className="text-center py-12">
+                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                  <p className="text-gray-600 mt-4 text-sm">Memuat data...</p>
+                </div>
+              ) : !showLandList && filteredDocuments.length > 0 ? (
+                <div className="space-y-3">
+                  {filteredDocuments.map((doc) => (
+                    <DocumentCard
+                      key={doc.id}
+                      id={doc.id}
+                      landId={doc.landId}
+                      title={doc.title}
+                      description={doc.description}
+                      category={doc.category}
+                      type={doc.type}
+                      file={doc.file}
+                      targetTime={doc.targetTime}
+                      hiddenFromOperator={doc.hiddenFromOperator}
+                      onDelete={handleDeleteSuccess}
+                      onVisibilityChange={handleVisibilityChange}
+                    />
+                  ))}
+                </div>
+              ) : null}
+
+              {/* Empty State */}
+              {!showLandList && !isLoading && showEmptyState && (
+                <div className="text-center py-16 bg-white rounded-lg border border-gray-200 shadow-sm">
+                  <p className="text-gray-400 text-lg font-medium">
+                    {searchQuery ? 'Tidak ada kecocokan pencarian' : 'Folder ini kosong'}
+                  </p>
+                  {!searchQuery && (
+                    <p className="text-gray-400 text-xs mt-1">
+                      Buat folder baru atau unggah dokumen di atas untuk memulai
+                    </p>
+                  )}
+                </div>
               )}
             </div>
-          )}
-        </div>
+          </>
+        )}
       </main>
 
       {/* Footer */}
