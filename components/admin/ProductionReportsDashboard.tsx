@@ -15,6 +15,9 @@ import {
   X,
   Layers,
   ChevronDown,
+  Eye,
+  Copy,
+  Check,
 } from "lucide-react";
 import { getLands, type Land } from "@/lib/services/land";
 import {
@@ -41,6 +44,10 @@ export default function ProductionReportsDashboard() {
   const [deleteTarget, setDeleteTarget] = useState<ProductionReport | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
+
+  // Modal Detail state
+  const [detailReport, setDetailReport] = useState<ProductionReport | null>(null);
+  const [isCopied, setIsCopied] = useState(false);
 
   // Load lands and initial reports
   const loadInitialData = async () => {
@@ -240,7 +247,7 @@ export default function ProductionReportsDashboard() {
     return timeStr;
   };
 
-  // Helper formatting date
+  // Helper formatting date to standard dd/mm/yyyy
   const formatDate = (dateStr: string) => {
     if (!dateStr) return "-";
     const [year, month, day] = dateStr.split("-");
@@ -248,6 +255,52 @@ export default function ProductionReportsDashboard() {
       return `${day}/${month}/${year}`;
     }
     return dateStr;
+  };
+
+  // Helper formatting date to Indonesian representation (e.g. 09 Juli 2026)
+  const formatDateIndo = (dateStr: string) => {
+    if (!dateStr) return "-";
+    const [year, month, day] = dateStr.split("-");
+    if (!year || !month || !day) return dateStr;
+    
+    const months = [
+      "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+      "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+    ];
+    
+    const monthIndex = parseInt(month, 10) - 1;
+    const monthName = months[monthIndex] ?? month;
+    
+    return `${day} ${monthName} ${year}`;
+  };
+
+  // Copy receipt text to clipboard
+  const handleCopyDetail = () => {
+    if (!detailReport) return;
+    const landName = detailReport.land?.name ?? "Unknown Line";
+    const breakMin = detailReport.break_minutes > 0 ? `${detailReport.break_minutes} Menit` : "-";
+    const ngCat = detailReport.ng_category ?? "-";
+    
+    const text = `===================================
+LAPORAN PRODUKSI
+-----------------------------------
+Tanggal: ${formatDateIndo(detailReport.report_date)}
+Operator: ${detailReport.operator_name}
+Line: ${landName}
+Shift: ${detailReport.shift}
+Part Number: ${detailReport.part_number}
+Qty Total: ${detailReport.qty}
+Qty OK: ${detailReport.qty - detailReport.ng_qty}
+Qty NG: ${detailReport.ng_qty}
+Kategori NG: ${ngCat}
+Jam Awal: ${formatTime(detailReport.start_time)}
+Jam Akhir: ${formatTime(detailReport.end_time)}
+Istirahat: ${breakMin}
+===================================`;
+
+    navigator.clipboard.writeText(text);
+    setIsCopied(true);
+    setTimeout(() => setIsCopied(false), 2000);
   };
 
   return (
@@ -266,7 +319,7 @@ export default function ProductionReportsDashboard() {
           <Button
             onClick={handleRefresh}
             variant="outline"
-            className="h-10 border-slate-300 hover:bg-slate-50 flex items-center gap-2"
+            className="h-10 border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900 flex items-center gap-2 cursor-pointer dark:bg-white dark:text-slate-700 dark:hover:bg-slate-50 dark:border-slate-300"
           >
             <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
             Perbarui
@@ -274,7 +327,7 @@ export default function ProductionReportsDashboard() {
           <Button
             onClick={handleExportCSV}
             disabled={filteredReports.length === 0}
-            className="h-10 bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-2"
+            className="h-10 bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-2 cursor-pointer"
           >
             <Download className="h-4 w-4" />
             Ekspor CSV
@@ -618,16 +671,26 @@ export default function ProductionReportsDashboard() {
                         </span>
                       </td>
 
-                      {/* Aksi Hapus */}
+                      {/* Aksi Detail & Hapus */}
                       <td className="py-3.5 px-4 text-center whitespace-nowrap">
-                        <button
-                          type="button"
-                          onClick={() => setDeleteTarget(report)}
-                          className="inline-flex items-center justify-center h-8 w-8 rounded text-slate-400 hover:text-red-600 hover:bg-red-50 transition cursor-pointer"
-                          title="Hapus Laporan"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
+                        <div className="flex items-center justify-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => setDetailReport(report)}
+                            className="inline-flex items-center justify-center h-8 w-8 rounded text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition cursor-pointer"
+                            title="Lihat Detail"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setDeleteTarget(report)}
+                            className="inline-flex items-center justify-center h-8 w-8 rounded text-slate-400 hover:text-red-600 hover:bg-red-50 transition cursor-pointer"
+                            title="Hapus Laporan"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -638,7 +701,153 @@ export default function ProductionReportsDashboard() {
         )}
       </div>
 
-      {/* Delete Confirmation Modal (Backdrop Blur Modal) */}
+      {/* Detail Laporan Modal (Modern Light Theme Modal) */}
+      {detailReport && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs transition-opacity animate-fadeIn">
+          <div className="relative w-full max-w-lg rounded-2xl bg-white border border-slate-200 shadow-2xl p-6 select-text overflow-hidden animate-scaleIn text-slate-800">
+            {/* Header */}
+            <div className="flex items-start justify-between border-b border-slate-100 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-xl bg-blue-50 border border-blue-100 text-blue-600 flex items-center justify-center">
+                  <Layers className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-slate-900">Detail Laporan Produksi</h3>
+                  <p className="text-xs text-slate-500">Informasi lengkap laporan yang diisi oleh operator.</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setDetailReport(null)}
+                className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition cursor-pointer"
+                aria-label="Tutup"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Grid Content */}
+            <div className="py-5 space-y-6">
+              
+              {/* Section 1: Informasi Umum */}
+              <div className="grid grid-cols-2 gap-4 bg-slate-50/50 p-4 rounded-xl border border-slate-100">
+                <div>
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider select-none">Tanggal</span>
+                  <div className="text-sm font-semibold text-slate-800 mt-1">{formatDateIndo(detailReport.report_date)}</div>
+                </div>
+                <div>
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider select-none">Operator</span>
+                  <div className="text-sm font-semibold text-slate-800 mt-1">{detailReport.operator_name}</div>
+                </div>
+                <div>
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider select-none">Line (Card)</span>
+                  <div className="text-sm font-semibold text-slate-800 mt-1">{detailReport.land?.name ?? "Unknown Line"}</div>
+                </div>
+                <div>
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider select-none">Shift</span>
+                  <div className="mt-1">
+                    <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold ${
+                      detailReport.shift === "Shift 1"
+                        ? "bg-sky-50 text-sky-700 border border-sky-100"
+                        : "bg-indigo-50 text-indigo-700 border border-indigo-100"
+                    }`}>
+                      {detailReport.shift}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Section 2: Hasil Produksi */}
+              <div className="space-y-4">
+                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider select-none">Hasil Produksi & Kualitas</h4>
+                
+                <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                  <span className="text-sm text-slate-600 font-medium">Part Number</span>
+                  <span className="text-sm font-bold text-slate-800">{detailReport.part_number}</span>
+                </div>
+
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="bg-blue-50/30 border border-blue-100/50 rounded-xl p-3 text-center">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider select-none">Total Qty</span>
+                    <div className="text-xl font-bold text-blue-700 mt-1">{detailReport.qty}</div>
+                  </div>
+                  <div className="bg-emerald-50/50 border border-emerald-100 rounded-xl p-3 text-center">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider select-none">Qty OK</span>
+                    <div className="text-xl font-bold text-emerald-700 mt-1">{detailReport.qty - detailReport.ng_qty}</div>
+                  </div>
+                  <div className="bg-rose-50/50 border border-rose-100 rounded-xl p-3 text-center">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider select-none">Qty NG</span>
+                    <div className="text-xl font-bold text-rose-700 mt-1">{detailReport.ng_qty}</div>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between border-b border-slate-100 pb-2 pt-2">
+                  <span className="text-sm text-slate-600 font-medium">NG Rate / Persentase Cacat</span>
+                  <span className={`text-sm font-bold ${detailReport.ng_qty > 0 ? "text-rose-600" : "text-slate-800"}`}>
+                    {(detailReport.qty > 0 ? (detailReport.ng_qty / detailReport.qty) * 100 : 0).toFixed(1)}%
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                  <span className="text-sm text-slate-600 font-medium">Kategori NG</span>
+                  <span className="text-sm font-bold text-slate-800">{detailReport.ng_category ?? "-"}</span>
+                </div>
+              </div>
+
+              {/* Section 3: Waktu Kerja */}
+              <div className="space-y-4">
+                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider select-none">Waktu & Efisiensi</h4>
+                <div className="grid grid-cols-3 gap-4 bg-slate-50/50 p-4 rounded-xl border border-slate-100">
+                  <div>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider select-none">Jam Awal</span>
+                    <div className="text-sm font-semibold text-slate-800 mt-1">{formatTime(detailReport.start_time)}</div>
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider select-none">Jam Akhir</span>
+                    <div className="text-sm font-semibold text-slate-800 mt-1">{formatTime(detailReport.end_time)}</div>
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider select-none">Istirahat</span>
+                    <div className="text-sm font-semibold text-slate-800 mt-1">
+                      {detailReport.break_minutes > 0 ? `${detailReport.break_minutes} Menit` : "-"}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            {/* Footer Actions */}
+            <div className="border-t border-slate-100 pt-4 flex gap-3">
+              <button
+                type="button"
+                onClick={handleCopyDetail}
+                className="flex-1 h-10 border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-xl transition duration-200 cursor-pointer flex items-center justify-center gap-2"
+              >
+                {isCopied ? (
+                  <>
+                    <Check className="h-4 w-4 text-emerald-600" />
+                    <span className="text-emerald-600">Tersalin!</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="h-4 w-4" />
+                    <span>Salin Laporan</span>
+                  </>
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={() => setDetailReport(null)}
+                className="flex-1 h-10 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl transition duration-200 cursor-pointer text-center"
+              >
+                Tutup
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
       {deleteTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs transition-opacity animate-fadeIn">
           <div className="relative w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-xl animate-scaleIn">
