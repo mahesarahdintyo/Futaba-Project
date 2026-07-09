@@ -55,9 +55,9 @@ function readAdminLocation(): AdminLocationState | null {
     const location = JSON.parse(rawLocation) as Partial<AdminLocationState>
     const folderPathHistory = Array.isArray(location.folderPathHistory)
       ? location.folderPathHistory.filter(
-          (folder): folder is BreadcrumbItem =>
-            typeof folder?.id === 'number' && typeof folder?.name === 'string'
-        )
+        (folder): folder is BreadcrumbItem =>
+          typeof folder?.id === 'number' && typeof folder?.name === 'string'
+      )
       : []
 
     if (typeof location.landId !== 'string') {
@@ -175,7 +175,7 @@ export default function Page({ initialLands = [] }: AdminPageProps) {
     setSearchQuery('')
     persistAdminLocation(land, [])
   }
-  
+
   // Fetch documents and folders whenever the current folder or search changes
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
@@ -186,25 +186,25 @@ export default function Page({ initialLands = [] }: AdminPageProps) {
   }, [selectedLand, showLandList, currentFolder, searchQuery])
 
   const fetchWorkspaceData = async (searchTerm = '') => {
-  if (showLandList || !selectedLand) {
-    setIsLoading(false)
-    return
-  }
+    if (showLandList || !selectedLand) {
+      setIsLoading(false)
+      return
+    }
 
-  try {
-    setIsLoading(true)
-    setError('')
+    try {
+      setIsLoading(true)
+      setError('')
 
-    await Promise.all([
-      fetchDocuments(searchTerm),
-      fetchFolders(searchTerm)
-    ])
-  } catch (err) {
-    console.error(err)
-  } finally {
-    setIsLoading(false)
+      await Promise.all([
+        fetchDocuments(searchTerm),
+        fetchFolders(searchTerm)
+      ])
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setIsLoading(false)
+    }
   }
-}
 
   const fetchDocuments = async (searchTerm = searchQuery.trim()) => {
     if (!selectedLand) return
@@ -222,7 +222,7 @@ export default function Page({ initialLands = [] }: AdminPageProps) {
       }
 
       const url = `/api/documents?${params.toString()}`
-      
+
       const response = await fetch(url)
       if (!response.ok) {
         throw new Error('Gagal mengambil data dokumen')
@@ -252,7 +252,7 @@ export default function Page({ initialLands = [] }: AdminPageProps) {
       }
 
       const url = `/api/folders?${params.toString()}`
-      
+
       const response = await fetch(url)
       if (!response.ok) {
         throw new Error('Gagal mengambil data folder')
@@ -266,13 +266,13 @@ export default function Page({ initialLands = [] }: AdminPageProps) {
     }
   }
 
-const handleUploadSuccess = () => {
-  fetchWorkspaceData()
-}
+  const handleUploadSuccess = () => {
+    fetchWorkspaceData()
+  }
 
-const handleCreateFolderSuccess = () => {
-  fetchWorkspaceData()
-}
+  const handleCreateFolderSuccess = () => {
+    fetchWorkspaceData()
+  }
 
   const handleDeleteSuccess = (deletedId: string) => {
     setDocuments(documents.filter(doc => doc.id !== deletedId))
@@ -288,39 +288,39 @@ const handleCreateFolderSuccess = () => {
     )
   }
 
-const handleEnterFolder = (id: number, name: string) => {
-  const newHistory = [...folderPathHistory, { id, name }]
+  const handleEnterFolder = (id: number, name: string) => {
+    const newHistory = [...folderPathHistory, { id, name }]
 
-  setFolderPathHistory(newHistory)
-  setCurrentFolder({ id, name })
-  setSearchQuery('')
+    setFolderPathHistory(newHistory)
+    setCurrentFolder({ id, name })
+    setSearchQuery('')
 
-  if (selectedLand) {
-    persistAdminLocation(selectedLand, newHistory)
+    if (selectedLand) {
+      persistAdminLocation(selectedLand, newHistory)
+    }
   }
-}
 
   const handleNavigateBreadcrumb = (index: number) => {
-  if (index === -1) {
-    setShowLandList(true)
-    setSelectedLand(null)
-    setCurrentFolder(null)
-    setFolderPathHistory([])
+    if (index === -1) {
+      setShowLandList(true)
+      setSelectedLand(null)
+      setCurrentFolder(null)
+      setFolderPathHistory([])
+      setSearchQuery('')
+      clearAdminLocation()
+      return
+    }
+
+    const newHistory = folderPathHistory.slice(0, index + 1)
+
+    setFolderPathHistory(newHistory)
+    setCurrentFolder(newHistory[newHistory.length - 1])
     setSearchQuery('')
-    clearAdminLocation()
-    return
+
+    if (selectedLand) {
+      persistAdminLocation(selectedLand, newHistory)
+    }
   }
-
-  const newHistory = folderPathHistory.slice(0, index + 1)
-
-  setFolderPathHistory(newHistory)
-  setCurrentFolder(newHistory[newHistory.length - 1])
-  setSearchQuery('')
-
-  if (selectedLand) {
-    persistAdminLocation(selectedLand, newHistory)
-  }
-}
 
   const handleNavigateLandRoot = () => {
     setCurrentFolder(null)
@@ -362,7 +362,7 @@ const handleEnterFolder = (id: number, name: string) => {
   // Filter folders by search query (only at UI level when searching)
   const filteredFolders = useMemo(() => {
     if (!searchQuery) return folders
-    return folders.filter((folder) => 
+    return folders.filter((folder) =>
       folder.name.toLowerCase().includes(searchQuery.toLowerCase())
     )
   }, [searchQuery, folders])
@@ -377,12 +377,12 @@ const handleEnterFolder = (id: number, name: string) => {
           <CreateLandDialog onCreateSuccess={loadLands} />
         ) : selectedLand ? (
           <>
-            <CreateFolderDialog 
+            <CreateFolderDialog
               parentId={currentFolder ? currentFolder.id : null}
               landId={selectedLand.id}
               onCreateSuccess={handleCreateFolderSuccess}
             />
-            <UploadDialog 
+            <UploadDialog
               folderId={currentFolder ? currentFolder.id : null}
               landId={selectedLand.id}
               onUploadSuccess={handleUploadSuccess}
@@ -408,75 +408,73 @@ const handleEnterFolder = (id: number, name: string) => {
         </div>
 
         {/* Breadcrumb Navigation */}
-{(!showLandList && selectedLand) && (
-  <div className="flex items-center flex-wrap gap-2 text-sm text-gray-600 mb-6 bg-white p-3 rounded-lg border border-gray-200 shadow-sm select-none">
+        {(!showLandList && selectedLand) && (
+          <div className="flex items-center flex-wrap gap-2 text-sm text-gray-600 mb-6 bg-white p-3 rounded-lg border border-gray-200 shadow-sm select-none">
 
-    <button
-      onClick={() => handleNavigateBreadcrumb(-1)}
-      className="font-semibold text-blue-600 hover:text-blue-700 transition-colors"
-    >
-      Home
-    </button>
+            <button
+              onClick={() => handleNavigateBreadcrumb(-1)}
+              className="font-semibold text-blue-600 hover:text-blue-700 transition-colors"
+            >
+              Home
+            </button>
 
-    <ChevronRight className="w-4 h-4 text-gray-400" />
+            <ChevronRight className="w-4 h-4 text-gray-400" />
 
-    <button
-      onClick={handleNavigateLandRoot}
-      disabled={folderPathHistory.length === 0}
-      className={`font-semibold transition-colors ${
-        folderPathHistory.length === 0
-          ? 'text-gray-800 cursor-default'
-          : 'text-blue-600 hover:text-blue-700'
-      }`}
-    >
-      {selectedLand.name}
-    </button>
+            <button
+              onClick={handleNavigateLandRoot}
+              disabled={folderPathHistory.length === 0}
+              className={`font-semibold transition-colors ${folderPathHistory.length === 0
+                  ? 'text-gray-800 cursor-default'
+                  : 'text-blue-600 hover:text-blue-700'
+                }`}
+            >
+              {selectedLand.name}
+            </button>
 
-    {folderPathHistory.map((folder, index) => (
-      <div key={folder.id} className="flex items-center gap-2">
-        <ChevronRight className="w-4 h-4 text-gray-400" />
+            {folderPathHistory.map((folder, index) => (
+              <div key={folder.id} className="flex items-center gap-2">
+                <ChevronRight className="w-4 h-4 text-gray-400" />
 
-        <button
-          onClick={() => handleNavigateBreadcrumb(index)}
-          disabled={index === folderPathHistory.length - 1}
-          className={`font-semibold transition-colors ${
-            index === folderPathHistory.length - 1
-              ? 'text-gray-800 cursor-default'
-              : 'text-blue-600 hover:text-blue-700'
-          }`}
-        >
-          {folder.name}
-        </button>
-      </div>
-    ))}
-  </div>
-)}
+                <button
+                  onClick={() => handleNavigateBreadcrumb(index)}
+                  disabled={index === folderPathHistory.length - 1}
+                  className={`font-semibold transition-colors ${index === folderPathHistory.length - 1
+                      ? 'text-gray-800 cursor-default'
+                      : 'text-blue-600 hover:text-blue-700'
+                    }`}
+                >
+                  {folder.name}
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
 
-{showLandList && (
-  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-    {filteredLands.map((land) => (
-      <AdminLandCard
-        key={land.id}
-        land={land}
-        onEnter={handleEnterLand}
-        onChangeSuccess={loadLands}
-      />
-    ))}
-  </div>
-)}
+        {showLandList && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            {filteredLands.map((land) => (
+              <AdminLandCard
+                key={land.id}
+                land={land}
+                onEnter={handleEnterLand}
+                onChangeSuccess={loadLands}
+              />
+            ))}
+          </div>
+        )}
 
-{showLandList && !isLoading && filteredLands.length === 0 && (
-  <div className="text-center py-16 bg-white rounded-lg border border-gray-200 shadow-sm">
-    <p className="text-gray-400 text-lg font-medium">
-      {searchQuery ? 'Tidak ada card yang cocok' : 'Belum ada card'}
-    </p>
-    {!searchQuery && (
-      <p className="text-gray-400 text-xs mt-1">
-        Buat card baru untuk memulai
-      </p>
-    )}
-  </div>
-)}
+        {showLandList && !isLoading && filteredLands.length === 0 && (
+          <div className="text-center py-16 bg-white rounded-lg border border-gray-200 shadow-sm">
+            <p className="text-gray-400 text-lg font-medium">
+              {searchQuery ? 'Tidak ada card yang cocok' : 'Belum ada card'}
+            </p>
+            {!searchQuery && (
+              <p className="text-gray-400 text-xs mt-1">
+                Buat card baru untuk memulai
+              </p>
+            )}
+          </div>
+        )}
 
         {/* Folder List Grid */}
         {!showLandList && !isLoading && filteredFolders.length > 0 && (

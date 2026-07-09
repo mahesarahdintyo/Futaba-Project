@@ -1,121 +1,325 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
-  Activity,
   AlertTriangle,
-  Calendar,
+  CalendarDays,
   CheckCircle,
-  Clock,
-  FileText,
+  ChevronDown,
   Loader2,
-  Trash2,
-  User,
-  Users,
+  Minus,
+  Pencil,
+  Plus,
+  TimerReset,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  createProductionReport,
-  deleteProductionReport,
-  getProductionReports,
-  type ProductionReport,
-} from "@/lib/services/production-report";
+import { createProductionReport } from "@/lib/services/production-report";
 
 interface ProductionReportFormProps {
   landId: string;
 }
 
-export default function ProductionReportForm({ landId }: ProductionReportFormProps) {
-  const getTodayDateString = () => {
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = String(today.getMonth() + 1).padStart(2, "0");
-    const day = String(today.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
+interface DateTimeFieldProps {
+  id: string;
+  label: string;
+  date: string;
+  time: string;
+  isEditing: boolean;
+  disabled?: boolean;
+  placeholder?: string;
+  onEdit: () => void;
+  onChange: (value: string) => void;
+}
+
+interface NumericStepperProps {
+  label: string;
+  value: number;
+  onChange: (value: number) => void;
+}
+
+interface ChoiceRowProps {
+  label: string;
+  value: "1" | "2";
+  onChange: (value: "1" | "2") => void;
+}
+
+const PART_NUMBER_OPTIONS = [
+  "FTB-001-A",
+  "FTB-002-B",
+  "FTB-003-C",
+];
+
+function padTime(value: number) {
+  return String(value).padStart(2, "0");
+}
+
+function getDateString(date: Date) {
+  const year = date.getFullYear();
+  const month = padTime(date.getMonth() + 1);
+  const day = padTime(date.getDate());
+  return `${year}-${month}-${day}`;
+}
+
+function getTimeString(date: Date) {
+  const hours = padTime(date.getHours());
+  const minutes = padTime(date.getMinutes());
+  const seconds = padTime(date.getSeconds());
+  return `${hours}:${minutes}:${seconds}`;
+}
+
+function normalizeTime(time: string) {
+  const [hours = "00", minutes = "00", seconds = "00"] = time.split(":");
+  return `${hours.padStart(2, "0")}:${minutes.padStart(2, "0")}:${seconds.padStart(2, "0")}`;
+}
+
+function formatDateTimeDisplay(dateString: string, timeString: string) {
+  if (!dateString || !timeString) return "";
+
+  const [year, month, day] = dateString.split("-").map(Number);
+  const [hours, minutes, seconds] = normalizeTime(timeString).split(":").map(Number);
+  const period = hours >= 12 ? "PM" : "AM";
+  const displayHours = hours % 12 || 12;
+
+  return `${padTime(month)}/${padTime(day)}/${year} ${padTime(displayHours)}:${padTime(minutes)}:${padTime(seconds)} ${period}`;
+}
+
+function getDateTimeInputValue(dateString: string, timeString: string) {
+  if (!dateString || !timeString) return "";
+  return `${dateString}T${normalizeTime(timeString)}`;
+}
+
+function parseDateTimeInput(value: string) {
+  const [dateString, rawTime = ""] = value.split("T");
+  return {
+    date: dateString,
+    time: normalizeTime(rawTime),
+  };
+}
+
+function DateTimeField({
+  id,
+  label,
+  date,
+  time,
+  isEditing,
+  disabled = false,
+  placeholder = "--/--/---- --:--:-- --",
+  onEdit,
+  onChange,
+}: DateTimeFieldProps) {
+  const displayValue = formatDateTimeDisplay(date, time);
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between gap-3">
+        <label htmlFor={id} className="text-xs font-semibold uppercase tracking-wide text-slate-600">
+          {label}
+        </label>
+        <button
+          type="button"
+          onClick={onEdit}
+          disabled={disabled}
+          className="inline-flex h-7 items-center gap-1.5 rounded border border-slate-200 bg-white px-2.5 text-xs font-semibold text-slate-600 transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          <Pencil className="h-3.5 w-3.5" />
+          Edit
+        </button>
+      </div>
+
+      <div className="relative">
+        {isEditing ? (
+          <input
+            id={id}
+            type="datetime-local"
+            step="1"
+            value={getDateTimeInputValue(date, time)}
+            onChange={(event) => onChange(event.target.value)}
+            disabled={disabled}
+            className="h-12 w-full rounded border border-slate-300 bg-white px-4 pr-11 text-base text-slate-950 outline-none transition focus:border-emerald-500 focus:ring-3 focus:ring-emerald-100 disabled:bg-slate-50 disabled:text-slate-400"
+          />
+        ) : (
+          <input
+            id={id}
+            type="text"
+            value={displayValue}
+            placeholder={placeholder}
+            readOnly
+            className="h-12 w-full rounded border border-slate-300 bg-white px-4 pr-11 text-base font-medium text-slate-950 outline-none placeholder:text-slate-400"
+          />
+        )}
+        <CalendarDays className="pointer-events-none absolute right-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-500" />
+      </div>
+    </div>
+  );
+}
+
+function NumericStepper({ label, value, onChange }: NumericStepperProps) {
+  const updateValue = (nextValue: number) => {
+    onChange(Math.max(0, nextValue));
   };
 
-  // Form State
-  const [reportDate, setReportDate] = useState(getTodayDateString());
-  const [operatorName, setOperatorName] = useState("");
-  
-  // New Fields requested:
-  const [startTime, setStartTime] = useState("08:00");
-  const [endTime, setEndTime] = useState("16:00");
-  const [partNumber, setPartNumber] = useState("");
-  const [qty, setQty] = useState<number>(0);
-  const [ngQty, setNgQty] = useState<number>(0);
-  const [ngCategory, setNgCategory] = useState("");
-  const [breakMinutes, setBreakMinutes] = useState<number>(0);
+  return (
+    <div className="grid grid-cols-[96px_minmax(0,1fr)] items-center gap-4">
+      <label className="text-sm font-semibold uppercase tracking-wide text-slate-600">
+        {label}
+      </label>
+      <div className="flex h-14 items-center rounded border border-slate-300 bg-white focus-within:border-emerald-500 focus-within:ring-3 focus-within:ring-emerald-100">
+        <input
+          type="number"
+          min="0"
+          value={value}
+          onChange={(event) => updateValue(Number(event.target.value) || 0)}
+          className="h-full min-w-0 flex-1 rounded-l border-0 bg-transparent px-4 text-lg font-medium text-slate-950 outline-none"
+        />
+        <div className="flex h-full items-center gap-1 px-3 text-slate-600">
+          <button
+            type="button"
+            onClick={() => updateValue(value - 1)}
+            className="inline-flex h-9 w-9 items-center justify-center rounded transition hover:bg-slate-100 hover:text-slate-950"
+            aria-label={`Kurangi ${label}`}
+          >
+            <Minus className="h-5 w-5 stroke-[3]" />
+          </button>
+          <button
+            type="button"
+            onClick={() => updateValue(value + 1)}
+            className="inline-flex h-9 w-9 items-center justify-center rounded transition hover:bg-slate-100 hover:text-slate-950"
+            aria-label={`Tambah ${label}`}
+          >
+            <Plus className="h-5 w-5 stroke-[3]" />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
-  // UI State
+function ChoiceRow({ label, value, onChange }: ChoiceRowProps) {
+  return (
+    <div className="grid grid-cols-[96px_minmax(0,1fr)] items-center gap-4">
+      <label className="text-sm font-semibold uppercase tracking-wide text-slate-600">
+        {label}
+      </label>
+      <div className="grid grid-cols-2 gap-2">
+        {(["1", "2"] as const).map((option) => {
+          const isSelected = value === option;
+          return (
+            <button
+              key={option}
+              type="button"
+              onClick={() => onChange(option)}
+              className={`h-14 rounded border text-lg font-medium transition ${isSelected
+                  ? "border-emerald-600 bg-emerald-50 text-emerald-800 ring-2 ring-emerald-100"
+                  : "border-slate-200 bg-slate-50 text-slate-700 hover:border-slate-300 hover:bg-white"
+                }`}
+            >
+              {option}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+export default function ProductionReportForm({ landId }: ProductionReportFormProps) {
+  const [partNumber, setPartNumber] = useState("");
+  const [reportDate, setReportDate] = useState(getDateString(new Date()));
+  const [startDate, setStartDate] = useState("");
+  const [startTime, setStartTime] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [endTime, setEndTime] = useState("");
+  const [qty, setQty] = useState(0);
+  const [ngQty, setNgQty] = useState(0);
+  const [breakMinutes, setBreakMinutes] = useState(0);
+  const [pc1, setPc1] = useState<"1" | "2">("1");
+  const [pc2, setPc2] = useState<"1" | "2">("1");
+  const [editingField, setEditingField] = useState<"start" | "end" | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isLoadingReports, setIsLoadingReports] = useState(false);
-  const [reports, setReports] = useState<ProductionReport[]>([]);
   const [error, setError] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
 
-  // Load production reports for this line
-  const loadReports = async () => {
-    if (!landId) return;
-    try {
-      setIsLoadingReports(true);
-      const data = await getProductionReports(landId);
-      setReports(data);
-    } catch (err) {
-      console.error("Gagal memuat laporan:", err);
-    } finally {
-      setIsLoadingReports(false);
-    }
+  const resetProductionDetails = () => {
+    setQty(0);
+    setNgQty(0);
+    setBreakMinutes(0);
+    setPc1("1");
+    setPc2("1");
   };
 
-  useEffect(() => {
-    loadReports();
-  }, [landId]);
+  const resetTimes = () => {
+    setStartDate("");
+    setStartTime("");
+    setEndDate("");
+    setEndTime("");
+    setEditingField(null);
+  };
 
-  // Adjust NG category based on NG Qty
-  useEffect(() => {
-    if (ngQty === 0) {
-      setNgCategory("");
-    } else if (!ngCategory) {
-      setNgCategory("Goresan (Scratch)");
+  const handlePartNumberChange = (value: string) => {
+    setPartNumber(value);
+    setError("");
+    setSuccessMsg("");
+    resetProductionDetails();
+
+    if (!value) {
+      resetTimes();
+      return;
     }
-  }, [ngQty]);
+
+    const now = new Date();
+    const date = getDateString(now);
+    setReportDate(date);
+    setStartDate(date);
+    setStartTime(getTimeString(now));
+    setEndDate("");
+    setEndTime("");
+    setEditingField(null);
+  };
+
+  const handleStartDateTimeChange = (value: string) => {
+    const next = parseDateTimeInput(value);
+    setStartDate(next.date);
+    setStartTime(next.time);
+    setReportDate(next.date);
+  };
+
+  const handleEndDateTimeChange = (value: string) => {
+    const next = parseDateTimeInput(value);
+    setEndDate(next.date);
+    setEndTime(next.time);
+  };
+
+  const handleFinish = () => {
+    const now = new Date();
+    setError("");
+    setSuccessMsg("");
+    setEndDate(getDateString(now));
+    setEndTime(getTimeString(now));
+    setEditingField(null);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setSuccessMsg("");
 
-    if (!operatorName.trim()) {
-      setError("Nama operator tidak boleh kosong");
-      return;
-    }
-    if (!startTime) {
-      setError("Waktu awal tidak boleh kosong");
-      return;
-    }
-    if (!endTime) {
-      setError("Waktu akhir tidak boleh kosong");
-      return;
-    }
-    if (!partNumber.trim()) {
+    if (!partNumber) {
       setError("Part number tidak boleh kosong");
       return;
     }
-    if (qty < 0) {
-      setError("Qty tidak boleh negatif");
+
+    if (!startDate || !startTime) {
+      setError("Waktu awal belum terset");
       return;
     }
-    if (ngQty < 0) {
-      setError("NG tidak boleh negatif");
+
+    if (!endDate || !endTime) {
+      setError("Tekan tombol Finish untuk menentukan waktu akhir");
       return;
     }
+
     if (ngQty > qty) {
-      setError("Jumlah NG tidak boleh melebihi total Qty");
-      return;
-    }
-    if (breakMinutes < 0) {
-      setError("Waktu break tidak boleh negatif");
+      setError("Jumlah NG tidak boleh melebihi QTY");
       return;
     }
 
@@ -125,26 +329,21 @@ export default function ProductionReportForm({ landId }: ProductionReportFormPro
         land_id: landId,
         report_date: reportDate,
         shift: "Shift 1",
-        operator_name: operatorName,
-        start_time: startTime + ":00", // Send in TIME format HH:MM:SS
-        end_time: endTime + ":00",
-        part_number: partNumber.trim(),
-        qty: qty,
+        operator_name: "Operator",
+        start_time: startTime,
+        end_time: endTime,
+        part_number: partNumber,
+        qty,
         ng_qty: ngQty,
-        ng_category: ngQty > 0 ? ngCategory : null,
+        ng_category: null,
         break_minutes: breakMinutes,
       });
 
       setSuccessMsg("Laporan produksi berhasil disimpan!");
-      // Reset production specific fields, keep operator info
       setPartNumber("");
-      setQty(0);
-      setNgQty(0);
-      setNgCategory("");
-      setBreakMinutes(0);
-
-      // Reload list
-      await loadReports();
+      resetTimes();
+      resetProductionDetails();
+      setReportDate(getDateString(new Date()));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Gagal menyimpan laporan");
     } finally {
@@ -152,340 +351,130 @@ export default function ProductionReportForm({ landId }: ProductionReportFormPro
     }
   };
 
-  const handleDelete = async (id: string, operator: string, part: string) => {
-    if (!window.confirm(`Hapus laporan dari ${operator} (Part: ${part})?`)) {
-      return;
-    }
-
-    try {
-      await deleteProductionReport(id);
-      setSuccessMsg("Laporan berhasil dihapus.");
-      await loadReports();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Gagal menghapus laporan");
-    }
-  };
-
-  const formatDate = (dateStr: string) => {
-    if (!dateStr) return "";
-    const date = new Date(dateStr);
-    if (isNaN(date.getTime())) return dateStr;
-    return date.toLocaleDateString("id-ID", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
-  };
-
-  const formatTime = (timeStr: string) => {
-    if (!timeStr) return "";
-    // timeStr could be HH:MM:SS, let's format to HH:MM
-    return timeStr.slice(0, 5);
-  };
-
   return (
-    <div className="space-y-6">
-      {/* Form Card */}
-      <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <div className="mb-6 flex items-center gap-2 border-b border-slate-100 pb-4">
-          <Activity className="h-6 w-6 text-emerald-600" />
-          <h2 className="text-xl font-bold text-slate-800">Form Laporan Produksi</h2>
+    <form onSubmit={handleSubmit} className="mx-auto max-w-[860px] pt-8">
+      <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm sm:p-7">
+        <div className="mb-6 border-b border-slate-200 pb-5">
+          <h2 className="text-lg font-semibold text-slate-950">Laporan Produksi</h2>
+          <p className="mt-1 text-sm text-slate-500">
+            Pilih part number, mulai produksi, lalu tekan Finish saat pekerjaan selesai.
+          </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="space-y-6">
           {error && (
-            <div className="flex items-start gap-2.5 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+            <div className="flex items-start gap-2.5 rounded border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-800">
               <AlertTriangle className="h-5 w-5 flex-shrink-0 text-red-600" />
               <span>{error}</span>
             </div>
           )}
 
           {successMsg && (
-            <div className="flex items-start gap-2.5 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
+            <div className="flex items-start gap-2.5 rounded border border-emerald-200 bg-emerald-50 p-4 text-sm font-medium text-emerald-800">
               <CheckCircle className="h-5 w-5 flex-shrink-0 text-emerald-600" />
               <span>{successMsg}</span>
             </div>
           )}
 
-          {/* Form Fields Grid */}
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {/* Tanggal */}
-            <div>
-              <label className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-slate-700">
-                <Calendar className="h-4 w-4 text-slate-400" />
-                Tanggal Produksi
-              </label>
-              <input
-                type="date"
-                value={reportDate}
-                onChange={(e) => setReportDate(e.target.value)}
-                className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-slate-900 transition focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100"
-                required
-              />
-            </div>
-
-            {/* Nama Operator */}
-            <div>
-              <label className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-slate-700">
-                <User className="h-4 w-4 text-slate-400" />
-                Nama Operator
-              </label>
-              <input
-                type="text"
-                placeholder="Masukkan nama operator"
-                value={operatorName}
-                onChange={(e) => setOperatorName(e.target.value)}
-                className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-slate-900 transition focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100"
-                required
-              />
-            </div>
-
-            {/* Waktu Awal */}
-            <div>
-              <label className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-slate-700">
-                <Clock className="h-4 w-4 text-slate-400" />
-                Waktu Awal
-              </label>
-              <input
-                type="time"
-                value={startTime}
-                onChange={(e) => setStartTime(e.target.value)}
-                className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-slate-900 transition focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100"
-                required
-              />
-            </div>
-
-            {/* Waktu Akhir */}
-            <div>
-              <label className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-slate-700">
-                <Clock className="h-4 w-4 text-slate-400" />
-                Waktu Akhir
-              </label>
-              <input
-                type="time"
-                value={endTime}
-                onChange={(e) => setEndTime(e.target.value)}
-                className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-slate-900 transition focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100"
-                required
-              />
-            </div>
-
-            {/* Part Number */}
-            <div>
-              <label className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-slate-700">
-                <FileText className="h-4 w-4 text-slate-400" />
-                Part Number
-              </label>
-              <input
-                type="text"
-                placeholder="Contoh: FT-98765-ABC"
-                value={partNumber}
-                onChange={(e) => setPartNumber(e.target.value)}
-                className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-slate-900 transition focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100 font-mono"
-                required
-              />
-            </div>
-
-            {/* Qty */}
-            <div>
-              <label className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-slate-700">
-                <Activity className="h-4 w-4 text-slate-400" />
-                Qty (Hasil Produksi)
-              </label>
-              <input
-                type="number"
-                min="0"
-                value={qty || ""}
-                onChange={(e) => setQty(parseInt(e.target.value) || 0)}
-                className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-slate-900 transition focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100"
-                placeholder="0"
-                required
-              />
-            </div>
-
-            {/* NG */}
-            <div>
-              <label className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-slate-700">
-                <AlertTriangle className="h-4 w-4 text-red-500" />
-                NG (Jumlah Cacat)
-              </label>
-              <input
-                type="number"
-                min="0"
-                value={ngQty || ""}
-                onChange={(e) => setNgQty(parseInt(e.target.value) || 0)}
-                className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-slate-900 transition focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100"
-                placeholder="0"
-                required
-              />
-            </div>
-
-            {/* Kategori NG */}
-            <div>
-              <label className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-slate-700">
-                <AlertTriangle className="h-4 w-4 text-red-400" />
-                Kategori NG
-              </label>
+          <div className="space-y-2">
+            <label htmlFor="part-number" className="text-xs font-semibold uppercase tracking-wide text-slate-600">
+              Part Number
+            </label>
+            <div className="relative rounded border border-slate-300 bg-white transition focus-within:border-emerald-500 focus-within:ring-3 focus-within:ring-emerald-100">
               <select
-                value={ngCategory}
-                onChange={(e) => setNgCategory(e.target.value)}
-                disabled={ngQty === 0}
-                className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-slate-900 transition focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100 disabled:bg-slate-50 disabled:text-slate-400 disabled:border-slate-200"
-              >
-                {ngQty === 0 ? (
-                  <option value="">Tidak ada NG</option>
-                ) : (
-                  <>
-                    <option value="Goresan (Scratch)">Goresan (Scratch)</option>
-                    <option value="Penyok (Dent)">Penyok (Dent)</option>
-                    <option value="Retak (Crack)">Retak (Crack)</option>
-                    <option value="Cacat Las (Welding)">Cacat Las (Welding)</option>
-                    <option value="Deformasi (Deformed)">Deformasi (Deformed)</option>
-                    <option value="Lainnya">Lainnya</option>
-                  </>
-                )}
-              </select>
-            </div>
-
-            {/* Break */}
-            <div>
-              <label className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-slate-700">
-                <Clock className="h-4 w-4 text-amber-500" />
-                Break (Menit)
-              </label>
-              <input
-                type="number"
-                min="0"
-                value={breakMinutes || ""}
-                onChange={(e) => setBreakMinutes(parseInt(e.target.value) || 0)}
-                className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-slate-900 transition focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100"
-                placeholder="0"
+                id="part-number"
+                value={partNumber}
+                onChange={(e) => handlePartNumberChange(e.target.value)}
+                className="h-12 w-full appearance-none bg-transparent px-4 pr-11 text-base font-medium text-slate-950 outline-none"
                 required
-              />
+              >
+                <option value="">Pilih part number</option>
+                {PART_NUMBER_OPTIONS.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-500" />
             </div>
           </div>
 
-          <div className="flex justify-end pt-2 border-t border-slate-100">
-            <Button
-              type="submit"
-              disabled={isSubmitting}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold h-11 px-8 rounded-lg transition"
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Menyimpan...
-                </>
+          {partNumber && (
+            <div className="space-y-5">
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                <DateTimeField
+                  id="start-time"
+                  label="Waktu Awal"
+                  date={startDate}
+                  time={startTime}
+                  isEditing={editingField === "start"}
+                  onEdit={() => setEditingField((current) => (current === "start" ? null : "start"))}
+                  onChange={handleStartDateTimeChange}
+                />
+
+                <DateTimeField
+                  id="end-time"
+                  label="Waktu Akhir"
+                  date={endDate}
+                  time={endTime}
+                  isEditing={editingField === "end"}
+                  disabled={!endTime}
+                  onEdit={() => setEditingField((current) => (current === "end" ? null : "end"))}
+                  onChange={handleEndDateTimeChange}
+                />
+              </div>
+
+              {!endTime ? (
+                <div className="flex justify-end border-t border-slate-200 pt-5">
+                  <Button
+                    type="button"
+                    onClick={handleFinish}
+                    className="h-11 rounded bg-slate-800 px-5 font-semibold text-white transition hover:bg-slate-950"
+                  >
+                    <TimerReset className="mr-2 h-4 w-4" />
+                    Finish
+                  </Button>
+                </div>
               ) : (
-                "Simpan Laporan"
+                <div className="space-y-7 border-t border-slate-200 pt-6">
+                  <div className="space-y-6">
+                    <NumericStepper label="QTY" value={qty} onChange={setQty} />
+                    <NumericStepper label="NG" value={ngQty} onChange={setNgQty} />
+                    <NumericStepper label="BREAK" value={breakMinutes} onChange={setBreakMinutes} />
+                    <ChoiceRow label="PC-1" value={pc1} onChange={setPc1} />
+                    <ChoiceRow label="PC-2" value={pc2} onChange={setPc2} />
+                  </div>
+
+                  <div className="flex flex-col gap-3 border-t border-slate-200 pt-5 sm:flex-row sm:justify-end">
+                    <Button
+                      type="button"
+                      onClick={handleFinish}
+                      className="h-11 rounded border border-slate-300 bg-white px-5 font-semibold text-slate-700 transition hover:bg-slate-50"
+                    >
+                      <TimerReset className="mr-2 h-4 w-4" />
+                      Update Finish
+                    </Button>
+                    <Button
+                      type="submit"
+                      disabled={isSubmitting}
+                      className="h-11 rounded bg-emerald-600 px-7 font-semibold text-white transition hover:bg-emerald-700"
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Menyimpan...
+                        </>
+                      ) : (
+                        "Simpan Laporan"
+                      )}
+                    </Button>
+                  </div>
+                </div>
               )}
-            </Button>
-          </div>
-        </form>
-      </div>
-
-      {/* Reports History Section */}
-      <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <div className="mb-6 flex items-center justify-between border-b border-slate-100 pb-4">
-          <div className="flex items-center gap-2">
-            <Users className="h-6 w-6 text-emerald-600" />
-            <h3 className="text-lg font-bold text-slate-800">
-              Riwayat Laporan Hari Ini & Terakhir
-            </h3>
-          </div>
-          <span className="text-xs bg-emerald-50 text-emerald-700 font-semibold px-2.5 py-1 rounded-full border border-emerald-200">
-            {reports.length} Laporan
-          </span>
+            </div>
+          )}
         </div>
-
-        {isLoadingReports ? (
-          <div className="flex justify-center py-10 text-slate-500">
-            <Loader2 className="h-7 w-7 animate-spin text-emerald-600" />
-          </div>
-        ) : reports.length === 0 ? (
-          <div className="py-10 text-center text-slate-500">
-            Belum ada laporan produksi yang diinput untuk line ini.
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[700px] border-collapse text-left text-sm text-slate-700">
-              <thead>
-                <tr className="border-b border-slate-200 bg-slate-50 text-slate-600 font-semibold">
-                  <th className="p-3">Tanggal</th>
-                  <th className="p-3">Operator</th>
-                  <th className="p-3">Waktu Kerja</th>
-                  <th className="p-3 font-mono">Part Number</th>
-                  <th className="p-3 text-center">Qty OK / NG</th>
-                  <th className="p-3 text-center">Break</th>
-                  <th className="p-3">Kategori NG</th>
-                  <th className="p-3 text-center">Aksi</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {reports.map((rpt) => (
-                  <tr key={rpt.id} className="hover:bg-slate-50/80 transition-colors">
-                    <td className="p-3 whitespace-nowrap">
-                      <div className="font-semibold text-slate-800">
-                        {formatDate(rpt.report_date)}
-                      </div>
-                    </td>
-                    <td className="p-3 font-medium text-slate-800 whitespace-nowrap">
-                      {rpt.operator_name}
-                    </td>
-                    <td className="p-3 whitespace-nowrap">
-                      <span className="font-semibold text-slate-800">
-                        {formatTime(rpt.start_time)} - {formatTime(rpt.end_time)}
-                      </span>
-                    </td>
-                    <td className="p-3 font-mono font-medium text-slate-800">
-                      {rpt.part_number}
-                    </td>
-                    <td className="p-3 text-center">
-                      <span className="font-bold text-slate-800">{rpt.qty} Total</span>
-                      <div className="text-xs font-semibold whitespace-nowrap mt-0.5">
-                        <span className="text-emerald-600">{rpt.qty - rpt.ng_qty} OK</span>
-                        {" / "}
-                        <span className={rpt.ng_qty > 0 ? "text-red-500 font-bold" : "text-slate-400"}>
-                          {rpt.ng_qty} NG
-                        </span>
-                      </div>
-                    </td>
-                    <td className="p-3 text-center whitespace-nowrap">
-                      {rpt.break_minutes ? (
-                        <span className="inline-flex items-center gap-1 rounded bg-amber-50 border border-amber-200 px-2 py-0.5 text-xs font-bold text-amber-700">
-                          {rpt.break_minutes} m
-                        </span>
-                      ) : (
-                        <span className="text-slate-400">-</span>
-                      )}
-                    </td>
-                    <td className="p-3 text-slate-600">
-                      {rpt.ng_qty > 0 ? (
-                        <span className="inline-flex items-center gap-1 rounded bg-red-50 border border-red-200 px-2 py-0.5 text-xs font-semibold text-red-700">
-                          {rpt.ng_category || "Lainnya"}
-                        </span>
-                      ) : (
-                        <span className="text-slate-400">-</span>
-                      )}
-                    </td>
-                    <td className="p-3 text-center whitespace-nowrap">
-                      <button
-                        onClick={() =>
-                          handleDelete(rpt.id, rpt.operator_name, rpt.part_number)
-                        }
-                        className="rounded p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600 transition"
-                        title="Hapus Laporan"
-                      >
-                        <Trash2 className="h-4.5 w-4.5" />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
       </div>
-    </div>
+    </form>
   );
 }
