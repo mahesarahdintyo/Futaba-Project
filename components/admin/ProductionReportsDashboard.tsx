@@ -891,8 +891,7 @@ Istirahat: ${breakMin}
               <Button
                 disabled={isDeleting}
                 onClick={() => setDeleteTarget(null)}
-                variant="outline"
-                className="h-10 border-slate-300 hover:bg-slate-50 text-slate-700 cursor-pointer"
+                className="h-10 bg-slate-500 hover:bg-slate-600 text-white font-semibold flex items-center justify-center cursor-pointer"
               >
                 Batal
               </Button>
