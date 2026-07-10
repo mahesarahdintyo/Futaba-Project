@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   AlertTriangle,
   CalendarDays,
@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { createProductionReport } from "@/lib/services/production-report";
+import { getPartNumbers } from "@/lib/services/part-number";
 
 interface ProductionReportFormProps {
   landId: string;
@@ -43,11 +44,7 @@ interface ChoiceRowProps {
   onChange: (value: "1" | "2") => void;
 }
 
-const PART_NUMBER_OPTIONS = [
-  "FTB-001-A",
-  "FTB-002-B",
-  "FTB-003-C",
-];
+
 
 function padTime(value: number) {
   return String(value).padStart(2, "0");
@@ -209,8 +206,8 @@ function ChoiceRow({ label, value, onChange }: ChoiceRowProps) {
               type="button"
               onClick={() => onChange(option)}
               className={`h-14 rounded border text-lg font-medium transition ${isSelected
-                  ? "border-emerald-600 bg-emerald-50 text-emerald-800 ring-2 ring-emerald-100"
-                  : "border-slate-200 bg-slate-50 text-slate-700 hover:border-slate-300 hover:bg-white"
+                ? "border-emerald-600 bg-emerald-50 text-emerald-800 ring-2 ring-emerald-100"
+                : "border-slate-200 bg-slate-50 text-slate-700 hover:border-slate-300 hover:bg-white"
                 }`}
             >
               {option}
@@ -224,7 +221,26 @@ function ChoiceRow({ label, value, onChange }: ChoiceRowProps) {
 
 export default function ProductionReportForm({ landId }: ProductionReportFormProps) {
   const [partNumber, setPartNumber] = useState("");
+  const [partNumbers, setPartNumbers] = useState<string[]>([]);
   const [reportDate, setReportDate] = useState(getDateString(new Date()));
+
+  useEffect(() => {
+    async function loadPartNumbers() {
+      try {
+        const data = await getPartNumbers();
+        setPartNumbers(data.map((pn) => pn.code));
+      } catch (err) {
+        console.error("Gagal memuat part numbers:", err);
+        // Fallback jika API gagal atau belum di-seed
+        setPartNumbers([
+          "FTB-001-A",
+          "FTB-002-B",
+          "FTB-003-C",
+        ]);
+      }
+    }
+    loadPartNumbers();
+  }, []);
   const [startDate, setStartDate] = useState("");
   const [startTime, setStartTime] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -389,7 +405,7 @@ export default function ProductionReportForm({ landId }: ProductionReportFormPro
                 required
               >
                 <option value="">Pilih part number</option>
-                {PART_NUMBER_OPTIONS.map((option) => (
+                {partNumbers.map((option) => (
                   <option key={option} value={option}>
                     {option}
                   </option>

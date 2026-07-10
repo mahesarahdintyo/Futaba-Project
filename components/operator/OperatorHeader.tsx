@@ -1,4 +1,5 @@
 import { AppHeader } from "@/components/app-header";
+import { LogoutButton } from "@/components/logout-button";
 
 interface OperatorHeaderProps {
   selectedLand: string;
@@ -18,6 +19,8 @@ export default function OperatorHeader({ selectedLand }: OperatorHeaderProps) {
           </span>
         </div>
       }
-    />
+    >
+      <LogoutButton variant="header" />
+    </AppHeader>
   );
 }

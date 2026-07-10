@@ -626,7 +626,7 @@ Istirahat: ${breakMin}
                       </td>
 
                       {/* Part Number */}
-                      <td className="py-3.5 px-4 font-semibold text-slate-800 whitespace-nowrap">
+                      <td className="py-3.5 px-4 font-semibold text-slate-800 whitespace-nowrap font-mono">
                         {report.part_number}
                       </td>
 
@@ -762,7 +762,7 @@ Istirahat: ${breakMin}
                 
                 <div className="flex items-center justify-between border-b border-slate-100 pb-2">
                   <span className="text-sm text-slate-600 font-medium">Part Number</span>
-                  <span className="text-sm font-bold text-slate-800">{detailReport.part_number}</span>
+                  <span className="text-sm font-bold text-slate-800 font-mono">{detailReport.part_number}</span>
                 </div>
 
                 <div className="grid grid-cols-3 gap-3">

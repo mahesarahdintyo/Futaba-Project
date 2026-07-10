@@ -10,8 +10,10 @@ import { CreateFolderDialog } from '@/components/create-folder-dialog'
 import { CreateLandDialog } from '@/components/create-land-dialog'
 import { AdminLandCard } from '@/components/admin-land-card'
 import { AppHeader } from '@/components/app-header'
+import { LogoutButton } from '@/components/logout-button'
 import { getLands, type Land } from '@/lib/services/land'
 import ProductionReportsDashboard from '@/components/admin/ProductionReportsDashboard'
+import AdminPartNumbersPanel from '@/components/admin/AdminPartNumbersPanel'
 
 interface Document {
   id: string
@@ -89,7 +91,7 @@ export default function Page({ initialLands = [] }: AdminPageProps) {
   const [folderPathHistory, setFolderPathHistory] = useState<BreadcrumbItem[]>([])
   const [isLoading, setIsLoading] = useState(initialLands.length === 0)
   const [error, setError] = useState('')
-  const [activeView, setActiveView] = useState<'workspace' | 'reports'>('workspace')
+  const [activeView, setActiveView] = useState<'workspace' | 'reports' | 'part-numbers'>('workspace')
 
   const persistAdminLocation = (land: Land, history: BreadcrumbItem[]) => {
     window.localStorage.setItem(
@@ -397,6 +399,16 @@ export default function Page({ initialLands = [] }: AdminPageProps) {
             >
               Laporan Produksi
             </button>
+            <button
+              onClick={() => setActiveView('part-numbers')}
+              className={`px-3 py-1.5 rounded-lg text-sm font-bold transition duration-200 cursor-pointer ${
+                activeView === 'part-numbers'
+                  ? 'bg-blue-50 text-blue-700 font-extrabold border border-blue-100'
+                  : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'
+              }`}
+            >
+              Part Number
+            </button>
           </div>
         }
       >
@@ -418,12 +430,15 @@ export default function Page({ initialLands = [] }: AdminPageProps) {
             </>
           ) : null
         )}
+        <LogoutButton variant="header" />
       </AppHeader>
 
       {/* Main Content */}
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {activeView === 'reports' ? (
           <ProductionReportsDashboard />
+        ) : activeView === 'part-numbers' ? (
+          <AdminPartNumbersPanel />
         ) : (
           <>
             {/* Search Bar */}
