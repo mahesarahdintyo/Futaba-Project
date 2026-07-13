@@ -25,12 +25,14 @@ export function AdminLandCard({
   const [isSavingVisibility, setIsSavingVisibility] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [error, setError] = useState('')
+  const [isDuplicateName, setIsDuplicateName] = useState(false)
   const isHiddenFromOperator = Boolean(land.hidden_from_operator)
 
   const resetEditForm = () => {
     setName(land.name)
     setDescription(land.description ?? '')
     setError('')
+    setIsDuplicateName(false)
   }
 
   const handleOpenEdit = (event: React.MouseEvent) => {
@@ -50,6 +52,8 @@ export function AdminLandCard({
 
     try {
       setIsSaving(true)
+      setIsDuplicateName(false)
+      setError('')
 
       const response = await fetch('/api/lands', {
         method: 'PUT',
@@ -63,14 +67,23 @@ export function AdminLandCard({
 
       if (!response.ok) {
         const data = await response.json().catch(() => null)
-        throw new Error(data?.error || 'Gagal mengubah card')
+        const message = data?.error || 'Gagal mengubah card'
+        if (response.status === 409) {
+          setIsDuplicateName(true)
+        } else {
+          setError(message)
+        }
+        toast.error(message)
+        return
       }
 
       toast.success(`Card "${name.trim()}" berhasil diperbarui!`)
       setIsEditOpen(false)
       onChangeSuccess?.()
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Gagal mengubah card')
+    } catch {
+      const msg = 'Gagal mengubah card. Periksa koneksi internet Anda.'
+      setError(msg)
+      toast.error(msg)
     } finally {
       setIsSaving(false)
     }
@@ -308,11 +321,24 @@ export function AdminLandCard({
                 <input
                   type="text"
                   value={name}
-                  onChange={(event) => setName(event.target.value)}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm text-gray-900 outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500 transition"
+                  onChange={(event) => {
+                    setName(event.target.value)
+                    if (isDuplicateName) setIsDuplicateName(false)
+                    if (error) setError('')
+                  }}
+                  className={`w-full px-4 py-2.5 border rounded-lg text-sm text-gray-900 outline-none focus:ring-2 transition
+                    ${isDuplicateName
+                      ? 'border-red-400 bg-red-50 focus:ring-red-200'
+                      : 'border-gray-300 focus:ring-blue-200 focus:border-blue-500'
+                    }`}
                   disabled={isSaving}
                   autoFocus
                 />
+                {isDuplicateName && (
+                  <p className="text-xs text-red-600 font-medium">
+                    Nama ini sudah digunakan. Pilih nama yang berbeda.
+                  </p>
+                )}
               </div>
 
               <div className="space-y-1.5">

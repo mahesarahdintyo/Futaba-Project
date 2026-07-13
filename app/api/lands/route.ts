@@ -95,19 +95,35 @@ export async function PUT(request: Request) {
 
     if (!id) {
       return NextResponse.json(
-        { error: "Land ID is required" },
+        { error: "Land ID tidak valid" },
         { status: 400 }
       );
     }
 
     if (!name) {
       return NextResponse.json(
-        { error: "Land name is required" },
+        { error: "Nama card tidak boleh kosong" },
         { status: 400 }
       );
     }
 
     const supabase = await createClient();
+
+    // Cek duplikat nama (case-insensitive), kecuali card yang sedang diedit
+    const { data: existing } = await supabase
+      .from("lands")
+      .select("id")
+      .ilike("name", name)
+      .eq("is_active", true)
+      .neq("id", id)
+      .maybeSingle();
+
+    if (existing) {
+      return NextResponse.json(
+        { error: `Card dengan nama "${name}" sudah ada. Gunakan nama yang berbeda.` },
+        { status: 409 }
+      );
+    }
 
     const { data: updatedLand, error } = await supabase
       .from("lands")
