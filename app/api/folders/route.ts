@@ -99,51 +99,84 @@ export async function GET(request: Request) {
   }
 }
 
-// POST - Create a new folder
+// POST - Create a new folder (auto-rename if name already exists)
 export async function POST(request: Request) {
   try {
     const body = await request.json()
 
-    const {
-      name,
-      parentId,
-      landId
-    } = body
+    const { name, parentId, landId } = body
 
-    if (!name) {
+    if (!name || typeof name !== 'string' || !name.trim()) {
       return NextResponse.json(
-        { error: 'Folder name is required' },
+        { error: 'Nama folder tidak boleh kosong' },
         { status: 400 }
       )
     }
 
+    const baseName = name.trim()
     const supabase = await createClient()
+    const parsedParentId = parentId ? parseInt(parentId) : null
+
+    // Ambil semua folder dalam scope yang sama (parent + land)
+    let siblingQuery = supabase
+      .from('folders')
+      .select('name')
+      .ilike('name', `${baseName}%`)
+
+    if (landId) {
+      siblingQuery = siblingQuery.eq('land_id', landId)
+    }
+
+    if (parsedParentId !== null) {
+      siblingQuery = siblingQuery.eq('parent_id', parsedParentId)
+    } else {
+      siblingQuery = siblingQuery.is('parent_id', null)
+    }
+
+    const { data: siblings } = await siblingQuery
+
+    // Cari nama yang tersedia dengan pola: "Nama", "Nama (01)", "Nama (02)", dst.
+    const existingNames = new Set(
+      (siblings ?? []).map((f) => f.name.toLowerCase())
+    )
+
+    let finalName = baseName
+
+    if (existingNames.has(baseName.toLowerCase())) {
+      let counter = 1
+      while (counter <= 99) {
+        const candidate = `${baseName} (${String(counter).padStart(2, '0')})`
+        if (!existingNames.has(candidate.toLowerCase())) {
+          finalName = candidate
+          break
+        }
+        counter++
+      }
+    }
 
     const { data: newFolder, error } = await supabase
       .from('folders')
       .insert({
-        name,
-        parent_id: parentId ? parseInt(parentId) : null,
-        land_id: landId
+        name: finalName,
+        parent_id: parsedParentId,
+        land_id: landId,
       })
       .select()
 
     if (error) {
-      return NextResponse.json(
-        { error: error.message },
-        { status: 500 }
-      )
+      return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    return NextResponse.json(newFolder[0], { status: 201 })
+    return NextResponse.json(
+      { ...newFolder[0], originalName: baseName, finalName },
+      { status: 201 }
+    )
   } catch (error) {
     console.error('Folders POST error:', error)
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
+
 
 // DELETE - Delete a folder
 export async function DELETE(request: Request) {

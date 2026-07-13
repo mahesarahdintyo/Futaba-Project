@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { FolderPlus, X, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { toast } from 'sonner'
 
 interface CreateFolderDialogProps {
   parentId: number | null
@@ -18,24 +19,27 @@ export function CreateFolderDialog({
   const [isOpen, setIsOpen] = useState(false)
   const [name, setName] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState('')
+
+  const handleClose = () => {
+    if (isLoading) return
+    setIsOpen(false)
+    setName('')
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError('')
 
     if (!name.trim()) {
-      setError('Nama folder tidak boleh kosong')
+      toast.error('Nama folder tidak boleh kosong')
       return
     }
 
     try {
       setIsLoading(true)
+
       const response = await fetch('/api/folders', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: name.trim(),
           parentId,
@@ -44,19 +48,28 @@ export function CreateFolderDialog({
       })
 
       if (!response.ok) {
-        const data = await response.json()
-        throw new Error(data.error || 'Gagal membuat folder')
+        const data = await response.json().catch(() => null)
+        toast.error(data?.error || 'Gagal membuat folder')
+        return
       }
 
-      // Reset form
+      const data = await response.json()
+
+      // Jika nama diganti otomatis oleh server (duplikat), beri notifikasi informatif
+      if (data.finalName && data.finalName !== data.originalName) {
+        toast.info(
+          `Folder "${data.originalName}" sudah ada — dibuat sebagai "${data.finalName}"`,
+          { duration: 5000 }
+        )
+      } else {
+        toast.success(`Folder "${data.finalName ?? name.trim()}" berhasil dibuat!`)
+      }
+
       setName('')
       setIsOpen(false)
-
-      if (onCreateSuccess) {
-        onCreateSuccess()
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Gagal membuat folder')
+      onCreateSuccess?.()
+    } catch {
+      toast.error('Gagal membuat folder. Periksa koneksi internet Anda.')
     } finally {
       setIsLoading(false)
     }
@@ -77,48 +90,46 @@ export function CreateFolderDialog({
         <div
           className="fixed inset-0 flex items-center justify-center z-50 p-4 backdrop-blur-sm"
           style={{ backgroundColor: 'rgba(0, 0, 0, 0.4)' }}
+          onClick={(e) => { if (e.target === e.currentTarget) handleClose() }}
         >
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
-            <div className="flex items-center justify-between p-6 border-b border-gray-200">
-              <h2 className="text-xl font-semibold text-gray-900">
-                Buat Folder Baru
-              </h2>
+          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+              <h2 className="text-lg font-semibold text-gray-900">Buat Folder Baru</h2>
               <button
-                onClick={() => setIsOpen(false)}
+                onClick={handleClose}
                 disabled={isLoading}
-                className="text-gray-400 hover:text-gray-600 disabled:opacity-50"
+                className="text-gray-400 hover:text-gray-600 disabled:opacity-50 transition"
+                aria-label="Tutup"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
-              {error && (
-                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-                  {error}
-                </div>
-              )}
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Nama Folder *
+              <div className="space-y-1.5">
+                <label htmlFor="folder-name" className="block text-sm font-medium text-gray-700">
+                  Nama Folder <span className="text-red-500">*</span>
                 </label>
                 <input
+                  id="folder-name"
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Contoh: Dokumen SOP, Keuangan"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm text-gray-900 outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500 transition"
                   disabled={isLoading}
                   autoFocus
                 />
+                <p className="text-xs text-gray-400">
+                  Jika nama sudah ada, folder akan otomatis diberi nomor urut.
+                </p>
               </div>
 
-              <div className="flex gap-3 pt-4">
+              <div className="flex gap-3 pt-1">
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => setIsOpen(false)}
+                  onClick={handleClose}
                   disabled={isLoading}
                   className="flex-1 border-gray-300 bg-white text-gray-700 hover:bg-gray-50 hover:text-gray-900"
                 >
