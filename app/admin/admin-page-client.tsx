@@ -14,6 +14,7 @@ import { LogoutButton } from '@/components/logout-button'
 import { getLands, type Land } from '@/lib/services/land'
 import ProductionReportsDashboard from '@/components/admin/ProductionReportsDashboard'
 import AdminPartNumbersPanel from '@/components/admin/AdminPartNumbersPanel'
+import AdminNgCategoriesPanel from '@/components/admin/AdminNgCategoriesPanel'
 
 interface Document {
   id: string
@@ -91,7 +92,7 @@ export default function Page({ initialLands = [] }: AdminPageProps) {
   const [folderPathHistory, setFolderPathHistory] = useState<BreadcrumbItem[]>([])
   const [isLoading, setIsLoading] = useState(initialLands.length === 0)
   const [error, setError] = useState('')
-  const [activeView, setActiveView] = useState<'workspace' | 'reports' | 'part-numbers'>('workspace')
+  const [activeView, setActiveView] = useState<'workspace' | 'reports' | 'part-numbers' | 'ng-categories'>('workspace')
 
   const persistAdminLocation = (land: Land, history: BreadcrumbItem[]) => {
     window.localStorage.setItem(
@@ -409,6 +410,16 @@ export default function Page({ initialLands = [] }: AdminPageProps) {
             >
               Part Number
             </button>
+            <button
+              onClick={() => setActiveView('ng-categories')}
+              className={`px-3 py-1.5 rounded-lg text-sm font-bold transition duration-200 cursor-pointer ${
+                activeView === 'ng-categories'
+                  ? 'bg-rose-50 text-rose-700 font-extrabold border border-rose-100'
+                  : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'
+              }`}
+            >
+              Kategori NG
+            </button>
           </div>
         }
       >
@@ -439,6 +450,8 @@ export default function Page({ initialLands = [] }: AdminPageProps) {
           <ProductionReportsDashboard />
         ) : activeView === 'part-numbers' ? (
           <AdminPartNumbersPanel />
+        ) : activeView === 'ng-categories' ? (
+          <AdminNgCategoriesPanel />
         ) : (
           <>
             {/* Search Bar */}

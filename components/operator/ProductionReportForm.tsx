@@ -10,11 +10,13 @@ import {
   Minus,
   Pencil,
   Plus,
+  Tag,
   TimerReset,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { createProductionReport } from "@/lib/services/production-report";
 import { getPartNumbers } from "@/lib/services/part-number";
+import { getNgCategories, type NgCategory } from "@/lib/services/ng-category";
 
 interface ProductionReportFormProps {
   landId: string;
@@ -36,6 +38,8 @@ interface NumericStepperProps {
   label: string;
   value: number;
   onChange: (value: number) => void;
+  required?: boolean;
+  hasError?: boolean;
 }
 
 interface ChoiceRowProps {
@@ -150,42 +154,84 @@ function DateTimeField({
   );
 }
 
-function NumericStepper({ label, value, onChange }: NumericStepperProps) {
+function NumericStepper({ label, value, onChange, required = false, hasError = false }: NumericStepperProps) {
+  // displayValue: empty string when focused and value is 0 so typing replaces 0
+  const [isFocused, setIsFocused] = useState(false);
+  const displayValue = isFocused && value === 0 ? "" : value;
+
   const updateValue = (nextValue: number) => {
     onChange(Math.max(0, nextValue));
+  };
+
+  const handleIncrement = () => {
+    // When value is 0, pressing + should go to 1 (replaces 0)
+    updateValue(value + 1);
+  };
+
+  const handleDecrement = () => {
+    updateValue(value - 1);
   };
 
   return (
     <div className="grid grid-cols-[96px_minmax(0,1fr)] items-center gap-4">
       <label className="text-sm font-semibold uppercase tracking-wide text-slate-600">
         {label}
+        {required && <span className="ml-1 text-red-500">*</span>}
       </label>
-      <div className="flex h-14 items-center rounded border border-slate-300 bg-white focus-within:border-emerald-500 focus-within:ring-3 focus-within:ring-emerald-100">
-        <input
-          type="number"
-          min="0"
-          value={value}
-          onChange={(event) => updateValue(Number(event.target.value) || 0)}
-          className="h-full min-w-0 flex-1 rounded-l border-0 bg-transparent px-4 text-lg font-medium text-slate-950 outline-none"
-        />
-        <div className="flex h-full items-center gap-1 px-3 text-slate-600">
-          <button
-            type="button"
-            onClick={() => updateValue(value - 1)}
-            className="inline-flex h-9 w-9 items-center justify-center rounded transition hover:bg-slate-100 hover:text-slate-950"
-            aria-label={`Kurangi ${label}`}
-          >
-            <Minus className="h-5 w-5 stroke-[3]" />
-          </button>
-          <button
-            type="button"
-            onClick={() => updateValue(value + 1)}
-            className="inline-flex h-9 w-9 items-center justify-center rounded transition hover:bg-slate-100 hover:text-slate-950"
-            aria-label={`Tambah ${label}`}
-          >
-            <Plus className="h-5 w-5 stroke-[3]" />
-          </button>
+      <div className="space-y-1">
+        <div
+          className={`flex h-14 items-center rounded border bg-white focus-within:ring-3 ${
+            hasError
+              ? "border-red-400 focus-within:border-red-500 focus-within:ring-red-100"
+              : "border-slate-300 focus-within:border-emerald-500 focus-within:ring-emerald-100"
+          }`}
+        >
+          <input
+            type="number"
+            min="0"
+            value={displayValue}
+            onFocus={() => setIsFocused(true)}
+            onBlur={(e) => {
+              setIsFocused(false);
+              // Ensure empty input resets to 0
+              if (e.target.value === "") updateValue(0);
+            }}
+            onChange={(event) => {
+              const raw = event.target.value;
+              if (raw === "") {
+                // Keep internal value as 0 while field looks empty during editing
+                onChange(0);
+                return;
+              }
+              updateValue(Number(raw));
+            }}
+            className="h-full min-w-0 flex-1 rounded-l border-0 bg-transparent px-4 text-lg font-medium text-slate-950 outline-none"
+          />
+          <div className="flex h-full items-center gap-1 px-3 text-slate-600">
+            <button
+              type="button"
+              onClick={handleDecrement}
+              className="inline-flex h-9 w-9 items-center justify-center rounded transition hover:bg-slate-100 hover:text-slate-950"
+              aria-label={`Kurangi ${label}`}
+            >
+              <Minus className="h-5 w-5 stroke-[3]" />
+            </button>
+            <button
+              type="button"
+              onClick={handleIncrement}
+              className="inline-flex h-9 w-9 items-center justify-center rounded transition hover:bg-slate-100 hover:text-slate-950"
+              aria-label={`Tambah ${label}`}
+            >
+              <Plus className="h-5 w-5 stroke-[3]" />
+            </button>
+          </div>
         </div>
+        {hasError && (
+          <p className="flex items-center gap-1 text-xs font-medium text-red-600">
+            <AlertTriangle className="h-3.5 w-3.5" />
+            {label} tidak boleh 0
+          </p>
+        )}
       </div>
     </div>
   );
@@ -224,22 +270,25 @@ export default function ProductionReportForm({ landId }: ProductionReportFormPro
   const [partNumbers, setPartNumbers] = useState<string[]>([]);
   const [reportDate, setReportDate] = useState(getDateString(new Date()));
 
+  // NG Categories
+  const [ngCategories, setNgCategories] = useState<NgCategory[]>([]);
+
   useEffect(() => {
-    async function loadPartNumbers() {
+    async function loadData() {
       try {
-        const data = await getPartNumbers();
-        setPartNumbers(data.map((pn) => pn.code));
-      } catch (err) {
-        console.error("Gagal memuat part numbers:", err);
-        // Fallback jika API gagal atau belum di-seed
-        setPartNumbers([
-          "FTB-001-A",
-          "FTB-002-B",
-          "FTB-003-C",
+        const [pnData, ngCatData] = await Promise.all([
+          getPartNumbers(),
+          getNgCategories(),
         ]);
+        setPartNumbers(pnData.map((pn) => pn.code));
+        setNgCategories(ngCatData);
+      } catch (err) {
+        console.error("Gagal memuat data:", err);
+        // Fallback jika API gagal
+        setPartNumbers(["FTB-001-A", "FTB-002-B", "FTB-003-C"]);
       }
     }
-    loadPartNumbers();
+    loadData();
   }, []);
   const [startDate, setStartDate] = useState("");
   const [startTime, setStartTime] = useState("");
@@ -247,6 +296,7 @@ export default function ProductionReportForm({ landId }: ProductionReportFormPro
   const [endTime, setEndTime] = useState("");
   const [qty, setQty] = useState(0);
   const [ngQty, setNgQty] = useState(0);
+  const [ngCategory, setNgCategory] = useState("");
   const [breakMinutes, setBreakMinutes] = useState(0);
   const [pc1, setPc1] = useState<"1" | "2">("1");
   const [pc2, setPc2] = useState<"1" | "2">("1");
@@ -258,6 +308,7 @@ export default function ProductionReportForm({ landId }: ProductionReportFormPro
   const resetProductionDetails = () => {
     setQty(0);
     setNgQty(0);
+    setNgCategory("");
     setBreakMinutes(0);
     setPc1("1");
     setPc2("1");
@@ -334,8 +385,18 @@ export default function ProductionReportForm({ landId }: ProductionReportFormPro
       return;
     }
 
+    if (qty === 0) {
+      setError("QTY tidak boleh 0. Masukkan jumlah produksi yang sesuai.");
+      return;
+    }
+
     if (ngQty > qty) {
       setError("Jumlah NG tidak boleh melebihi QTY");
+      return;
+    }
+
+    if (ngQty > 0 && !ngCategory) {
+      setError("Pilih kategori NG karena jumlah NG lebih dari 0.");
       return;
     }
 
@@ -351,7 +412,7 @@ export default function ProductionReportForm({ landId }: ProductionReportFormPro
         part_number: partNumber,
         qty,
         ng_qty: ngQty,
-        ng_category: null,
+        ng_category: ngQty > 0 ? ngCategory : null,
         break_minutes: breakMinutes,
       });
 
@@ -454,8 +515,61 @@ export default function ProductionReportForm({ landId }: ProductionReportFormPro
               ) : (
                 <div className="space-y-7 border-t border-slate-200 pt-6">
                   <div className="space-y-6">
-                    <NumericStepper label="QTY" value={qty} onChange={setQty} />
-                    <NumericStepper label="NG" value={ngQty} onChange={setNgQty} />
+                    <NumericStepper label="QTY" value={qty} onChange={setQty} required hasError={qty === 0} />
+                    <NumericStepper
+                      label="NG"
+                      value={ngQty}
+                      onChange={(val) => {
+                        setNgQty(val);
+                        // Reset kategori NG jika NG dikembalikan ke 0
+                        if (val === 0) setNgCategory("");
+                      }}
+                    />
+
+                    {/* Kategori NG — muncul hanya saat ngQty > 0 */}
+                    {ngQty > 0 && (
+                      <div className="grid grid-cols-[96px_minmax(0,1fr)] items-start gap-4">
+                        <label className="text-sm font-semibold uppercase tracking-wide text-slate-600 pt-1">
+                          Kat. NG
+                          <span className="ml-1 text-red-500">*</span>
+                        </label>
+                        <div className="space-y-2">
+                          {ngCategories.length === 0 ? (
+                            <p className="text-sm text-slate-400 italic">
+                              Belum ada kategori NG. Hubungi admin.
+                            </p>
+                          ) : (
+                            <div className="flex flex-wrap gap-2">
+                              {ngCategories.map((cat) => {
+                                const isSelected = ngCategory === cat.name;
+                                return (
+                                  <button
+                                    key={cat.id}
+                                    type="button"
+                                    onClick={() => setNgCategory(cat.name)}
+                                    className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-semibold transition ${
+                                      isSelected
+                                        ? "border-rose-500 bg-rose-50 text-rose-700 ring-2 ring-rose-100"
+                                        : "border-slate-200 bg-slate-50 text-slate-600 hover:border-slate-300 hover:bg-white"
+                                    }`}
+                                  >
+                                    <Tag className="h-3.5 w-3.5" />
+                                    {cat.name}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          )}
+                          {ngQty > 0 && !ngCategory && (
+                            <p className="flex items-center gap-1 text-xs font-medium text-red-600">
+                              <AlertTriangle className="h-3.5 w-3.5" />
+                              Pilih kategori NG
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
                     <NumericStepper label="BREAK" value={breakMinutes} onChange={setBreakMinutes} />
                     <ChoiceRow label="PC-1" value={pc1} onChange={setPc1} />
                     <ChoiceRow label="PC-2" value={pc2} onChange={setPc2} />

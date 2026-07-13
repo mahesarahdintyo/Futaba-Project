@@ -32,14 +32,14 @@ export default function ProductionReportsDashboard() {
   const [lands, setLands] = useState<Land[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
-  
+
   // Filters state
   const [selectedLandId, setSelectedLandId] = useState("all");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [selectedShift, setSelectedShift] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
-  
+
   // Modal Delete state
   const [deleteTarget, setDeleteTarget] = useState<ProductionReport | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -54,10 +54,10 @@ export default function ProductionReportsDashboard() {
     try {
       setIsLoading(true);
       setError("");
-      
+
       const landsData = await getLands({ includeHidden: true });
       setLands(landsData);
-      
+
       const reportsData = await getProductionReports();
       setReports(reportsData);
     } catch (err) {
@@ -114,7 +114,7 @@ export default function ProductionReportsDashboard() {
       if (selectedShift !== "all" && report.shift !== selectedShift) {
         return false;
       }
-      
+
       // Text search (operator_name or part_number)
       if (searchQuery.trim()) {
         const query = searchQuery.toLowerCase();
@@ -125,7 +125,7 @@ export default function ProductionReportsDashboard() {
           return false;
         }
       }
-      
+
       return true;
     });
   }, [reports, selectedShift, searchQuery]);
@@ -206,7 +206,7 @@ export default function ProductionReportsDashboard() {
     const csvString = csvRows.join("\n");
     const blob = new Blob([csvString], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
-    
+
     const link = document.createElement("a");
     link.setAttribute("href", url);
     link.setAttribute(
@@ -225,7 +225,7 @@ export default function ProductionReportsDashboard() {
       setIsDeleting(true);
       setDeleteError("");
       await deleteProductionReport(deleteTarget.id);
-      
+
       // Update UI state local
       setReports((prev) => prev.filter((r) => r.id !== deleteTarget.id));
       setDeleteTarget(null);
@@ -262,15 +262,15 @@ export default function ProductionReportsDashboard() {
     if (!dateStr) return "-";
     const [year, month, day] = dateStr.split("-");
     if (!year || !month || !day) return dateStr;
-    
+
     const months = [
       "Januari", "Februari", "Maret", "April", "Mei", "Juni",
       "Juli", "Agustus", "September", "Oktober", "November", "Desember"
     ];
-    
+
     const monthIndex = parseInt(month, 10) - 1;
     const monthName = months[monthIndex] ?? month;
-    
+
     return `${day} ${monthName} ${year}`;
   };
 
@@ -280,7 +280,7 @@ export default function ProductionReportsDashboard() {
     const landName = detailReport.land?.name ?? "Unknown Line";
     const breakMin = detailReport.break_minutes > 0 ? `${detailReport.break_minutes} Menit` : "-";
     const ngCat = detailReport.ng_category ?? "-";
-    
+
     const text = `===================================
 LAPORAN PRODUKSI
 -----------------------------------
@@ -601,7 +601,7 @@ Istirahat: ${breakMin}
                       <td className="py-3.5 px-4 font-medium text-slate-900 whitespace-nowrap">
                         {formatDate(report.report_date)}
                       </td>
-                      
+
                       {/* Line Name */}
                       <td className="py-3.5 px-4 font-semibold text-slate-700 whitespace-nowrap">
                         {report.land?.name ?? "Unknown Line"}
@@ -615,11 +615,10 @@ Istirahat: ${breakMin}
                       {/* Shift */}
                       <td className="py-3.5 px-4 whitespace-nowrap">
                         <span
-                          className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-semibold ${
-                            report.shift === "Shift 1"
+                          className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-semibold ${report.shift === "Shift 1"
                               ? "bg-sky-50 text-sky-700 border border-sky-100"
                               : "bg-indigo-50 text-indigo-700 border border-indigo-100"
-                          }`}
+                            }`}
                         >
                           {report.shift}
                         </span>
@@ -648,9 +647,8 @@ Istirahat: ${breakMin}
                       {/* QTY NG */}
                       <td className="py-3.5 px-4 text-right whitespace-nowrap">
                         <span
-                          className={`font-bold ${
-                            isNgHigh ? "text-red-600 bg-red-50 border border-red-100 rounded px-1.5 py-0.5" : "text-slate-500"
-                          }`}
+                          className={`font-bold ${isNgHigh ? "text-red-600 bg-red-50 border border-red-100 rounded px-1.5 py-0.5" : "text-slate-500"
+                            }`}
                         >
                           {report.ng_qty}
                         </span>
@@ -659,13 +657,12 @@ Istirahat: ${breakMin}
                       {/* NG Rate */}
                       <td className="py-3.5 px-4 text-right font-semibold whitespace-nowrap">
                         <span
-                          className={`${
-                            isNgHigh
+                          className={`${isNgHigh
                               ? ngRate > 5
                                 ? "text-red-700"
                                 : "text-amber-700"
                               : "text-slate-400 font-normal"
-                          }`}
+                            }`}
                         >
                           {ngRate.toFixed(1)}%
                         </span>
@@ -727,7 +724,7 @@ Istirahat: ${breakMin}
 
             {/* Grid Content */}
             <div className="py-5 space-y-6">
-              
+
               {/* Section 1: Informasi Umum */}
               <div className="grid grid-cols-2 gap-4 bg-slate-50/50 p-4 rounded-xl border border-slate-100">
                 <div>
@@ -745,11 +742,10 @@ Istirahat: ${breakMin}
                 <div>
                   <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider select-none">Shift</span>
                   <div className="mt-1">
-                    <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold ${
-                      detailReport.shift === "Shift 1"
+                    <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold ${detailReport.shift === "Shift 1"
                         ? "bg-sky-50 text-sky-700 border border-sky-100"
                         : "bg-indigo-50 text-indigo-700 border border-indigo-100"
-                    }`}>
+                      }`}>
                       {detailReport.shift}
                     </span>
                   </div>
@@ -759,7 +755,7 @@ Istirahat: ${breakMin}
               {/* Section 2: Hasil Produksi */}
               <div className="space-y-4">
                 <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider select-none">Hasil Produksi & Kualitas</h4>
-                
+
                 <div className="flex items-center justify-between border-b border-slate-100 pb-2">
                   <span className="text-sm text-slate-600 font-medium">Part Number</span>
                   <span className="text-sm font-bold text-slate-800 font-mono">{detailReport.part_number}</span>
