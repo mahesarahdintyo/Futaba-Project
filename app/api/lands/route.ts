@@ -144,10 +144,19 @@ export async function PATCH(request: Request) {
       })
       .eq("id", id)
       .select()
-      .single();
+      .maybeSingle();
 
     if (error) {
+      console.error("Lands PATCH supabase error:", error);
       return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    // Jika tidak ada baris yang ter-update, kemungkinan diblokir oleh RLS
+    if (!updatedLand) {
+      return NextResponse.json(
+        { error: "Data tidak ditemukan atau Anda tidak memiliki izin untuk mengubah visibilitas card ini." },
+        { status: 403 }
+      );
     }
 
     return NextResponse.json(updatedLand);
@@ -156,6 +165,7 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
+
 
 export async function DELETE(request: Request) {
   try {
