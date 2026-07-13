@@ -1,8 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { Eye, EyeOff, Folder, Loader2, Pencil, Trash2, X } from 'lucide-react'
+import { Eye, EyeOff, Folder, Loader2, Pencil, Trash2, X, AlertTriangle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { toast } from 'sonner'
 import type { Land } from '@/lib/services/land'
 
 interface AdminLandCardProps {
@@ -17,6 +18,7 @@ export function AdminLandCard({
   onChangeSuccess,
 }: AdminLandCardProps) {
   const [isEditOpen, setIsEditOpen] = useState(false)
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false)
   const [name, setName] = useState(land.name)
   const [description, setDescription] = useState(land.description ?? '')
   const [isSaving, setIsSaving] = useState(false)
@@ -51,9 +53,7 @@ export function AdminLandCard({
 
       const response = await fetch('/api/lands', {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           id: land.id,
           name: name.trim(),
@@ -66,6 +66,7 @@ export function AdminLandCard({
         throw new Error(data?.error || 'Gagal mengubah card')
       }
 
+      toast.success(`Card "${name.trim()}" berhasil diperbarui!`)
       setIsEditOpen(false)
       onChangeSuccess?.()
     } catch (err) {
@@ -75,13 +76,12 @@ export function AdminLandCard({
     }
   }
 
-  const handleDelete = async (event: React.MouseEvent) => {
+  const handleOpenDelete = (event: React.MouseEvent) => {
     event.stopPropagation()
+    setIsDeleteOpen(true)
+  }
 
-    if (!window.confirm(`Apakah Anda yakin ingin menghapus card "${land.name}"?`)) {
-      return
-    }
-
+  const handleDelete = async () => {
     try {
       setIsDeleting(true)
 
@@ -94,9 +94,11 @@ export function AdminLandCard({
         throw new Error(data?.error || 'Gagal menghapus card')
       }
 
+      toast.success(`Card "${land.name}" berhasil dihapus.`)
+      setIsDeleteOpen(false)
       onChangeSuccess?.()
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Gagal menghapus card')
+      toast.error(err instanceof Error ? err.message : 'Gagal menghapus card')
     } finally {
       setIsDeleting(false)
     }
@@ -110,9 +112,7 @@ export function AdminLandCard({
 
       const response = await fetch('/api/lands', {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           id: land.id,
           hidden_from_operator: !isHiddenFromOperator,
@@ -124,9 +124,14 @@ export function AdminLandCard({
         throw new Error(data?.error || 'Gagal mengubah visibilitas card')
       }
 
+      toast.success(
+        isHiddenFromOperator
+          ? `Card "${land.name}" sekarang terlihat oleh operator.`
+          : `Card "${land.name}" disembunyikan dari operator.`
+      )
       onChangeSuccess?.()
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Gagal mengubah visibilitas card')
+      toast.error(err instanceof Error ? err.message : 'Gagal mengubah visibilitas card')
     } finally {
       setIsSavingVisibility(false)
     }
@@ -134,6 +139,7 @@ export function AdminLandCard({
 
   return (
     <>
+      {/* Card */}
       <div
         onClick={() => onEnter(land)}
         className={`bg-white border rounded-lg p-5 shadow-sm hover:shadow-md cursor-pointer transition-all ${
@@ -199,7 +205,7 @@ export function AdminLandCard({
             <Button
               size="icon-sm"
               variant="ghost"
-              onClick={handleDelete}
+              onClick={handleOpenDelete}
               disabled={isDeleting}
               title="Hapus Card"
               aria-label={`Hapus card ${land.name}`}
@@ -215,20 +221,73 @@ export function AdminLandCard({
         </div>
       </div>
 
+      {/* Modal Konfirmasi Hapus */}
+      {isDeleteOpen && (
+        <div
+          className="fixed inset-0 flex items-center justify-center z-50 p-4 backdrop-blur-sm"
+          style={{ backgroundColor: 'rgba(0, 0, 0, 0.4)' }}
+          onClick={(e) => { if (e.target === e.currentTarget && !isDeleting) setIsDeleteOpen(false) }}
+        >
+          <div className="bg-white rounded-xl shadow-2xl max-w-sm w-full p-6 space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="flex-shrink-0 w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                <AlertTriangle className="w-5 h-5 text-red-600" />
+              </div>
+              <div>
+                <h2 className="text-base font-semibold text-gray-900">Hapus Card</h2>
+                <p className="text-sm text-gray-500 mt-0.5">Tindakan ini tidak dapat dibatalkan.</p>
+              </div>
+            </div>
+
+            <p className="text-sm text-gray-700">
+              Apakah Anda yakin ingin menghapus card{' '}
+              <span className="font-semibold text-gray-900">&quot;{land.name}&quot;</span>?
+            </p>
+
+            <div className="flex gap-3 pt-1">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsDeleteOpen(false)}
+                disabled={isDeleting}
+                className="flex-1 border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+              >
+                Batal
+              </Button>
+              <Button
+                type="button"
+                onClick={handleDelete}
+                disabled={isDeleting}
+                className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+              >
+                {isDeleting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Menghapus...
+                  </>
+                ) : (
+                  'Hapus'
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Edit */}
       {isEditOpen && (
         <div
           className="fixed inset-0 flex items-center justify-center z-50 p-4 backdrop-blur-sm"
           style={{ backgroundColor: 'rgba(0, 0, 0, 0.4)' }}
+          onClick={(e) => { if (e.target === e.currentTarget && !isSaving) setIsEditOpen(false) }}
         >
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
-            <div className="flex items-center justify-between p-6 border-b border-gray-200">
-              <h2 className="text-xl font-semibold text-gray-900">
-                Edit Card
-              </h2>
+          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+              <h2 className="text-lg font-semibold text-gray-900">Edit Card</h2>
               <button
                 onClick={() => setIsEditOpen(false)}
                 disabled={isSaving}
-                className="text-gray-400 hover:text-gray-600 disabled:opacity-50"
+                className="text-gray-400 hover:text-gray-600 disabled:opacity-50 transition"
                 aria-label="Tutup"
               >
                 <X className="w-5 h-5" />
@@ -242,34 +301,34 @@ export function AdminLandCard({
                 </div>
               )}
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Nama Card *
+              <div className="space-y-1.5">
+                <label className="block text-sm font-medium text-gray-700">
+                  Nama Card <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   value={name}
                   onChange={(event) => setName(event.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm text-gray-900 outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500 transition"
                   disabled={isSaving}
                   autoFocus
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Deskripsi
+              <div className="space-y-1.5">
+                <label className="block text-sm font-medium text-gray-700">
+                  Deskripsi <span className="text-gray-400">(opsional)</span>
                 </label>
                 <textarea
                   value={description}
                   onChange={(event) => setDescription(event.target.value)}
                   rows={3}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm text-gray-900 outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500 transition resize-none"
                   disabled={isSaving}
                 />
               </div>
 
-              <div className="flex gap-3 pt-4">
+              <div className="flex gap-3 pt-2">
                 <Button
                   type="button"
                   variant="outline"
