@@ -40,12 +40,27 @@ export async function POST(request: Request) {
 
     if (!name) {
       return NextResponse.json(
-        { error: "Land name is required" },
+        { error: "Nama card tidak boleh kosong" },
         { status: 400 }
       );
     }
 
     const supabase = await createClient();
+
+    // Cek duplikat nama (case-insensitive)
+    const { data: existing } = await supabase
+      .from("lands")
+      .select("id")
+      .ilike("name", name)
+      .eq("is_active", true)
+      .maybeSingle();
+
+    if (existing) {
+      return NextResponse.json(
+        { error: `Card dengan nama "${name}" sudah ada. Gunakan nama yang berbeda.` },
+        { status: 409 }
+      );
+    }
 
     const { data: newLand, error } = await supabase
       .from("lands")

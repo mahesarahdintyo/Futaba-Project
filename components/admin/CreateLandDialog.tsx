@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { FolderPlus, Loader2, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { toast } from 'sonner'
 
 interface CreateLandDialogProps {
   onCreateSuccess?: () => void
@@ -13,14 +14,22 @@ export function CreateLandDialog({ onCreateSuccess }: CreateLandDialogProps) {
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState('')
+  const [isDuplicate, setIsDuplicate] = useState(false)
+
+  const handleClose = () => {
+    if (isLoading) return
+    setIsOpen(false)
+    setName('')
+    setDescription('')
+    setIsDuplicate(false)
+  }
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
-    setError('')
+    setIsDuplicate(false)
 
     if (!name.trim()) {
-      setError('Nama card tidak boleh kosong')
+      toast.error('Nama card tidak boleh kosong')
       return
     }
 
@@ -29,9 +38,7 @@ export function CreateLandDialog({ onCreateSuccess }: CreateLandDialogProps) {
 
       const response = await fetch('/api/lands', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: name.trim(),
           description: description.trim() || null,
@@ -40,15 +47,24 @@ export function CreateLandDialog({ onCreateSuccess }: CreateLandDialogProps) {
 
       if (!response.ok) {
         const data = await response.json().catch(() => null)
-        throw new Error(data?.error || 'Gagal membuat card')
+        const message = data?.error || 'Gagal membuat card'
+
+        // Tandai input sebagai duplikat jika status 409
+        if (response.status === 409) {
+          setIsDuplicate(true)
+        }
+
+        toast.error(message)
+        return
       }
 
+      toast.success(`Card "${name.trim()}" berhasil dibuat!`)
       setName('')
       setDescription('')
       setIsOpen(false)
       onCreateSuccess?.()
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Gagal membuat card')
+    } catch {
+      toast.error('Gagal membuat card. Periksa koneksi internet Anda.')
     } finally {
       setIsLoading(false)
     }
@@ -68,16 +84,16 @@ export function CreateLandDialog({ onCreateSuccess }: CreateLandDialogProps) {
         <div
           className="fixed inset-0 flex items-center justify-center z-50 p-4 backdrop-blur-sm"
           style={{ backgroundColor: 'rgba(0, 0, 0, 0.4)' }}
+          onClick={(e) => { if (e.target === e.currentTarget) handleClose() }}
         >
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
-            <div className="flex items-center justify-between p-6 border-b border-gray-200">
-              <h2 className="text-xl font-semibold text-gray-900">
-                Buat Card Baru
-              </h2>
+          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full animate-scaleIn">
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+              <h2 className="text-lg font-semibold text-gray-900">Buat Card Baru</h2>
               <button
-                onClick={() => setIsOpen(false)}
+                onClick={handleClose}
                 disabled={isLoading}
-                className="text-gray-400 hover:text-gray-600 disabled:opacity-50"
+                className="text-gray-400 hover:text-gray-600 disabled:opacity-50 transition"
                 aria-label="Tutup"
               >
                 <X className="w-5 h-5" />
@@ -85,48 +101,60 @@ export function CreateLandDialog({ onCreateSuccess }: CreateLandDialogProps) {
             </div>
 
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
-              {error && (
-                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-                  {error}
-                </div>
-              )}
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Nama Card *
+              {/* Nama Card */}
+              <div className="space-y-1.5">
+                <label htmlFor="land-name" className="block text-sm font-medium text-gray-700">
+                  Nama Card <span className="text-red-500">*</span>
                 </label>
                 <input
+                  id="land-name"
                   type="text"
                   value={name}
-                  onChange={(event) => setName(event.target.value)}
+                  onChange={(e) => {
+                    setName(e.target.value)
+                    if (isDuplicate) setIsDuplicate(false)
+                  }}
                   placeholder="Contoh: Produksi, HRD, Keuangan"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                  className={`w-full px-4 py-2.5 border rounded-lg text-sm text-gray-900 outline-none transition
+                    focus:ring-2 focus:border-transparent
+                    ${isDuplicate
+                      ? 'border-red-400 bg-red-50 focus:ring-red-200'
+                      : 'border-gray-300 focus:ring-blue-200 focus:border-blue-500'
+                    }`}
                   disabled={isLoading}
                   autoFocus
                 />
+                {isDuplicate && (
+                  <p className="text-xs text-red-600 font-medium">
+                    Nama ini sudah digunakan. Pilih nama yang berbeda.
+                  </p>
+                )}
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Deskripsi
+              {/* Deskripsi */}
+              <div className="space-y-1.5">
+                <label htmlFor="land-description" className="block text-sm font-medium text-gray-700">
+                  Deskripsi <span className="text-gray-400">(opsional)</span>
                 </label>
                 <textarea
+                  id="land-description"
                   value={description}
-                  onChange={(event) => setDescription(event.target.value)}
-                  placeholder="Opsional"
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Keterangan singkat tentang card ini..."
                   rows={3}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm text-gray-900 outline-none transition focus:ring-2 focus:ring-blue-200 focus:border-blue-500 resize-none"
                   disabled={isLoading}
                 />
               </div>
 
-              <div className="flex gap-3 pt-4">
+              {/* Actions */}
+              <div className="flex gap-3 pt-2">
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => setIsOpen(false)}
+                  onClick={handleClose}
                   disabled={isLoading}
-                  className="flex-1 border-gray-300 bg-white text-gray-700 hover:bg-gray-50 hover:text-gray-900"
+                  className="flex-1 border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
                 >
                   Batal
                 </Button>
