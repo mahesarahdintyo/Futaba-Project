@@ -1,7 +1,7 @@
 import type { Folder } from "@/lib/services/folder";
 import type { Document } from "@/lib/services/document";
-import { FolderCard } from "@/components/folder-card";
-import { DocumentCard } from "@/components/document-card";
+import { FolderCard } from "@/components/ui/folder-card";
+import { DocumentCard } from "@/components/ui/document-card";
 
 interface DocumentListProps {
   folders: Folder[];

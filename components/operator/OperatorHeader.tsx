@@ -1,5 +1,5 @@
-import { AppHeader } from "@/components/app-header";
-import { LogoutButton } from "@/components/logout-button";
+import { AppHeader } from "@/components/ui/app-header";
+import { LogoutButton } from "@/components/ui/logout-button";
 
 interface OperatorHeaderProps {
   selectedLand: string;

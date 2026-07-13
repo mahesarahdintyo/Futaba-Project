@@ -2,13 +2,13 @@
 
 import { useEffect, useState } from "react";
 import {
+  AlertTriangle,
   Plus,
   Trash2,
-  AlertTriangle,
   Loader2,
-  CheckCircle2,
   Tag,
 } from "lucide-react";
+import { toast } from "sonner";
 import {
   getNgCategories,
   createNgCategory,
@@ -19,8 +19,6 @@ import {
 export default function AdminNgCategoriesPanel() {
   const [categories, setCategories] = useState<NgCategory[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [successMsg, setSuccessMsg] = useState("");
 
   // Form state
   const [newName, setNewName] = useState("");
@@ -34,11 +32,10 @@ export default function AdminNgCategoriesPanel() {
   const loadData = async () => {
     try {
       setIsLoading(true);
-      setError("");
       const data = await getNgCategories();
       setCategories(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Gagal memuat kategori NG");
+      toast.error(err instanceof Error ? err.message : "Gagal memuat kategori NG");
     } finally {
       setIsLoading(false);
     }
@@ -54,19 +51,16 @@ export default function AdminNgCategoriesPanel() {
 
     try {
       setIsSubmitting(true);
-      setError("");
-      setSuccessMsg("");
-
+      const submittedName = newName;
       const created = await createNgCategory(newName, newDescription);
       setCategories((prev) =>
         [...prev, created].sort((a, b) => a.name.localeCompare(b.name))
       );
       setNewName("");
       setNewDescription("");
-      setSuccessMsg(`Kategori NG "${created.name}" berhasil ditambahkan!`);
-      setTimeout(() => setSuccessMsg(""), 3000);
+      toast.success(`Kategori NG "${created.name}" berhasil ditambahkan!`);
     } catch (err) {
-      setError(
+      toast.error(
         err instanceof Error ? err.message : "Gagal menambahkan kategori NG"
       );
     } finally {
@@ -79,16 +73,12 @@ export default function AdminNgCategoriesPanel() {
 
     try {
       setIsDeleting(true);
-      setError("");
-      setSuccessMsg("");
-
       await deleteNgCategory(deleteTarget.id);
       setCategories((prev) => prev.filter((c) => c.id !== deleteTarget.id));
-      setSuccessMsg(`Kategori NG "${deleteTarget.name}" berhasil dihapus.`);
+      toast.success(`Kategori NG "${deleteTarget.name}" berhasil dihapus.`);
       setDeleteTarget(null);
-      setTimeout(() => setSuccessMsg(""), 3000);
     } catch (err) {
-      setError(
+      toast.error(
         err instanceof Error ? err.message : "Gagal menghapus kategori NG"
       );
     } finally {
@@ -117,19 +107,6 @@ export default function AdminNgCategoriesPanel() {
             Tambah Kategori NG
           </h2>
 
-          {successMsg && (
-            <div className="mb-4 flex items-start gap-2.5 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-xs text-emerald-800 animate-fadeIn">
-              <CheckCircle2 className="h-4 w-4 text-emerald-600 flex-shrink-0 mt-0.5" />
-              <span>{successMsg}</span>
-            </div>
-          )}
-
-          {error && (
-            <div className="mb-4 flex items-start gap-2.5 rounded-lg border border-red-200 bg-red-50 p-3 text-xs text-red-800 animate-fadeIn">
-              <AlertTriangle className="h-4 w-4 text-red-600 flex-shrink-0 mt-0.5" />
-              <span>{error}</span>
-            </div>
-          )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1.5">

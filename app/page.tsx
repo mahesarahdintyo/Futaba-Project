@@ -1,9 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
-import { LoginForm } from "@/components/login-form";
-import { LogoutButton } from "@/components/logout-button";
+import { LoginForm } from "@/components/ui/login-form";
+import { LogoutButton } from "@/components/ui/logout-button";
 import Link from "next/link";
 import Image from "next/image";
-import { AppHeader } from "@/components/app-header";
+import { AppHeader } from "@/components/ui/app-header";
 import { ArrowRight, ShieldCheck, User, Tv } from "lucide-react";
 
 export default async function HomePage() {

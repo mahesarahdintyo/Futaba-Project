@@ -28,7 +28,7 @@ export function LogoutButton({ className = "", variant = "default" }: LogoutButt
       <button
         onClick={handleLogout}
         disabled={isPending}
-        className={`h-10 px-3 bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold text-xs rounded-xl transition duration-200 cursor-pointer flex items-center justify-center gap-2 border border-rose-100 disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
+        className={`h-9 px-4 bg-rose-50 hover:bg-rose-100 text-rose-600 font-medium text-sm rounded-lg transition-all duration-200 cursor-pointer flex items-center justify-center gap-2 border border-rose-100 disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
         title="Keluar"
       >
         {isPending ? (
@@ -36,7 +36,7 @@ export function LogoutButton({ className = "", variant = "default" }: LogoutButt
         ) : (
           <LogOut className="h-4 w-4" />
         )}
-        <span className="hidden sm:inline">Keluar</span>
+        <span>Keluar</span>
       </button>
     );
   }

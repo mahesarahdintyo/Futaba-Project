@@ -58,7 +58,7 @@ export function CreateLandDialog({ onCreateSuccess }: CreateLandDialogProps) {
     <>
       <Button
         onClick={() => setIsOpen(true)}
-        className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto flex items-center justify-center"
+        className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto flex items-center justify-center h-9 px-4 rounded-lg text-white text-sm font-medium"
       >
         <FolderPlus className="w-4 h-4 mr-2" />
         New Card

@@ -67,7 +67,7 @@ export function CreateFolderDialog({
       <Button
         onClick={() => setIsOpen(true)}
         variant="outline"
-        className="border-gray-300 hover:bg-gray-50 w-full sm:w-auto flex items-center justify-center gap-2 text-white font-medium"
+        className="border-gray-300 hover:bg-gray-50 w-full sm:w-auto flex items-center justify-center gap-2 h-9 px-4 rounded-lg text-gray-700 bg-white text-sm font-medium"
       >
         <FolderPlus className="w-4 h-4 text-yellow-600" />
         New Folder

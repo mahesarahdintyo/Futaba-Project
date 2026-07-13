@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import {
   AlertTriangle,
   CalendarDays,
-  CheckCircle,
   ChevronDown,
   Loader2,
   Minus,
@@ -13,6 +12,7 @@ import {
   Tag,
   TimerReset,
 } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { createProductionReport } from "@/lib/services/production-report";
 import { getPartNumbers } from "@/lib/services/part-number";
@@ -302,8 +302,6 @@ export default function ProductionReportForm({ landId }: ProductionReportFormPro
   const [pc2, setPc2] = useState<"1" | "2">("1");
   const [editingField, setEditingField] = useState<"start" | "end" | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState("");
-  const [successMsg, setSuccessMsg] = useState("");
 
   const resetProductionDetails = () => {
     setQty(0);
@@ -324,8 +322,6 @@ export default function ProductionReportForm({ landId }: ProductionReportFormPro
 
   const handlePartNumberChange = (value: string) => {
     setPartNumber(value);
-    setError("");
-    setSuccessMsg("");
     resetProductionDetails();
 
     if (!value) {
@@ -358,8 +354,6 @@ export default function ProductionReportForm({ landId }: ProductionReportFormPro
 
   const handleFinish = () => {
     const now = new Date();
-    setError("");
-    setSuccessMsg("");
     setEndDate(getDateString(now));
     setEndTime(getTimeString(now));
     setEditingField(null);
@@ -367,36 +361,34 @@ export default function ProductionReportForm({ landId }: ProductionReportFormPro
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
-    setSuccessMsg("");
 
     if (!partNumber) {
-      setError("Part number tidak boleh kosong");
+      toast.error("Part number tidak boleh kosong");
       return;
     }
 
     if (!startDate || !startTime) {
-      setError("Waktu awal belum terset");
+      toast.error("Waktu awal belum terset");
       return;
     }
 
     if (!endDate || !endTime) {
-      setError("Tekan tombol Finish untuk menentukan waktu akhir");
+      toast.error("Tekan tombol Finish untuk menentukan waktu akhir");
       return;
     }
 
     if (qty === 0) {
-      setError("QTY tidak boleh 0. Masukkan jumlah produksi yang sesuai.");
+      toast.error("QTY tidak boleh 0. Masukkan jumlah produksi yang sesuai.");
       return;
     }
 
     if (ngQty > qty) {
-      setError("Jumlah NG tidak boleh melebihi QTY");
+      toast.error("Jumlah NG tidak boleh melebihi QTY");
       return;
     }
 
     if (ngQty > 0 && !ngCategory) {
-      setError("Pilih kategori NG karena jumlah NG lebih dari 0.");
+      toast.error("Pilih kategori NG karena jumlah NG lebih dari 0.");
       return;
     }
 
@@ -416,13 +408,13 @@ export default function ProductionReportForm({ landId }: ProductionReportFormPro
         break_minutes: breakMinutes,
       });
 
-      setSuccessMsg("Laporan produksi berhasil disimpan!");
+      toast.success("Laporan produksi berhasil disimpan!");
       setPartNumber("");
       resetTimes();
       resetProductionDetails();
       setReportDate(getDateString(new Date()));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Gagal menyimpan laporan");
+      toast.error(err instanceof Error ? err.message : "Gagal menyimpan laporan");
     } finally {
       setIsSubmitting(false);
     }
@@ -439,19 +431,6 @@ export default function ProductionReportForm({ landId }: ProductionReportFormPro
         </div>
 
         <div className="space-y-6">
-          {error && (
-            <div className="flex items-start gap-2.5 rounded border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-800">
-              <AlertTriangle className="h-5 w-5 flex-shrink-0 text-red-600" />
-              <span>{error}</span>
-            </div>
-          )}
-
-          {successMsg && (
-            <div className="flex items-start gap-2.5 rounded border border-emerald-200 bg-emerald-50 p-4 text-sm font-medium text-emerald-800">
-              <CheckCircle className="h-5 w-5 flex-shrink-0 text-emerald-600" />
-              <span>{successMsg}</span>
-            </div>
-          )}
 
           <div className="space-y-2">
             <label htmlFor="part-number" className="text-xs font-semibold uppercase tracking-wide text-slate-600">

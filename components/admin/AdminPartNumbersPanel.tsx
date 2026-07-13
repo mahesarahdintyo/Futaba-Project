@@ -2,13 +2,13 @@
 
 import { useEffect, useState } from "react";
 import {
+  AlertTriangle,
   Plus,
   Trash2,
-  AlertTriangle,
   Loader2,
-  CheckCircle2,
   FileCode,
 } from "lucide-react";
+import { toast } from "sonner";
 import {
   getPartNumbers,
   createPartNumber,
@@ -19,8 +19,6 @@ import {
 export default function AdminPartNumbersPanel() {
   const [partNumbers, setPartNumbers] = useState<PartNumber[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [successMsg, setSuccessMsg] = useState("");
 
   // Form state
   const [newCode, setNewCode] = useState("");
@@ -34,11 +32,10 @@ export default function AdminPartNumbersPanel() {
   const loadData = async () => {
     try {
       setIsLoading(true);
-      setError("");
       const data = await getPartNumbers();
       setPartNumbers(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Gagal memuat part numbers");
+      toast.error(err instanceof Error ? err.message : "Gagal memuat part numbers");
     } finally {
       setIsLoading(false);
     }
@@ -54,19 +51,14 @@ export default function AdminPartNumbersPanel() {
 
     try {
       setIsSubmitting(true);
-      setError("");
-      setSuccessMsg("");
-
+      const created = newCode;
       const newPN = await createPartNumber(newCode, newDescription);
       setPartNumbers((prev) => [...prev, newPN].sort((a, b) => a.code.localeCompare(b.code)));
       setNewCode("");
       setNewDescription("");
-      setSuccessMsg(`Part number "${newCode}" berhasil ditambahkan!`);
-
-      // Auto-hide success message
-      setTimeout(() => setSuccessMsg(""), 3000);
+      toast.success(`Part number "${created}" berhasil ditambahkan!`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Gagal menambahkan part number");
+      toast.error(err instanceof Error ? err.message : "Gagal menambahkan part number");
     } finally {
       setIsSubmitting(false);
     }
@@ -77,17 +69,12 @@ export default function AdminPartNumbersPanel() {
 
     try {
       setIsDeleting(true);
-      setError("");
-      setSuccessMsg("");
-
       await deletePartNumber(deleteTarget.id);
       setPartNumbers((prev) => prev.filter((pn) => pn.id !== deleteTarget.id));
-      setSuccessMsg(`Part number "${deleteTarget.code}" berhasil dihapus.`);
+      toast.success(`Part number "${deleteTarget.code}" berhasil dihapus.`);
       setDeleteTarget(null);
-
-      setTimeout(() => setSuccessMsg(""), 3000);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Gagal menghapus part number");
+      toast.error(err instanceof Error ? err.message : "Gagal menghapus part number");
     } finally {
       setIsDeleting(false);
     }
@@ -113,19 +100,6 @@ export default function AdminPartNumbersPanel() {
             Tambah Part Number
           </h2>
 
-          {successMsg && (
-            <div className="mb-4 flex items-start gap-2.5 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-xs text-emerald-800 animate-fadeIn">
-              <CheckCircle2 className="h-4.5 w-4.5 text-emerald-600 flex-shrink-0" />
-              <span>{successMsg}</span>
-            </div>
-          )}
-
-          {error && (
-            <div className="mb-4 flex items-start gap-2.5 rounded-lg border border-red-200 bg-red-50 p-3 text-xs text-red-800 animate-fadeIn">
-              <AlertTriangle className="h-4.5 w-4.5 text-red-600 flex-shrink-0" />
-              <span>{error}</span>
-            </div>
-          )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1.5">
