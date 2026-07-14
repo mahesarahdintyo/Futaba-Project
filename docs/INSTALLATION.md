@@ -213,6 +213,25 @@ Terapkan semua file SQL di folder `supabase/migrations/` secara berurutan (sesua
 
 ---
 
+#### F. Aktifkan Supabase Realtime
+
+Beberapa halaman memakai Supabase Realtime agar data lintas perangkat langsung tersinkron tanpa refresh manual:
+
+- `production_reports`: laporan baru dari operator langsung muncul di dashboard admin.
+- `part_numbers`: dropdown part number operator langsung mengikuti tambah/hapus dari admin.
+
+Aktifkan melalui dashboard Supabase: **Database** -> **Replication** -> publication `supabase_realtime`, lalu enable tabel `production_reports` dan `part_numbers`.
+
+Atau jalankan SQL berikut:
+
+```sql
+ALTER PUBLICATION supabase_realtime ADD TABLE public.production_reports;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.part_numbers;
+```
+
+Jika tabel sudah pernah ditambahkan ke publication, Supabase dapat menampilkan error duplikat; itu aman diabaikan.
+
+---
 ### 4. Setup Storage Bucket
 
 1. Buka menu **Storage** di dashboard Supabase.

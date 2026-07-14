@@ -44,6 +44,23 @@ Lihat [INSTALLATION.md](./INSTALLATION.md) untuk detail query SQL setiap tabel.
 
 ---
 
+## Realtime Supabase
+
+Pastikan publication `supabase_realtime` di project Supabase produksi mengaktifkan tabel berikut:
+
+- `production_reports`, agar laporan yang disubmit operator langsung muncul di dashboard admin.
+- `part_numbers`, agar dropdown part number operator langsung mengikuti perubahan dari admin.
+
+Konfigurasi dapat dilakukan dari **Supabase Dashboard -> Database -> Replication**, atau dengan SQL:
+
+```sql
+ALTER PUBLICATION supabase_realtime ADD TABLE public.production_reports;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.part_numbers;
+```
+
+Kode aplikasi juga memiliki fallback polling beberapa detik, tetapi Realtime tetap direkomendasikan untuk update paling cepat.
+
+---
 ## 🔒 Keamanan Produksi (RLS)
 
 Semua tabel sudah dikonfigurasi dengan **Row Level Security (RLS)**. Berikut rekomendasi kebijakan untuk produksi:

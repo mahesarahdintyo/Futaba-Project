@@ -13,17 +13,17 @@
 | Fitur | Keterangan |
 |---|---|
 | Workspace Dokumen | Kelola folder, unggah/hapus dokumen SOP/Manual/Form per lini (Land) |
-| Laporan Produksi | Pantau laporan harian semua operator — filter, search, export CSV |
+| Laporan Produksi | Pantau laporan harian semua operator secara realtime - filter, search, export CSV |
 | Detail Laporan | Lihat detail lengkap + salin laporan ke clipboard |
 | Hapus Laporan | Hapus laporan dengan konfirmasi modal |
-| Manajemen Part Number | Tambah & hapus part number yang bisa dipilih operator |
+| Manajemen Part Number | Tambah & hapus part number yang langsung tersinkron ke dropdown operator |
 | **Manajemen Kategori NG** | Tambah & hapus kategori cacat (NG) yang dipakai operator |
 
 ### 📱 Operator
 | Fitur | Keterangan |
 |---|---|
 | Tampilkan Dokumen | Pilih & kirim dokumen ke TV Display secara realtime |
-| Laporan Produksi | Isi QTY, NG, Kategori NG per sesi produksi |
+| Laporan Produksi | Isi QTY, NG, Kategori NG per sesi produksi; hasilnya langsung muncul di dashboard admin |
 | Kategori NG Dinamis | Pilihan kategori NG muncul otomatis saat NG > 0, wajib dipilih |
 | Validasi Form | QTY tidak boleh 0; Kategori NG wajib jika ada NG |
 
@@ -156,8 +156,8 @@ Buka **[http://localhost:3000](http://localhost:3000)**.
 ```
 Admin Login
   └─ Tab: Workspace     → Kelola dokumen/folder per lini
-  └─ Tab: Laporan Produksi → Pantau laporan operator
-  └─ Tab: Part Number   → Tambah/hapus part number
+  └─ Tab: Laporan Produksi -> Pantau laporan operator secara realtime
+  └─ Tab: Part Number   -> Tambah/hapus part number, dropdown operator otomatis update
   └─ Tab: Kategori NG  → Tambah/hapus kategori cacat
 
 Operator (tablet)
@@ -166,7 +166,7 @@ Operator (tablet)
   └─ Tekan Finish → sistem set waktu selesai
   └─ Isi QTY (wajib, > 0)
   └─ Isi NG (jika ada → pilih Kategori NG)
-  └─ Simpan Laporan
+  └─ Simpan Laporan -> dashboard admin otomatis update tanpa refresh
 
 TV Display
   └─ Buka /display/[landId] di browser TV

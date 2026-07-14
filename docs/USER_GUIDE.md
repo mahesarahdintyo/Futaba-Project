@@ -51,6 +51,8 @@ Halaman Admin memiliki empat tab utama di navigation bar atas:
 
 Dashboard untuk memantau semua laporan harian yang dikirim operator.
 
+Dashboard akan memperbarui daftar laporan secara otomatis saat operator menyimpan laporan baru. Admin tidak perlu melakukan refresh browser; tombol **Perbarui** tetap tersedia untuk refresh manual jika koneksi realtime sedang bermasalah.
+
 #### 🔍 Filter & Pencarian
 - **Filter Lini/Card**: Dropdown pilih lini produksi tertentu.
 - **Filter Tanggal**: Tentukan rentang tanggal.
@@ -77,6 +79,8 @@ Panel untuk mengelola daftar part number yang bisa dipilih operator.
 - **Hapus**: Klik ikon **Trash** pada baris yang ingin dihapus → konfirmasi modal.
 
 > Part number yang dihapus tidak lagi muncul di form operator. Laporan lama yang sudah memakai part number tersebut tidak terpengaruh.
+
+Dropdown part number di halaman operator ikut tersinkron otomatis saat admin menambah atau menghapus part number. Jika part number yang sedang dipilih operator dihapus, pilihan akan dikosongkan dan operator perlu memilih ulang.
 
 ---
 
@@ -110,6 +114,8 @@ Halaman operator diakses via tablet di masing-masing lini produksi.
 7. Pilih **PC-1** dan **PC-2**.
 8. Klik **Simpan Laporan**.
 
+Setelah laporan tersimpan, laporan tersebut otomatis muncul di tab **Laporan Produksi** halaman admin tanpa refresh manual.
+
 **Validasi yang berlaku:**
 - QTY tidak boleh 0
 - QTY NG tidak boleh melebihi QTY
@@ -140,6 +146,7 @@ Layar TV Display diletakkan di area kerja setiap lini (stasiun kerja).
 | Situasi | Solusi |
 |---|---|
 | Part number belum muncul | Minta admin tambah di Tab **Part Number** |
+| Laporan baru belum muncul di admin | Tunggu beberapa detik, klik **Perbarui**, lalu cek koneksi Supabase Realtime |
 | Kategori NG tidak ada | Minta admin tambah di Tab **Kategori NG** |
 | Dokumen tidak muncul di operator | Cek visibilitas dokumen (ikon mata) di admin |
 | TV Display tidak update | Refresh halaman TV Display, cek koneksi jaringan |

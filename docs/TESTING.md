@@ -67,6 +67,13 @@ Jalankan server lokal (`pnpm dev` atau `npm run start`) lalu verifikasi fungsion
 - [ ] Klik tombol **Preview** pada dokumen. Pastikan dokumen terbuka di tab baru.
 - [ ] Pastikan dokumen yang diset **hidden** di halaman admin **tidak muncul** sama sekali di halaman operator.
 
+#### Laporan Produksi & Part Number Realtime
+- [ ] Buka halaman admin tab **Part Number** dan halaman operator tab **Laporan Produksi** di dua tab browser.
+- [ ] Tambah part number baru dari admin. Pastikan dropdown part number operator bertambah otomatis tanpa refresh.
+- [ ] Hapus part number dari admin. Pastikan dropdown operator berkurang otomatis tanpa refresh.
+- [ ] Buka halaman admin tab **Laporan Produksi** dan halaman operator tab **Laporan Produksi** di dua tab browser.
+- [ ] Submit laporan produksi dari operator. Pastikan laporan baru muncul otomatis di dashboard admin tanpa refresh browser.
+
 ---
 
 ### 📺 C. Halaman Display TV (`/display`)
