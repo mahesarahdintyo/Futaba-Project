@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Activity,
   Calendar,
@@ -26,6 +26,9 @@ import {
   type ProductionReport,
 } from "@/lib/services/production-report";
 import { Button } from "@/components/ui/button";
+import { createClient } from "@/lib/supabase/client";
+
+const PRODUCTION_REPORT_REFRESH_INTERVAL_MS = 3000;
 
 export default function ProductionReportsDashboard() {
   const [reports, setReports] = useState<ProductionReport[]>([]);
@@ -48,56 +51,96 @@ export default function ProductionReportsDashboard() {
   // Modal Detail state
   const [detailReport, setDetailReport] = useState<ProductionReport | null>(null);
   const [isCopied, setIsCopied] = useState(false);
+  const reportsRequestIdRef = useRef(0);
 
-  // Load lands and initial reports
-  const loadInitialData = async () => {
-    try {
-      setIsLoading(true);
-      setError("");
+  const loadReports = useCallback(
+    async ({ showLoading = true }: { showLoading?: boolean } = {}) => {
+      const requestId = reportsRequestIdRef.current + 1;
+      reportsRequestIdRef.current = requestId;
 
-      const landsData = await getLands({ includeHidden: true });
-      setLands(landsData);
+      try {
+        if (showLoading) {
+          setIsLoading(true);
+        }
+        setError("");
 
-      const reportsData = await getProductionReports();
-      setReports(reportsData);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Gagal memuat data");
-      console.error(err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+        const query = {
+          landId: selectedLandId !== "all" ? selectedLandId : undefined,
+          startDate: startDate || undefined,
+          endDate: endDate || undefined,
+        };
+        const reportsData = await getProductionReports(query);
 
+        if (reportsRequestIdRef.current !== requestId) return;
+        setReports(reportsData);
+      } catch (err) {
+        if (reportsRequestIdRef.current !== requestId) return;
+        setError(err instanceof Error ? err.message : "Gagal memperbarui data");
+        console.error(err);
+      } finally {
+        if (reportsRequestIdRef.current === requestId && showLoading) {
+          setIsLoading(false);
+        }
+      }
+    },
+    [endDate, selectedLandId, startDate]
+  );
+
+  // Load lands once for the filter options
   useEffect(() => {
-    loadInitialData();
+    async function loadLands() {
+      try {
+        const landsData = await getLands({ includeHidden: true });
+        setLands(landsData);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Gagal memuat data line");
+        console.error(err);
+      }
+    }
+
+    void loadLands();
   }, []);
 
-  const handleRefresh = async () => {
-    try {
-      setIsLoading(true);
-      setError("");
-      const query = {
-        landId: selectedLandId !== "all" ? selectedLandId : undefined,
-        startDate: startDate || undefined,
-        endDate: endDate || undefined,
-      };
-      const reportsData = await getProductionReports(query);
-      setReports(reportsData);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Gagal memperbarui data");
-      console.error(err);
-    } finally {
-      setIsLoading(false);
-    }
+  const handleRefresh = () => {
+    void loadReports();
   };
 
   // Trigger refresh when database filters change
   useEffect(() => {
-    const delayDebounce = setTimeout(() => {
-      handleRefresh();
+    const delayDebounce = window.setTimeout(() => {
+      void loadReports();
     }, 100);
-    return () => clearTimeout(delayDebounce);
-  }, [selectedLandId, startDate, endDate]);
+    return () => window.clearTimeout(delayDebounce);
+  }, [loadReports]);
+
+  useEffect(() => {
+    const supabase = createClient();
+
+    const refreshReports = () => {
+      void loadReports({ showLoading: false });
+    };
+
+    const channel = supabase
+      .channel("admin-production-reports")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "production_reports" },
+        refreshReports
+      )
+      .subscribe();
+
+    const intervalId = window.setInterval(() => {
+      void loadReports({ showLoading: false });
+    }, PRODUCTION_REPORT_REFRESH_INTERVAL_MS);
+
+    window.addEventListener("focus", refreshReports);
+
+    return () => {
+      window.clearInterval(intervalId);
+      window.removeEventListener("focus", refreshReports);
+      void supabase.removeChannel(channel);
+    };
+  }, [loadReports]);
 
   const handleResetFilters = () => {
     setSelectedLandId("all");
