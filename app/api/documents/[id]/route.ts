@@ -94,17 +94,26 @@ export async function PATCH(
 
     const supabase = await createClient()
 
-    const { data, error } = await supabase
+    // Mengganti .single() dengan .select() agar aman dari error single row coercion
+    const { data: rawData, error } = await supabase
       .from('documents')
       .update(updateFields)
       .eq('id', id)
       .select('id, target_time, hidden_from_operator, file_name, title')
-      .single()
 
     if (error) {
       return NextResponse.json(
         { error: error.message },
         { status: 500 }
+      )
+    }
+
+    const data = Array.isArray(rawData) ? rawData[0] : rawData
+
+    if (!data) {
+      return NextResponse.json(
+        { error: 'Document not found or update failed' },
+        { status: 404 }
       )
     }
 

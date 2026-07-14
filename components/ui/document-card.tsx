@@ -1,4 +1,5 @@
 import { useEffect, useState, type CSSProperties } from 'react'
+import { useRouter } from 'next/navigation'
 import {
   Clock,
   Eye,
@@ -300,6 +301,7 @@ export function DocumentCard({
   onVisibilityChange,
   showOperatorActions = false
 }: DocumentCardProps) {
+  const router = useRouter()
   const [isDeleting, setIsDeleting] = useState(false)
   const [isViewing, setIsViewing] = useState(false)
   const [isDisplaying, setIsDisplaying] = useState(false)
@@ -372,7 +374,7 @@ export function DocumentCard({
       window.open(data.url, '_blank')
     } catch (error) {
       console.error('View error:', error)
-      alert('Failed to open file preview')
+      toast.error('Gagal membuka preview dokumen')
     } finally {
       setIsViewing(false)
     }
@@ -428,7 +430,7 @@ export function DocumentCard({
       )
     } catch (error) {
       console.error('Display error:', error)
-      alert(error instanceof Error ? error.message : 'Gagal menampilkan dokumen di display')
+      toast.error(error instanceof Error ? error.message : 'Gagal menampilkan dokumen di display')
     } finally {
       window.setTimeout(() => setIsDisplaying(false), 600)
     }
@@ -490,7 +492,7 @@ export function DocumentCard({
       setTargetTimeInput(toLocalDateTimeInputValue(savedTargetTime))
     } catch (error) {
       console.error('Target time update error:', error)
-      alert(error instanceof Error ? error.message : 'Gagal menyimpan target waktu')
+      toast.error(error instanceof Error ? error.message : 'Gagal menyimpan target waktu')
     } finally {
       setIsSavingTargetTime(false)
     }
@@ -543,9 +545,19 @@ export function DocumentCard({
 
       setCurrentHiddenFromOperator(savedHiddenFromOperator)
       onVisibilityChange?.(id, savedHiddenFromOperator)
+
+      // Menampilkan Toast notifikasi
+      if (savedHiddenFromOperator) {
+        toast.success("Dokumen berhasil disembunyikan dari operator")
+      } else {
+        toast.success("Dokumen sekarang dapat dilihat oleh operator")
+      }
+
+      // Refresh data dari server (membantu sinkronisasi jika RSC (React Server Components) digunakan)
+      router.refresh()
     } catch (error) {
       console.error('Operator visibility update error:', error)
-      alert(error instanceof Error ? error.message : 'Gagal mengubah visibilitas operator')
+      toast.error(error instanceof Error ? error.message : 'Gagal mengubah visibilitas operator')
     } finally {
       setIsSavingVisibility(false)
     }
@@ -611,7 +623,7 @@ export function DocumentCard({
       setIsEditingFileName(false)
     } catch (error) {
       console.error('File name update error:', error)
-      alert(error instanceof Error ? error.message : 'Gagal menyimpan nama file')
+      toast.error(error instanceof Error ? error.message : 'Gagal menyimpan nama file')
     } finally {
       setIsSavingFileName(false)
     }
@@ -672,7 +684,7 @@ export function DocumentCard({
       setIsEditingTitle(false)
     } catch (error) {
       console.error('Title update error:', error)
-      alert(error instanceof Error ? error.message : 'Gagal menyimpan judul dokumen')
+      toast.error(error instanceof Error ? error.message : 'Gagal menyimpan judul dokumen')
     } finally {
       setIsSavingTitle(false)
     }
@@ -680,403 +692,403 @@ export function DocumentCard({
 
   return (
     <>
-    <div
-      onClick={showOperatorActions ? undefined : handleView}
-      className={`bg-white border rounded-lg p-4 shadow-sm hover:shadow-md transition-all group select-none text-gray-900 ${showOperatorActions ? '' : 'cursor-pointer'
-        } ${currentHiddenFromOperator
-          ? 'border-amber-200 bg-amber-50/40 hover:border-amber-300'
-          : 'border-gray-200 hover:border-blue-400'
-        }`}
-      title={showOperatorActions ? undefined : 'Klik kartu ini untuk melihat/membuka dokumen'}
-    >
-      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-        {/* Main Content Area */}
-        <div className="flex items-start gap-4 min-w-0 flex-1">
-          <div className="flex-shrink-0">
-            <div
-              className={`flex items-center justify-center w-12 h-12 rounded-lg transition-colors ${fileIconMeta.containerClassName}`}
-              style={fileIconMeta.containerStyle}
-            >
-              <TypeIcon
-                className={`w-6 h-6 ${fileIconMeta.iconClassName}`}
-                style={fileIconMeta.iconStyle}
-              />
-            </div>
-          </div>
-          <div className="min-w-0 flex-1">
-            {isEditingTitle ? (
+      <div
+        onClick={showOperatorActions ? undefined : handleView}
+        className={`bg-white border rounded-lg p-4 shadow-sm hover:shadow-md transition-all group select-none text-gray-900 ${showOperatorActions ? '' : 'cursor-pointer'
+          } ${currentHiddenFromOperator
+            ? 'border-amber-200 bg-amber-50/40 hover:border-amber-300'
+            : 'border-gray-200 hover:border-blue-400'
+          }`}
+        title={showOperatorActions ? undefined : 'Klik kartu ini untuk melihat/membuka dokumen'}
+      >
+        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+          {/* Main Content Area */}
+          <div className="flex items-start gap-4 min-w-0 flex-1">
+            <div className="flex-shrink-0">
               <div
-                className="flex items-center gap-1.5 w-full max-w-sm mb-1"
-                onClick={(e) => e.stopPropagation()}
+                className={`flex items-center justify-center w-12 h-12 rounded-lg transition-colors ${fileIconMeta.containerClassName}`}
+                style={fileIconMeta.containerStyle}
               >
-                <input
-                  type="text"
-                  value={titleInput}
-                  onChange={(e) => setTitleInput(e.target.value)}
-                  className="h-8 px-2 flex-1 rounded border border-gray-300 bg-white text-base font-semibold text-gray-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-100"
-                  placeholder="Judul dokumen"
-                  disabled={isSavingTitle}
-                  autoFocus
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      handleSaveTitle()
-                    } else if (e.key === 'Escape') {
-                      setIsEditingTitle(false)
-                    }
-                  }}
+                <TypeIcon
+                  className={`w-6 h-6 ${fileIconMeta.iconClassName}`}
+                  style={fileIconMeta.iconStyle}
                 />
-                <button
-                  onClick={handleSaveTitle}
-                  disabled={isSavingTitle || !titleInput.trim()}
-                  className="p-1.5 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 transition-colors flex items-center justify-center"
-                  title="Simpan"
-                >
-                  {isSavingTitle ? (
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  ) : (
-                    <Save className="w-3.5 h-3.5" />
-                  )}
-                </button>
-                <button
-                  onClick={() => setIsEditingTitle(false)}
-                  disabled={isSavingTitle}
-                  className="p-1.5 bg-gray-100 text-gray-600 rounded hover:bg-gray-200 transition-colors flex items-center justify-center"
-                  title="Batal"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
               </div>
-            ) : (
-              <h3 className="text-lg font-semibold text-gray-900 truncate group-hover:text-blue-600 transition-colors inline-flex items-center gap-1.5 max-w-full">
-                <span className="truncate">{currentTitle}</span>
-                {isAdmin && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      setTitleInput(currentTitle)
-                      setIsEditingTitle(true)
-                    }}
-                    className="p-1 text-gray-400 hover:text-blue-600 rounded transition-colors flex-shrink-0"
-                    title="Ubah judul dokumen"
-                  >
-                    <Pencil className="w-3.5 h-3.5" />
-                  </button>
-                )}
-              </h3>
-            )}
-            {description && (
-              <p className="text-sm text-gray-600 mt-1 line-clamp-2">
-                {description}
-              </p>
-            )}
-            <div className="flex items-center gap-2 mt-3">
-              <span
-                className={`inline-block px-2.5 py-0.5 text-xs font-medium rounded-full ${fileIconMeta.labelClassName}`}
-                style={fileIconMeta.labelStyle}
-              >
-                {getTypeLabel(type, currentFileName)}
-              </span>
-              {currentHiddenFromOperator && (
-                <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-700">
-                  <EyeOff className="h-3.5 w-3.5" />
-                  Disembunyikan dari operator
-                </span>
-              )}
             </div>
-            <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-500">
-              {isEditingFileName ? (
+            <div className="min-w-0 flex-1">
+              {isEditingTitle ? (
                 <div
-                  className="flex items-center gap-1.5 w-full"
+                  className="flex items-center gap-1.5 w-full max-w-sm mb-1"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <FileText className="h-3.5 w-3.5 flex-shrink-0 text-gray-400" />
-                  <div className="flex flex-1 items-center gap-1 max-w-sm">
-                    <input
-                      type="text"
-                      value={fileNameInput}
-                      onChange={(e) => setFileNameInput(e.target.value)}
-                      className="h-7 px-2 flex-1 rounded border border-gray-300 bg-white text-xs text-gray-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-100"
-                      placeholder="Nama file"
-                      disabled={isSavingFileName}
-                      autoFocus
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          handleSaveFileName()
-                        } else if (e.key === 'Escape') {
-                          setIsEditingFileName(false)
-                        }
-                      }}
-                    />
-                    {currentFileName.lastIndexOf('.') !== -1 && (
-                      <span className="text-xs text-gray-500 select-none pr-1">
-                        .{currentFileName.substring(currentFileName.lastIndexOf('.') + 1)}
-                      </span>
+                  <input
+                    type="text"
+                    value={titleInput}
+                    onChange={(e) => setTitleInput(e.target.value)}
+                    className="h-8 px-2 flex-1 rounded border border-gray-300 bg-white text-base font-semibold text-gray-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-100"
+                    placeholder="Judul dokumen"
+                    disabled={isSavingTitle}
+                    autoFocus
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        handleSaveTitle()
+                      } else if (e.key === 'Escape') {
+                        setIsEditingTitle(false)
+                      }
+                    }}
+                  />
+                  <button
+                    onClick={handleSaveTitle}
+                    disabled={isSavingTitle || !titleInput.trim()}
+                    className="p-1.5 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 transition-colors flex items-center justify-center"
+                    title="Simpan"
+                  >
+                    {isSavingTitle ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <Save className="w-3.5 h-3.5" />
                     )}
-                    <button
-                      onClick={handleSaveFileName}
-                      disabled={isSavingFileName || !fileNameInput.trim()}
-                      className="p-1.5 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 transition-colors flex items-center justify-center"
-                      title="Simpan"
-                    >
-                      {isSavingFileName ? (
-                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      ) : (
-                        <Save className="w-3.5 h-3.5" />
-                      )}
-                    </button>
-                    <button
-                      onClick={() => setIsEditingFileName(false)}
-                      disabled={isSavingFileName}
-                      className="p-1.5 bg-gray-100 text-gray-600 rounded hover:bg-gray-200 transition-colors flex items-center justify-center"
-                      title="Batal"
-                    >
-                      <X className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
+                  </button>
+                  <button
+                    onClick={() => setIsEditingTitle(false)}
+                    disabled={isSavingTitle}
+                    className="p-1.5 bg-gray-100 text-gray-600 rounded hover:bg-gray-200 transition-colors flex items-center justify-center"
+                    title="Batal"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
                 </div>
               ) : (
-                <>
-                  <span className="inline-flex min-w-0 max-w-full items-center gap-1.5">
-                    <FileText className="h-3.5 w-3.5 flex-shrink-0 text-gray-400" />
-                    <span className="truncate">{currentFileName}</span>
-                    {isAdmin && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          const lastDotIndex = currentFileName.lastIndexOf('.')
-                          const base = lastDotIndex !== -1 ? currentFileName.substring(0, lastDotIndex) : currentFileName
-                          setFileNameInput(base)
-                          setIsEditingFileName(true)
-                        }}
-                        className="p-1 text-gray-400 hover:text-blue-600 rounded transition-colors"
-                        title="Ubah nama file"
-                      >
-                        <Pencil className="w-3.5 h-3.5" />
-                      </button>
-                    )}
-                  </span>
-                  <span className="inline-flex items-center gap-1.5">
-                    <HardDrive className="h-3.5 w-3.5 text-gray-400" />
-                    {formatFileSize(file.size)}
-                  </span>
-                  {formattedTargetTime && (
-                    <span className="inline-flex items-center gap-1.5">
-                      <Clock className="h-3.5 w-3.5 text-gray-400" />
-                      Target {formattedTargetTime}
-                    </span>
-                  )}
-                </>
-              )}
-            </div>
-
-            {showTargetTimeEditor && (
-              <div
-                className="mt-4 flex flex-col gap-2 rounded-lg border border-gray-200 bg-gray-50 p-3 sm:flex-row sm:items-end"
-                onClick={(event) => event.stopPropagation()}
-              >
-                <label className="flex-1">
-                  <span className="mb-1 block text-xs font-semibold text-gray-600">
-                    Target Waktu
-                  </span>
-                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                    <input
-                      type="date"
-                      value={getLocalDateInputValue(targetTimeInput)}
-                      onChange={(event) => {
-                        setTargetTimeInput((currentValue) =>
-                          mergeLocalDateTimeInputValue(currentValue, 'date', event.target.value)
-                        )
+                <h3 className="text-lg font-semibold text-gray-900 truncate group-hover:text-blue-600 transition-colors inline-flex items-center gap-1.5 max-w-full">
+                  <span className="truncate">{currentTitle}</span>
+                  {isAdmin && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setTitleInput(currentTitle)
+                        setIsEditingTitle(true)
                       }}
-                      className="h-9 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                      disabled={isSavingTargetTime}
-                    />
-                    <div className="flex h-9 items-center rounded-lg border border-gray-300 bg-white px-2 text-sm text-gray-900 transition focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-100">
+                      className="p-1 text-gray-400 hover:text-blue-600 rounded transition-colors flex-shrink-0"
+                      title="Ubah judul dokumen"
+                    >
+                      <Pencil className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </h3>
+              )}
+              {description && (
+                <p className="text-sm text-gray-600 mt-1 line-clamp-2">
+                  {description}
+                </p>
+              )}
+              <div className="flex items-center gap-2 mt-3">
+                <span
+                  className={`inline-block px-2.5 py-0.5 text-xs font-medium rounded-full ${fileIconMeta.labelClassName}`}
+                  style={fileIconMeta.labelStyle}
+                >
+                  {getTypeLabel(type, currentFileName)}
+                </span>
+                {currentHiddenFromOperator && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-700">
+                    <EyeOff className="h-3.5 w-3.5" />
+                    Disembunyikan dari operator
+                  </span>
+                )}
+              </div>
+              <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-500">
+                {isEditingFileName ? (
+                  <div
+                    className="flex items-center gap-1.5 w-full"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <FileText className="h-3.5 w-3.5 flex-shrink-0 text-gray-400" />
+                    <div className="flex flex-1 items-center gap-1 max-w-sm">
                       <input
                         type="text"
-                        value={getClockHourValue(getLocalClockInputValue(targetTimeInput))}
-                        onChange={(event) => {
-                          setTargetTimeInput((currentValue) => {
-                            const clockValue = mergeClockInputValue(
-                              getLocalClockInputValue(currentValue),
-                              'hour',
-                              event.target.value
-                            )
-
-                            return mergeLocalDateTimeInputValue(currentValue, 'clock', clockValue)
-                          })
+                        value={fileNameInput}
+                        onChange={(e) => setFileNameInput(e.target.value)}
+                        className="h-7 px-2 flex-1 rounded border border-gray-300 bg-white text-xs text-gray-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-100"
+                        placeholder="Nama file"
+                        disabled={isSavingFileName}
+                        autoFocus
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            handleSaveFileName()
+                          } else if (e.key === 'Escape') {
+                            setIsEditingFileName(false)
+                          }
                         }}
-                        placeholder="HH"
-                        inputMode="numeric"
-                        pattern="[0-9]*"
-                        maxLength={2}
-                        aria-label="Jam"
-                        className="h-full w-10 bg-transparent text-center outline-none placeholder:text-gray-400"
-                        disabled={isSavingTargetTime}
                       />
-                      <span className="px-1 font-semibold text-gray-500">:</span>
-                      <input
-                        type="text"
-                        value={getClockMinuteValue(getLocalClockInputValue(targetTimeInput))}
-                        onChange={(event) => {
-                          setTargetTimeInput((currentValue) => {
-                            const clockValue = mergeClockInputValue(
-                              getLocalClockInputValue(currentValue),
-                              'minute',
-                              event.target.value
-                            )
-
-                            return mergeLocalDateTimeInputValue(currentValue, 'clock', clockValue)
-                          })
-                        }}
-                        placeholder="MM"
-                        inputMode="numeric"
-                        pattern="[0-9]*"
-                        maxLength={2}
-                        aria-label="Menit"
-                        className="h-full w-10 bg-transparent text-center outline-none placeholder:text-gray-400"
-                        disabled={isSavingTargetTime}
-                      />
+                      {currentFileName.lastIndexOf('.') !== -1 && (
+                        <span className="text-xs text-gray-500 select-none pr-1">
+                          .{currentFileName.substring(currentFileName.lastIndexOf('.') + 1)}
+                        </span>
+                      )}
+                      <button
+                        onClick={handleSaveFileName}
+                        disabled={isSavingFileName || !fileNameInput.trim()}
+                        className="p-1.5 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 transition-colors flex items-center justify-center"
+                        title="Simpan"
+                      >
+                        {isSavingFileName ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        ) : (
+                          <Save className="w-3.5 h-3.5" />
+                        )}
+                      </button>
+                      <button
+                        onClick={() => setIsEditingFileName(false)}
+                        disabled={isSavingFileName}
+                        className="p-1.5 bg-gray-100 text-gray-600 rounded hover:bg-gray-200 transition-colors flex items-center justify-center"
+                        title="Batal"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
                     </div>
                   </div>
-                  {targetTimeError && (
-                    <span className="mt-1 block text-xs font-medium text-red-600">
-                      {targetTimeError}
+                ) : (
+                  <>
+                    <span className="inline-flex min-w-0 max-w-full items-center gap-1.5">
+                      <FileText className="h-3.5 w-3.5 flex-shrink-0 text-gray-400" />
+                      <span className="truncate">{currentFileName}</span>
+                      {isAdmin && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            const lastDotIndex = currentFileName.lastIndexOf('.')
+                            const base = lastDotIndex !== -1 ? currentFileName.substring(0, lastDotIndex) : currentFileName
+                            setFileNameInput(base)
+                            setIsEditingFileName(true)
+                          }}
+                          className="p-1 text-gray-400 hover:text-blue-600 rounded transition-colors"
+                          title="Ubah nama file"
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                        </button>
+                      )}
                     </span>
-                  )}
-                </label>
-                <Button
-                  type="button"
-                  size="sm"
-                  onClick={handleSaveTargetTime}
-                  disabled={isSavingTargetTime || !isTargetTimeInputValid}
-                  className="h-9 bg-blue-600 text-white hover:bg-blue-700"
-                >
-                  {isSavingTargetTime ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <Save className="w-4 h-4" />
-                  )}
-                  Simpan
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  onClick={handleResetTargetTime}
-                  disabled={isSavingTargetTime || (!currentTargetTime && !targetTimeInput)}
-                  className="h-9 border-gray-300 bg-white text-gray-700 hover:bg-gray-100"
-                >
-                  {isSavingTargetTime ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <RotateCcw className="w-4 h-4" />
-                  )}
-                  Reset
-                </Button>
+                    <span className="inline-flex items-center gap-1.5">
+                      <HardDrive className="h-3.5 w-3.5 text-gray-400" />
+                      {formatFileSize(file.size)}
+                    </span>
+                    {formattedTargetTime && (
+                      <span className="inline-flex items-center gap-1.5">
+                        <Clock className="h-3.5 w-3.5 text-gray-400" />
+                        Target {formattedTargetTime}
+                      </span>
+                    )}
+                  </>
+                )}
               </div>
-            )}
-          </div>
-        </div>
 
-        {showOperatorActions && (
-          <div className="grid w-full grid-cols-1 gap-2 border-t border-[#e5e7eb] pt-3 sm:flex sm:w-auto sm:flex-shrink-0 sm:self-start sm:border-t-0 sm:pt-0">
-            <button
-              className="inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-lg text-sm font-semibold sm:w-40"
-              onClick={handlePreviewClick}
-              disabled={isViewing}
-              style={{
-                backgroundColor: '#ffffff',
-                border: '1px solid #cbd5e1',
-                color: '#0f172a',
-              }}
-              title="Preview Dokumen"
-              type="button"
-            >
-              {isViewing ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Eye className="w-4 h-4" />
+              {showTargetTimeEditor && (
+                <div
+                  className="mt-4 flex flex-col gap-2 rounded-lg border border-gray-200 bg-gray-50 p-3 sm:flex-row sm:items-end"
+                  onClick={(event) => event.stopPropagation()}
+                >
+                  <label className="flex-1">
+                    <span className="mb-1 block text-xs font-semibold text-gray-600">
+                      Target Waktu
+                    </span>
+                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                      <input
+                        type="date"
+                        value={getLocalDateInputValue(targetTimeInput)}
+                        onChange={(event) => {
+                          setTargetTimeInput((currentValue) =>
+                            mergeLocalDateTimeInputValue(currentValue, 'date', event.target.value)
+                          )
+                        }}
+                        className="h-9 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                        disabled={isSavingTargetTime}
+                      />
+                      <div className="flex h-9 items-center rounded-lg border border-gray-300 bg-white px-2 text-sm text-gray-900 transition focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-100">
+                        <input
+                          type="text"
+                          value={getClockHourValue(getLocalClockInputValue(targetTimeInput))}
+                          onChange={(event) => {
+                            setTargetTimeInput((currentValue) => {
+                              const clockValue = mergeClockInputValue(
+                                getLocalClockInputValue(currentValue),
+                                'hour',
+                                event.target.value
+                              )
+
+                              return mergeLocalDateTimeInputValue(currentValue, 'clock', clockValue)
+                            })
+                          }}
+                          placeholder="HH"
+                          inputMode="numeric"
+                          pattern="[0-9]*"
+                          maxLength={2}
+                          aria-label="Jam"
+                          className="h-full w-10 bg-transparent text-center outline-none placeholder:text-gray-400"
+                          disabled={isSavingTargetTime}
+                        />
+                        <span className="px-1 font-semibold text-gray-500">:</span>
+                        <input
+                          type="text"
+                          value={getClockMinuteValue(getLocalClockInputValue(targetTimeInput))}
+                          onChange={(event) => {
+                            setTargetTimeInput((currentValue) => {
+                              const clockValue = mergeClockInputValue(
+                                getLocalClockInputValue(currentValue),
+                                'minute',
+                                event.target.value
+                              )
+
+                              return mergeLocalDateTimeInputValue(currentValue, 'clock', clockValue)
+                            })
+                          }}
+                          placeholder="MM"
+                          inputMode="numeric"
+                          pattern="[0-9]*"
+                          maxLength={2}
+                          aria-label="Menit"
+                          className="h-full w-10 bg-transparent text-center outline-none placeholder:text-gray-400"
+                          disabled={isSavingTargetTime}
+                        />
+                      </div>
+                    </div>
+                    {targetTimeError && (
+                      <span className="mt-1 block text-xs font-medium text-red-600">
+                        {targetTimeError}
+                      </span>
+                    )}
+                  </label>
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={handleSaveTargetTime}
+                    disabled={isSavingTargetTime || !isTargetTimeInputValid}
+                    className="h-9 bg-blue-600 text-white hover:bg-blue-700"
+                  >
+                    {isSavingTargetTime ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Save className="w-4 h-4" />
+                    )}
+                    Simpan
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={handleResetTargetTime}
+                    disabled={isSavingTargetTime || (!currentTargetTime && !targetTimeInput)}
+                    className="h-9 border-gray-300 bg-white text-gray-700 hover:bg-gray-100"
+                  >
+                    {isSavingTargetTime ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <RotateCcw className="w-4 h-4" />
+                    )}
+                    Reset
+                  </Button>
+                </div>
               )}
-              <span className="text-xs font-medium">Preview</span>
-            </button>
-
-            <button
-              className="inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-lg text-sm font-semibold sm:w-40"
-              onClick={handleShowOnDisplay}
-              disabled={isDisplaying}
-              style={{
-                backgroundColor: '#059669',
-                border: '1px solid #059669',
-                color: '#ffffff',
-              }}
-              title="Tampilkan di Display"
-              type="button"
-            >
-              {isDisplaying ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <MonitorUp className="w-4 h-4" />
-              )}
-              <span className="text-xs font-medium">Tampilkan</span>
-            </button>
+            </div>
           </div>
-        )}
 
-        {onDelete && (
-          <div className="flex gap-2 sm:flex-shrink-0 self-end sm:self-start justify-end w-full sm:w-auto border-t sm:border-t-0 pt-3 sm:pt-0 mt-1 sm:mt-0">
-            <Button
-              size="sm"
-              variant="ghost"
-              className={`flex-1 sm:flex-initial flex items-center justify-center gap-1.5 ${currentHiddenFromOperator
+          {showOperatorActions && (
+            <div className="grid w-full grid-cols-1 gap-2 border-t border-[#e5e7eb] pt-3 sm:flex sm:w-auto sm:flex-shrink-0 sm:self-start sm:border-t-0 sm:pt-0">
+              <button
+                className="inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-lg text-sm font-semibold sm:w-40"
+                onClick={handlePreviewClick}
+                disabled={isViewing}
+                style={{
+                  backgroundColor: '#ffffff',
+                  border: '1px solid #cbd5e1',
+                  color: '#0f172a',
+                }}
+                title="Preview Dokumen"
+                type="button"
+              >
+                {isViewing ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Eye className="w-4 h-4" />
+                )}
+                <span className="text-xs font-medium">Preview</span>
+              </button>
+
+              <button
+                className="inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-lg text-sm font-semibold sm:w-40"
+                onClick={handleShowOnDisplay}
+                disabled={isDisplaying}
+                style={{
+                  backgroundColor: '#059669',
+                  border: '1px solid #059669',
+                  color: '#ffffff',
+                }}
+                title="Tampilkan di Display"
+                type="button"
+              >
+                {isDisplaying ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <MonitorUp className="w-4 h-4" />
+                )}
+                <span className="text-xs font-medium">Tampilkan</span>
+              </button>
+            </div>
+          )}
+
+          {onDelete && (
+            <div className="flex gap-2 sm:flex-shrink-0 self-end sm:self-start justify-end w-full sm:w-auto border-t sm:border-t-0 pt-3 sm:pt-0 mt-1 sm:mt-0">
+              <Button
+                size="sm"
+                variant="ghost"
+                className={`flex-1 sm:flex-initial flex items-center justify-center gap-1.5 ${currentHiddenFromOperator
                   ? 'text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800'
                   : 'text-amber-700 hover:bg-amber-50 hover:text-amber-800'
-                }`}
-              onClick={handleToggleOperatorVisibility}
-              disabled={isSavingVisibility}
-              title={currentHiddenFromOperator ? 'Tampilkan ke Operator' : 'Sembunyikan dari Operator'}
-            >
-              {isSavingVisibility ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : currentHiddenFromOperator ? (
-                <Eye className="w-4 h-4" />
-              ) : (
-                <EyeOff className="w-4 h-4" />
-              )}
-              <span className="sm:hidden text-xs font-medium">
-                {currentHiddenFromOperator ? 'Tampilkan' : 'Sembunyikan'}
-              </span>
-            </Button>
-            <Button
-              size="sm"
-              variant="ghost"
-              className="text-red-600 hover:bg-red-50 hover:text-red-700 flex-1 sm:flex-initial flex items-center justify-center gap-1.5"
-              onClick={handleDeleteClick}
-              disabled={isDeleting}
-              title="Hapus Dokumen"
-            >
-              {isDeleting ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Trash2 className="w-4 h-4" />
-              )}
-              <span className="sm:hidden text-xs font-medium">Hapus</span>
-            </Button>
-          </div>
-        )}
+                  }`}
+                onClick={handleToggleOperatorVisibility}
+                disabled={isSavingVisibility}
+                title={currentHiddenFromOperator ? 'Tampilkan ke Operator' : 'Sembunyikan dari Operator'}
+              >
+                {isSavingVisibility ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : currentHiddenFromOperator ? (
+                  <Eye className="w-4 h-4" />
+                ) : (
+                  <EyeOff className="w-4 h-4" />
+                )}
+                <span className="sm:hidden text-xs font-medium">
+                  {currentHiddenFromOperator ? 'Tampilkan' : 'Sembunyikan'}
+                </span>
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="text-red-600 hover:bg-red-50 hover:text-red-700 flex-1 sm:flex-initial flex items-center justify-center gap-1.5"
+                onClick={handleDeleteClick}
+                disabled={isDeleting}
+                title="Hapus Dokumen"
+              >
+                {isDeleting ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Trash2 className="w-4 h-4" />
+                )}
+                <span className="sm:hidden text-xs font-medium">Hapus</span>
+              </Button>
+            </div>
+          )}
+        </div>
       </div>
-    </div>
-    <DeleteConfirmDialog
-      isOpen={showDeleteConfirm}
-      isLoading={isDeleting}
-      title="Hapus File"
-      description="File ini akan dihapus secara permanen dari sistem dan tidak bisa dikembalikan."
-      itemName={currentTitle}
-      confirmLabel="Hapus File"
-      onConfirm={handleConfirmDelete}
-      onCancel={() => {
-        if (!isDeleting) setShowDeleteConfirm(false)
-      }}
-    />
+      <DeleteConfirmDialog
+        isOpen={showDeleteConfirm}
+        isLoading={isDeleting}
+        title="Hapus File"
+        description="File ini akan dihapus secara permanen dari sistem dan tidak bisa dikembalikan."
+        itemName={currentTitle}
+        confirmLabel="Hapus File"
+        onConfirm={handleConfirmDelete}
+        onCancel={() => {
+          if (!isDeleting) setShowDeleteConfirm(false)
+        }}
+      />
     </>
   )
 }
