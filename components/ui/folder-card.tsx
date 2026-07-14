@@ -3,6 +3,8 @@
 import { Folder, Trash2, Loader2 } from 'lucide-react'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
+import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
+import { toast } from 'sonner'
 
 interface FolderCardProps {
   id: number
@@ -20,76 +22,103 @@ export function FolderCard({
   onDeleteSuccess
 }: FolderCardProps) {
   const [isDeleting, setIsDeleting] = useState(false)
+  const [showConfirm, setShowConfirm] = useState(false)
   const canDelete = typeof onDeleteSuccess === 'function'
+  const hasContent = typeof itemCount === 'number' && itemCount > 0
 
-  const handleDelete = async (e: React.MouseEvent) => {
-    e.stopPropagation() // Prevent entering the folder
+  const handleDeleteClick = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (!canDelete) return
+    setShowConfirm(true)
+  }
 
-    if (!canDelete) {
-      return
-    }
-    
-    if (!window.confirm(`Apakah Anda yakin ingin menghapus folder "${name}" beserta semua isinya?`)) {
-      return
-    }
-
+  const handleConfirmDelete = async () => {
     try {
       setIsDeleting(true)
+
       const response = await fetch(`/api/folders?id=${id}`, {
-        method: 'DELETE'
+        method: 'DELETE',
       })
 
       if (!response.ok) {
-        throw new Error('Gagal menghapus folder')
+        const data = await response.json().catch(() => null)
+        throw new Error(data?.error || 'Gagal menghapus folder')
       }
 
-      onDeleteSuccess()
+      setShowConfirm(false)
+
+      if (hasContent) {
+        toast.success(`Folder "${name}" dan ${itemCount} isinya berhasil dihapus.`, {
+          duration: 4000,
+        })
+      } else {
+        toast.success(`Folder "${name}" berhasil dihapus.`)
+      }
+
+      onDeleteSuccess!()
     } catch (error) {
       console.error('Delete folder error:', error)
-      alert('Gagal menghapus folder')
+      toast.error(error instanceof Error ? error.message : 'Gagal menghapus folder')
     } finally {
       setIsDeleting(false)
     }
   }
 
   return (
-<div
-  onClick={() => {
-    onEnter(id, name)
-  }}
-  className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md hover:border-blue-400 transition-all cursor-pointer group flex items-center justify-between text-gray-900"
-  title={`Klik untuk masuk ke folder ${name}`}
->
-      <div className="flex items-center gap-3 min-w-0">
-        <div className="flex-shrink-0 w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center group-hover:bg-yellow-200 transition-colors">
-          <Folder className="w-5 h-5 text-yellow-600 fill-yellow-600" />
+    <>
+      <div
+        onClick={() => onEnter(id, name)}
+        className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md hover:border-blue-400 transition-all cursor-pointer group flex items-center justify-between text-gray-900"
+        title={`Klik untuk masuk ke folder ${name}`}
+      >
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="flex-shrink-0 w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center group-hover:bg-yellow-200 transition-colors">
+            <Folder className="w-5 h-5 text-yellow-600 fill-yellow-600" />
+          </div>
+          <div className="min-w-0">
+            <h4 className="font-semibold text-gray-900 truncate group-hover:text-blue-600 transition-colors">
+              {name}
+            </h4>
+            <p className="text-xs text-gray-500">
+              {typeof itemCount === 'number' ? `${itemCount} isi` : 'Folder'}
+            </p>
+          </div>
         </div>
-        <div className="min-w-0">
-          <h4 className="font-semibold text-gray-900 truncate group-hover:text-blue-600 transition-colors">
-            {name}
-          </h4>
-          <p className="text-xs text-gray-500">
-            {typeof itemCount === 'number' ? `${itemCount} isi` : 'Folder'}
-          </p>
-        </div>
+
+        {canDelete && (
+          <Button
+            size="sm"
+            variant="ghost"
+            className="text-red-500 hover:text-red-700 hover:bg-red-50"
+            onClick={handleDeleteClick}
+            disabled={isDeleting}
+            title="Hapus Folder"
+          >
+            {isDeleting ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Trash2 className="w-4 h-4" />
+            )}
+          </Button>
+        )}
       </div>
-      
-      {canDelete && (
-        <Button
-          size="sm"
-          variant="ghost"
-          className="text-red-500 hover:text-red-700 hover:bg-red-50"
-          onClick={handleDelete}
-          disabled={isDeleting}
-          title="Hapus Folder"
-        >
-          {isDeleting ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : (
-            <Trash2 className="w-4 h-4" />
-          )}
-        </Button>
-      )}
-    </div>
+
+      <DeleteConfirmDialog
+        isOpen={showConfirm}
+        isLoading={isDeleting}
+        title="Hapus Folder"
+        description={
+          hasContent
+            ? `Folder ini berisi ${itemCount} item. Semua file dan sub-folder di dalamnya akan ikut terhapus secara permanen.`
+            : 'Folder ini akan dihapus secara permanen dari sistem.'
+        }
+        itemName={name}
+        confirmLabel="Hapus Folder"
+        onConfirm={handleConfirmDelete}
+        onCancel={() => {
+          if (!isDeleting) setShowConfirm(false)
+        }}
+      />
+    </>
   )
 }

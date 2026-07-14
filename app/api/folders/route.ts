@@ -178,7 +178,7 @@ export async function POST(request: Request) {
 }
 
 
-// DELETE - Delete a folder
+// DELETE - Delete a folder beserta seluruh isinya (dokumen & sub-folder) secara rekursif
 export async function DELETE(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
@@ -191,24 +191,56 @@ export async function DELETE(request: Request) {
       )
     }
 
-    const id = parseInt(idStr)
+    const rootId = parseInt(idStr)
     const supabase = await createClient()
 
-    const { error } = await supabase
+    // Kumpulkan semua folder ID secara rekursif (BFS)
+    const allFolderIds: number[] = [rootId]
+    const queue: number[] = [rootId]
+
+    while (queue.length > 0) {
+      const currentIds = queue.splice(0, queue.length)
+
+      const { data: children, error: childErr } = await supabase
+        .from('folders')
+        .select('id')
+        .in('parent_id', currentIds)
+
+      if (childErr) {
+        return NextResponse.json({ error: childErr.message }, { status: 500 })
+      }
+
+      if (children && children.length > 0) {
+        const childIds = children.map((f) => f.id as number)
+        allFolderIds.push(...childIds)
+        queue.push(...childIds)
+      }
+    }
+
+    // Hapus semua dokumen yang berada di dalam folder-folder tersebut
+    const { error: docDeleteError } = await supabase
+      .from('documents')
+      .delete()
+      .in('folder_id', allFolderIds)
+
+    if (docDeleteError) {
+      return NextResponse.json({ error: docDeleteError.message }, { status: 500 })
+    }
+
+    // Hapus semua folder (dari child ke root agar tidak ada FK violation)
+    const { error: folderDeleteError } = await supabase
       .from('folders')
       .delete()
-      .eq('id', id)
+      .in('id', allFolderIds)
 
-    if (error) {
-      return NextResponse.json(
-        { error: error.message },
-        { status: 500 }
-      )
+    if (folderDeleteError) {
+      return NextResponse.json({ error: folderDeleteError.message }, { status: 500 })
     }
 
     return NextResponse.json({
       success: true,
-      message: 'Folder deleted successfully'
+      message: 'Folder dan seluruh isinya berhasil dihapus',
+      deletedFolderIds: allFolderIds,
     })
   } catch (error) {
     console.error('Folders DELETE error:', error)

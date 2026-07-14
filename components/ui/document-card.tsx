@@ -21,6 +21,8 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
+import { toast } from 'sonner'
 
 const DISPLAY_DOCUMENT_STORAGE_KEY = 'futaba.display.document'
 
@@ -306,7 +308,7 @@ export function DocumentCard({
   const [currentTargetTime, setCurrentTargetTime] = useState<string | null>(targetTime ?? null)
   const [currentHiddenFromOperator, setCurrentHiddenFromOperator] = useState(hiddenFromOperator)
   const [targetTimeInput, setTargetTimeInput] = useState(() => toLocalDateTimeInputValue(targetTime))
-  
+
   const [currentFileName, setCurrentFileName] = useState(file.name)
   const [isEditingFileName, setIsEditingFileName] = useState(false)
   const [fileNameInput, setFileNameInput] = useState('')
@@ -316,6 +318,7 @@ export function DocumentCard({
   const [isEditingTitle, setIsEditingTitle] = useState(false)
   const [titleInput, setTitleInput] = useState('')
   const [isSavingTitle, setIsSavingTitle] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
   const fileIconMeta = getFileIconMeta(type, currentFileName)
   const TypeIcon = fileIconMeta.Icon
@@ -347,7 +350,7 @@ export function DocumentCard({
   const handleView = async () => {
     try {
       setIsViewing(true)
-      
+
       // Get signed URL from API
       const response = await fetch('/api/download', {
         method: 'POST',
@@ -364,7 +367,7 @@ export function DocumentCard({
       }
 
       const data = await response.json()
-      
+
       // Open in a new tab to display the file
       window.open(data.url, '_blank')
     } catch (error) {
@@ -431,28 +434,31 @@ export function DocumentCard({
     }
   }
 
-  const handleDelete = async (e: React.MouseEvent) => {
-    e.stopPropagation() // Prevent triggering card's onClick view
-    if (!window.confirm(`Are you sure you want to delete "${currentTitle}"?`)) {
-      return
-    }
+  const handleDeleteClick = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    setShowDeleteConfirm(true)
+  }
 
+  const handleConfirmDelete = async () => {
     try {
       setIsDeleting(true)
       const response = await fetch(`/api/documents/${id}`, {
-        method: 'DELETE'
+        method: 'DELETE',
       })
 
       if (!response.ok) {
-        throw new Error('Failed to delete document')
+        throw new Error('Gagal menghapus file')
       }
+
+      setShowDeleteConfirm(false)
+      toast.success(`File "${currentTitle}" berhasil dihapus.`)
 
       if (onDelete) {
         await onDelete(id)
       }
     } catch (error) {
       console.error('Delete error:', error)
-      alert('Failed to delete document')
+      toast.error(error instanceof Error ? error.message : 'Gagal menghapus file')
     } finally {
       setIsDeleting(false)
     }
@@ -673,15 +679,14 @@ export function DocumentCard({
   }
 
   return (
+    <>
     <div
       onClick={showOperatorActions ? undefined : handleView}
-      className={`bg-white border rounded-lg p-4 shadow-sm hover:shadow-md transition-all group select-none text-gray-900 ${
-        showOperatorActions ? '' : 'cursor-pointer'
-      } ${
-        currentHiddenFromOperator
+      className={`bg-white border rounded-lg p-4 shadow-sm hover:shadow-md transition-all group select-none text-gray-900 ${showOperatorActions ? '' : 'cursor-pointer'
+        } ${currentHiddenFromOperator
           ? 'border-amber-200 bg-amber-50/40 hover:border-amber-300'
           : 'border-gray-200 hover:border-blue-400'
-      }`}
+        }`}
       title={showOperatorActions ? undefined : 'Klik kartu ini untuk melihat/membuka dokumen'}
     >
       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
@@ -700,7 +705,7 @@ export function DocumentCard({
           </div>
           <div className="min-w-0 flex-1">
             {isEditingTitle ? (
-              <div 
+              <div
                 className="flex items-center gap-1.5 w-full max-w-sm mb-1"
                 onClick={(e) => e.stopPropagation()}
               >
@@ -780,7 +785,7 @@ export function DocumentCard({
             </div>
             <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-500">
               {isEditingFileName ? (
-                <div 
+                <div
                   className="flex items-center gap-1.5 w-full"
                   onClick={(e) => e.stopPropagation()}
                 >
@@ -1022,11 +1027,10 @@ export function DocumentCard({
             <Button
               size="sm"
               variant="ghost"
-              className={`flex-1 sm:flex-initial flex items-center justify-center gap-1.5 ${
-                currentHiddenFromOperator
+              className={`flex-1 sm:flex-initial flex items-center justify-center gap-1.5 ${currentHiddenFromOperator
                   ? 'text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800'
                   : 'text-amber-700 hover:bg-amber-50 hover:text-amber-800'
-              }`}
+                }`}
               onClick={handleToggleOperatorVisibility}
               disabled={isSavingVisibility}
               title={currentHiddenFromOperator ? 'Tampilkan ke Operator' : 'Sembunyikan dari Operator'}
@@ -1046,7 +1050,7 @@ export function DocumentCard({
               size="sm"
               variant="ghost"
               className="text-red-600 hover:bg-red-50 hover:text-red-700 flex-1 sm:flex-initial flex items-center justify-center gap-1.5"
-              onClick={handleDelete}
+              onClick={handleDeleteClick}
               disabled={isDeleting}
               title="Hapus Dokumen"
             >
@@ -1061,5 +1065,18 @@ export function DocumentCard({
         )}
       </div>
     </div>
+    <DeleteConfirmDialog
+      isOpen={showDeleteConfirm}
+      isLoading={isDeleting}
+      title="Hapus File"
+      description="File ini akan dihapus secara permanen dari sistem dan tidak bisa dikembalikan."
+      itemName={currentTitle}
+      confirmLabel="Hapus File"
+      onConfirm={handleConfirmDelete}
+      onCancel={() => {
+        if (!isDeleting) setShowDeleteConfirm(false)
+      }}
+    />
+    </>
   )
 }

@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Upload, X, Loader2, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { toast } from 'sonner'
 
 const ALLOWED_FILE_TYPES = ['application/pdf', 'image/jpeg', 'image/png']
 const ALLOWED_FILE_EXTENSIONS = ['pdf', 'jpg', 'jpeg', 'png']
@@ -125,7 +126,7 @@ export function UploadDialog({
     }
 
     if (files.length === 1 && !title) {
-      setError('Please provide a title')
+      setError('Judul dokumen tidak boleh kosong')
       return
     }
 
@@ -169,12 +170,20 @@ export function UploadDialog({
       }
 
       // Reset form
+      const uploadedCount = files.length
+      const uploadedTitle = files.length === 1 ? title : `${files.length} file`
       setFiles([])
       setTitle('')
       setDescription('')
       setTargetDate('')
       setTargetClock('')
       setIsOpen(false)
+
+      if (uploadedCount === 1) {
+        toast.success(`Dokumen "${uploadedTitle}" berhasil diupload!`)
+      } else {
+        toast.success(`${uploadedCount} dokumen berhasil diupload!`)
+      }
 
       if (onUploadSuccess) {
         onUploadSuccess()

@@ -409,6 +409,7 @@ export default function OperatorPage({
               documents={documents}
               isLoading={isLoading}
               error={error}
+              selectedLandId={selectedLand?.id}
               onEnterFolder={handleEnterFolder}
             />
           </div>

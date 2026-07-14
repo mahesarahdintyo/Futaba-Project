@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Clock, FileText, Monitor } from 'lucide-react'
 import { useSearchParams } from 'next/navigation'
 
@@ -136,6 +136,17 @@ function isSameDisplayDocument(
     currentDocument.file.size === nextDocument.file.size &&
     currentDocument.targetTime === nextDocument.targetTime &&
     currentDocument.updatedAt === nextDocument.updatedAt
+  )
+}
+
+function isSameFile(
+  currentDocument: DisplayDocument | null,
+  nextDocument: DisplayDocument | null
+) {
+  if (!currentDocument || !nextDocument) return currentDocument === nextDocument
+  return (
+    currentDocument.id === nextDocument.id &&
+    currentDocument.file.path === nextDocument.file.path
   )
 }
 
@@ -295,15 +306,27 @@ export default function DisplayPageClient({ landId: routeLandId }: DisplayPageCl
     }
   }, [landId])
 
+  const prevDocumentRef = useRef<DisplayDocument | null>(null)
+
   useEffect(() => {
     let isMounted = true
 
     async function loadFileUrl() {
+
+
       if (!document) {
         setFileUrl('')
         setError('')
+        prevDocumentRef.current = null
         return
       }
+
+      // Jika file yang di-display sama (id + path), skip reload URL
+      if (isSameFile(prevDocumentRef.current, document)) {
+        return
+      }
+
+      prevDocumentRef.current = document
 
       try {
         setIsLoading(true)
