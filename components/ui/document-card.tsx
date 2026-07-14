@@ -452,6 +452,27 @@ export function DocumentCard({
         throw new Error('Gagal menghapus file')
       }
 
+      // --- TAMBAHAN BARU: Sinyal instan ke layar Display ---
+      const displayStorageKey = getDisplayDocumentStorageKey(landId)
+      const rawDisplayDoc = window.localStorage.getItem(displayStorageKey)
+      
+      if (rawDisplayDoc) {
+        try {
+          const displayDoc = JSON.parse(rawDisplayDoc)
+          if (displayDoc.id === id) {
+            window.localStorage.removeItem(displayStorageKey)
+            window.dispatchEvent(
+              new CustomEvent('futaba-display-document-change', {
+                detail: null, 
+              })
+            )
+          }
+        } catch (e) {
+          console.error('Error clearing display storage:', e)
+        }
+      }
+      // -----------------------------------------------------
+
       setShowDeleteConfirm(false)
       toast.success(`File "${currentTitle}" berhasil dihapus.`)
 
@@ -546,14 +567,12 @@ export function DocumentCard({
       setCurrentHiddenFromOperator(savedHiddenFromOperator)
       onVisibilityChange?.(id, savedHiddenFromOperator)
 
-      // Menampilkan Toast notifikasi
       if (savedHiddenFromOperator) {
         toast.success("Dokumen berhasil disembunyikan dari operator")
       } else {
         toast.success("Dokumen sekarang dapat dilihat oleh operator")
       }
 
-      // Refresh data dari server (membantu sinkronisasi jika RSC (React Server Components) digunakan)
       router.refresh()
     } catch (error) {
       console.error('Operator visibility update error:', error)
@@ -600,7 +619,6 @@ export function DocumentCard({
 
       setCurrentFileName(savedFileName)
 
-      // Update local storage representation if it is currently displayed
       const displayStorageKey = getDisplayDocumentStorageKey(landId)
       const rawDisplayDoc = window.localStorage.getItem(displayStorageKey)
       if (rawDisplayDoc) {
@@ -661,7 +679,6 @@ export function DocumentCard({
 
       setCurrentTitle(savedTitle)
 
-      // Update local storage representation if it is currently displayed
       const displayStorageKey = getDisplayDocumentStorageKey(landId)
       const rawDisplayDoc = window.localStorage.getItem(displayStorageKey)
       if (rawDisplayDoc) {

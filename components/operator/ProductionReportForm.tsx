@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   AlertTriangle,
   CalendarDays,
@@ -17,6 +17,9 @@ import { Button } from "@/components/ui/button";
 import { createProductionReport } from "@/lib/services/production-report";
 import { getPartNumbers } from "@/lib/services/part-number";
 import { getNgCategories, type NgCategory } from "@/lib/services/ng-category";
+import { createClient } from "@/lib/supabase/client";
+
+const PART_NUMBER_REFRESH_INTERVAL_MS = 3000;
 
 interface ProductionReportFormProps {
   landId: string;
@@ -269,27 +272,12 @@ export default function ProductionReportForm({ landId }: ProductionReportFormPro
   const [partNumber, setPartNumber] = useState("");
   const [partNumbers, setPartNumbers] = useState<string[]>([]);
   const [reportDate, setReportDate] = useState(getDateString(new Date()));
+  const partNumberRef = useRef("");
 
   // NG Categories
   const [ngCategories, setNgCategories] = useState<NgCategory[]>([]);
 
-  useEffect(() => {
-    async function loadData() {
-      try {
-        const [pnData, ngCatData] = await Promise.all([
-          getPartNumbers(),
-          getNgCategories(),
-        ]);
-        setPartNumbers(pnData.map((pn) => pn.code));
-        setNgCategories(ngCatData);
-      } catch (err) {
-        console.error("Gagal memuat data:", err);
-        // Fallback jika API gagal
-        setPartNumbers(["FTB-001-A", "FTB-002-B", "FTB-003-C"]);
-      }
-    }
-    loadData();
-  }, []);
+
   const [startDate, setStartDate] = useState("");
   const [startTime, setStartTime] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -303,22 +291,94 @@ export default function ProductionReportForm({ landId }: ProductionReportFormPro
   const [editingField, setEditingField] = useState<"start" | "end" | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const resetProductionDetails = () => {
+  const resetProductionDetails = useCallback(() => {
     setQty(0);
     setNgQty(0);
     setNgCategory("");
     setBreakMinutes(0);
     setPc1("1");
     setPc2("1");
-  };
+  }, []);
 
-  const resetTimes = () => {
+  const resetTimes = useCallback(() => {
     setStartDate("");
     setStartTime("");
     setEndDate("");
     setEndTime("");
     setEditingField(null);
-  };
+  }, []);
+
+  useEffect(() => {
+    partNumberRef.current = partNumber;
+  }, [partNumber]);
+
+  const loadPartNumbers = useCallback(
+    async ({ notifyRemovedSelection = false }: { notifyRemovedSelection?: boolean } = {}) => {
+      try {
+        const pnData = await getPartNumbers();
+        const nextPartNumbers = pnData.map((pn) => pn.code);
+
+        setPartNumbers(nextPartNumbers);
+
+        const selectedPartNumber = partNumberRef.current;
+        if (selectedPartNumber && !nextPartNumbers.includes(selectedPartNumber)) {
+          setPartNumber("");
+          resetTimes();
+          resetProductionDetails();
+
+          if (notifyRemovedSelection) {
+            toast.info("Part number yang dipilih sudah dihapus admin. Silakan pilih ulang.");
+          }
+        }
+      } catch (err) {
+        console.error("Gagal memuat part number:", err);
+      }
+    },
+    [resetProductionDetails, resetTimes]
+  );
+
+  useEffect(() => {
+    async function loadNgCategories() {
+      try {
+        const ngCatData = await getNgCategories();
+        setNgCategories(ngCatData);
+      } catch (err) {
+        console.error("Gagal memuat kategori NG:", err);
+      }
+    }
+
+    void loadPartNumbers();
+    void loadNgCategories();
+  }, [loadPartNumbers]);
+
+  useEffect(() => {
+    const supabase = createClient();
+
+    const refreshPartNumbers = () => {
+      void loadPartNumbers({ notifyRemovedSelection: true });
+    };
+
+    const channel = supabase
+      .channel("operator-part-numbers")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "part_numbers" },
+        refreshPartNumbers
+      )
+      .subscribe();
+
+    const intervalId = window.setInterval(() => {
+      void loadPartNumbers({ notifyRemovedSelection: true });
+    }, PART_NUMBER_REFRESH_INTERVAL_MS);
+
+    window.addEventListener("focus", refreshPartNumbers);
+
+    return () => {
+      window.clearInterval(intervalId);
+      window.removeEventListener("focus", refreshPartNumbers);
+      void supabase.removeChannel(channel);
+    };
+  }, [loadPartNumbers]);
 
   const handlePartNumberChange = (value: string) => {
     setPartNumber(value);

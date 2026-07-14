@@ -177,6 +177,14 @@ export async function DELETE(
       }
     }
 
+    // --- TAMBAHAN BARU: Hapus referensi dari layar display ---
+    // Membersihkan data di tabel display_documents agar langsung hilang di layar TV
+    await supabase.from('display_documents').delete().eq('document_id', id)
+    
+    // (Fail-safe) Jika skema menggunakan format JSON (document->>id)
+    await supabase.from('display_documents').delete().eq('document->>id', id)
+    // ---------------------------------------------------------
+
     // Delete document record
     const { error: deleteError } = await supabase
       .from('documents')
