@@ -217,6 +217,26 @@ export async function DELETE(request: Request) {
       }
     }
 
+    // Ambil path file dokumen yang akan dihapus agar bisa dihapus dari storage
+    const { data: docsToQuery, error: docsFetchError } = await supabase
+      .from('documents')
+      .select('file_path')
+      .in('folder_id', allFolderIds)
+
+    if (!docsFetchError && docsToQuery && docsToQuery.length > 0) {
+      const filePaths = docsToQuery
+        .map((d) => d.file_path)
+        .filter(Boolean)
+      if (filePaths.length > 0) {
+        const { error: storageError } = await supabase.storage
+          .from('documents')
+          .remove(filePaths)
+        if (storageError) {
+          console.error('Storage delete error on folder deletion:', storageError)
+        }
+      }
+    }
+
     // Hapus semua dokumen yang berada di dalam folder-folder tersebut
     const { error: docDeleteError } = await supabase
       .from('documents')

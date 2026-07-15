@@ -71,7 +71,7 @@ const extensionGroups = {
 
 function getFileExtension(fileName: string) {
   const parts = fileName.toLowerCase().split('.')
-  return parts.length > 1 ? parts.at(-1) ?? '' : ''
+  return parts.length > 1 ? parts[parts.length - 1] ?? '' : ''
 }
 
 function getFileIconMeta(type: string, fileName: string): FileIconMeta {
@@ -190,7 +190,8 @@ function getTypeLabel(type: string, fileName: string) {
   const extension = getFileExtension(fileName)
   if (extension) return extension.toUpperCase()
 
-  const subtype = type.split('/').at(-1)
+  const parts = type.split('/')
+  const subtype = parts[parts.length - 1]
   return subtype ? subtype.toUpperCase() : 'FILE'
 }
 

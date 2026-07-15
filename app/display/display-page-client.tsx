@@ -64,7 +64,7 @@ function readDisplayDocument(landId?: string | null): DisplayDocument | null {
 
 function getFileExtension(fileName: string) {
   const parts = fileName.toLowerCase().split('.')
-  return parts.length > 1 ? parts.at(-1) ?? '' : ''
+  return parts.length > 1 ? parts[parts.length - 1] ?? '' : ''
 }
 
 function getDisplayMode(document: DisplayDocument) {
@@ -85,12 +85,13 @@ function getTypeLabel(document: DisplayDocument) {
   const extension = getFileExtension(document.file.name)
   if (extension) return extension.toUpperCase()
 
-  const subtype = document.type.split('/').at(-1)
+  const parts = document.type.split('/')
+  const subtype = parts[parts.length - 1]
   return subtype ? subtype.toUpperCase() : 'FILE'
 }
 
 function formatDateTime(date: Date) {
-  const pad = (value: number) => value.toString().padStart(2, '0')
+  const pad = (value: number) => value < 10 ? '0' + value : value.toString()
   const formattedDate = new Intl.DateTimeFormat('id-ID', {
     weekday: 'long',
     day: 'numeric',
@@ -199,17 +200,23 @@ export default function DisplayPageClient({ landId: routeLandId }: DisplayPageCl
   useEffect(() => {
     if (!landId) return
 
-    const sendHeartbeat = () => {
-      fetch('/api/system/display-heartbeat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ landId }),
-        keepalive: true,
-      }).catch((error) => {
+    let heartbeatTimeoutId: number
+
+    const sendHeartbeat = async () => {
+      try {
+        await fetch('/api/system/display-heartbeat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ landId }),
+          keepalive: true,
+        })
+      } catch (error) {
         console.error('Display heartbeat error:', error)
-      })
+      } finally {
+        heartbeatTimeoutId = window.setTimeout(sendHeartbeat, 5000)
+      }
     }
 
     const clearDisplayDocument = () => {
@@ -233,17 +240,18 @@ export default function DisplayPageClient({ landId: routeLandId }: DisplayPageCl
     }
 
     sendHeartbeat()
-    const heartbeatIntervalId = window.setInterval(sendHeartbeat, 5000)
 
     window.addEventListener('pagehide', clearDisplayDocument)
 
     return () => {
       window.removeEventListener('pagehide', clearDisplayDocument)
-      window.clearInterval(heartbeatIntervalId)
+      window.clearTimeout(heartbeatTimeoutId)
     }
   }, [landId])
 
   useEffect(() => {
+    let pollingTimeoutId: number
+
     async function loadServerDisplayDocument() {
       try {
         const params = new URLSearchParams()
@@ -280,6 +288,8 @@ export default function DisplayPageClient({ landId: routeLandId }: DisplayPageCl
         })
       } catch (error) {
         console.error('Display polling error:', error)
+      } finally {
+        pollingTimeoutId = window.setTimeout(loadServerDisplayDocument, 1000)
       }
     }
 
@@ -297,12 +307,11 @@ export default function DisplayPageClient({ landId: routeLandId }: DisplayPageCl
     window.addEventListener('futaba-display-document-change', handleLocalChange)
 
     loadServerDisplayDocument()
-    const intervalId = window.setInterval(loadServerDisplayDocument, 1000)
 
     return () => {
       window.removeEventListener('storage', handleStorage)
       window.removeEventListener('futaba-display-document-change', handleLocalChange)
-      window.clearInterval(intervalId)
+      window.clearTimeout(pollingTimeoutId)
     }
   }, [landId])
 

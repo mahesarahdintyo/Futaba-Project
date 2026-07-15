@@ -34,9 +34,9 @@ function readOperatorLocation(): OperatorLocationState | null {
     const location = JSON.parse(rawLocation) as Partial<OperatorLocationState>;
     const folderPathHistory = Array.isArray(location.folderPathHistory)
       ? location.folderPathHistory.filter(
-          (folder): folder is BreadcrumbItem =>
-            typeof folder?.id === "number" && typeof folder?.name === "string"
-        )
+        (folder): folder is BreadcrumbItem =>
+          typeof folder?.id === "number" && typeof folder?.name === "string"
+      )
       : [];
 
     if (typeof location.landId !== "string") {
@@ -189,9 +189,18 @@ export default function OperatorPage({
   }, [loadLands]);
 
   useEffect(() => {
-    const intervalId = window.setInterval(() => {
-      loadLands();
-    }, LAND_REFRESH_INTERVAL_MS);
+    let timeoutId: number;
+    let isMounted = true;
+
+    const pollLands = async () => {
+      if (!isMounted) return;
+      await loadLands();
+      if (isMounted) {
+        timeoutId = window.setTimeout(pollLands, LAND_REFRESH_INTERVAL_MS);
+      }
+    };
+
+    timeoutId = window.setTimeout(pollLands, LAND_REFRESH_INTERVAL_MS);
 
     const handleWindowFocus = () => {
       loadLands();
@@ -200,7 +209,8 @@ export default function OperatorPage({
     window.addEventListener("focus", handleWindowFocus);
 
     return () => {
-      window.clearInterval(intervalId);
+      isMounted = false;
+      window.clearTimeout(timeoutId);
       window.removeEventListener("focus", handleWindowFocus);
     };
   }, [loadLands]);
@@ -286,9 +296,18 @@ export default function OperatorPage({
   useEffect(() => {
     if (!selectedLand) return;
 
-    const intervalId = window.setInterval(() => {
-      loadWorkspaceData({ showLoading: false });
-    }, WORKSPACE_REFRESH_INTERVAL_MS);
+    let timeoutId: number;
+    let isMounted = true;
+
+    const pollWorkspace = async () => {
+      if (!isMounted) return;
+      await loadWorkspaceData({ showLoading: false });
+      if (isMounted) {
+        timeoutId = window.setTimeout(pollWorkspace, WORKSPACE_REFRESH_INTERVAL_MS);
+      }
+    };
+
+    timeoutId = window.setTimeout(pollWorkspace, WORKSPACE_REFRESH_INTERVAL_MS);
 
     const handleWindowFocus = () => {
       loadWorkspaceData({ showLoading: false });
@@ -297,7 +316,8 @@ export default function OperatorPage({
     window.addEventListener("focus", handleWindowFocus);
 
     return () => {
-      window.clearInterval(intervalId);
+      isMounted = false;
+      window.clearTimeout(timeoutId);
       window.removeEventListener("focus", handleWindowFocus);
     };
   }, [loadWorkspaceData, selectedLand]);
@@ -349,11 +369,10 @@ export default function OperatorPage({
         <div className="flex border-b border-slate-200">
           <button
             onClick={() => setActiveTab("display")}
-            className={`flex items-center gap-2 border-b-2 px-6 py-3 text-sm font-bold transition-all focus:outline-none cursor-pointer ${
-              activeTab === "display"
+            className={`flex items-center gap-2 border-b-2 px-6 py-3 text-sm font-bold transition-all focus:outline-none cursor-pointer ${activeTab === "display"
                 ? "border-emerald-600 text-emerald-700"
                 : "border-transparent text-slate-500 hover:text-slate-600"
-            }`}
+              }`}
             type="button"
           >
             <Tv className="h-4.5 w-4.5" />
@@ -361,11 +380,10 @@ export default function OperatorPage({
           </button>
           <button
             onClick={() => setActiveTab("report")}
-            className={`flex items-center gap-2 border-b-2 px-6 py-3 text-sm font-bold transition-all focus:outline-none cursor-pointer ${
-              activeTab === "report"
+            className={`flex items-center gap-2 border-b-2 px-6 py-3 text-sm font-bold transition-all focus:outline-none cursor-pointer ${activeTab === "report"
                 ? "border-emerald-600 text-emerald-700"
                 : "border-transparent text-slate-500 hover:text-slate-600"
-            }`}
+              }`}
             type="button"
           >
             <ClipboardList className="h-4.5 w-4.5" />

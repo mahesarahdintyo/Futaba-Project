@@ -43,9 +43,8 @@ function formatDateTime(value?: string | null) {
 function StatusDot({ active }: { active: boolean }) {
   return (
     <span
-      className={`h-3 w-3 rounded-full ${
-        active ? "bg-emerald-500 shadow-[0_0_0_4px_rgba(16,185,129,0.14)]" : "bg-red-500 shadow-[0_0_0_4px_rgba(239,68,68,0.12)]"
-      }`}
+      className={`h-3 w-3 rounded-full ${active ? "bg-emerald-500 shadow-[0_0_0_4px_rgba(16,185,129,0.14)]" : "bg-red-500 shadow-[0_0_0_4px_rgba(239,68,68,0.12)]"
+        }`}
       aria-hidden="true"
     />
   );
@@ -105,7 +104,7 @@ export default function SystemPageClient() {
 
   const systemAlerts = useMemo(() => {
     const alerts: string[] = [];
-    
+
     if (error) {
       if (typeof window !== "undefined" && !navigator.onLine) {
         alerts.push("Koneksi Internet Terputus: Browser Anda terdeteksi offline. Pastikan koneksi Wi-Fi atau kabel LAN terhubung.");
@@ -151,7 +150,7 @@ export default function SystemPageClient() {
     } catch (error) {
       console.error("System health load error:", error);
       setError(
-        error instanceof Error 
+        error instanceof Error
           ? error.message === "Failed to fetch" || error.message.includes("fetch failed")
             ? "Koneksi jaringan gagal"
             : error.message
@@ -163,10 +162,24 @@ export default function SystemPageClient() {
   };
 
   useEffect(() => {
-    loadHealth();
-    const intervalId = window.setInterval(loadHealth, 5000);
+    let timeoutId: number;
+    let isMounted = true;
 
-    return () => window.clearInterval(intervalId);
+    const pollHealth = async () => {
+      if (!isMounted) return;
+      await loadHealth();
+      if (isMounted) {
+        timeoutId = window.setTimeout(pollHealth, 5000);
+      }
+    };
+
+    timeoutId = window.setTimeout(pollHealth, 5000);
+    loadHealth();
+
+    return () => {
+      isMounted = false;
+      window.clearTimeout(timeoutId);
+    };
   }, []);
 
   return (
@@ -196,9 +209,8 @@ export default function SystemPageClient() {
         <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
           <div className="mb-6 flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-4">
             <div className="flex items-center gap-3">
-              <div className={`flex h-11 w-11 items-center justify-center rounded-lg ${
-                allSystemsOk ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"
-              }`}>
+              <div className={`flex h-11 w-11 items-center justify-center rounded-lg ${allSystemsOk ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"
+                }`}>
                 <Server className="h-5 w-5" />
               </div>
               <div>
@@ -215,8 +227,8 @@ export default function SystemPageClient() {
           {systemAlerts.length > 0 && (
             <div className="mb-6 space-y-2.5">
               {systemAlerts.map((alertText, idx) => (
-                <div 
-                  key={idx} 
+                <div
+                  key={idx}
                   className="flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800 shadow-sm animate-pulse-slow"
                 >
                   <Activity className="h-5 w-5 shrink-0 text-red-600 mt-0.5" />

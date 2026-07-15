@@ -212,9 +212,33 @@ export async function DELETE(request: Request) {
 
     const supabase = await createClient();
 
+    // 1. Get all documents in this land to delete their files from storage
+    const { data: documents } = await supabase
+      .from("documents")
+      .select("file_path")
+      .eq("land_id", id);
+
+    if (documents && documents.length > 0) {
+      const filePaths = documents
+        .map((doc) => doc.file_path)
+        .filter(Boolean);
+      if (filePaths.length > 0) {
+        const { error: storageError } = await supabase.storage
+          .from("documents")
+          .remove(filePaths);
+        if (storageError) {
+          console.error("Storage delete error on land deletion:", storageError);
+        }
+      }
+    }
+
+    // 2. Delete display heartbeats (if any)
+    await supabase.from("display_heartbeats").delete().eq("land_id", id);
+
+    // 3. Delete the land from database (cascades to folders, documents, display documents, reports, etc.)
     const { error } = await supabase
       .from("lands")
-      .update({ is_active: false })
+      .delete()
       .eq("id", id);
 
     if (error) {
