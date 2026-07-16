@@ -5,12 +5,16 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const includeHidden = searchParams.get("includeHidden") === "true";
+    const showTrash = searchParams.get("trash") === "true";
     const supabase = await createClient();
 
-    let query = supabase
-      .from("lands")
-      .select("*")
-      .eq("is_active", true);
+    let query = supabase.from("lands").select("*");
+
+    if (showTrash) {
+      query = query.eq("is_active", false);
+    } else {
+      query = query.or("is_active.eq.true,is_active.is.null");
+    }
 
     if (!includeHidden) {
       query = query.eq("hidden_from_operator", false);
@@ -212,33 +216,59 @@ export async function DELETE(request: Request) {
 
     const supabase = await createClient();
 
-    // 1. Get all documents in this land to delete their files from storage
-    const { data: documents } = await supabase
-      .from("documents")
-      .select("file_path")
+    // 1. Get all folders of this land
+    const { data: folders } = await supabase
+      .from("folders")
+      .select("id")
       .eq("land_id", id);
 
-    if (documents && documents.length > 0) {
-      const filePaths = documents
-        .map((doc) => doc.file_path)
-        .filter(Boolean);
-      if (filePaths.length > 0) {
-        const { error: storageError } = await supabase.storage
-          .from("documents")
-          .remove(filePaths);
-        if (storageError) {
-          console.error("Storage delete error on land deletion:", storageError);
-        }
-      }
+    const folderIds = (folders ?? []).map((f) => f.id);
+
+    // 2. Find documents directly in the land or in its folders to clear display_documents
+    const queryBuilder = supabase
+      .from("documents")
+      .select("id");
+
+    let docQuery = queryBuilder;
+    if (folderIds.length > 0) {
+      docQuery = docQuery.or(`land_id.eq.${id},folder_id.in.(${folderIds.join(",")})`);
+    } else {
+      docQuery = docQuery.eq("land_id", id);
     }
 
-    // 2. Delete display heartbeats (if any)
+    const { data: documents } = await docQuery;
+
+    if (documents && documents.length > 0) {
+      const docIds = documents.map((doc) => doc.id);
+      
+      // Clean display_documents references
+      await supabase.from("display_documents").delete().in("document_id", docIds);
+      for (const docId of docIds) {
+        await supabase.from("display_documents").delete().eq("document->>id", docId);
+      }
+
+      // Soft delete documents
+      await supabase
+        .from("documents")
+        .update({ is_active: false })
+        .in("id", docIds);
+    }
+
+    // 3. Soft delete folders
+    if (folderIds.length > 0) {
+      await supabase
+        .from("folders")
+        .update({ is_active: false })
+        .in("id", folderIds);
+    }
+
+    // 4. Delete display heartbeats (if any)
     await supabase.from("display_heartbeats").delete().eq("land_id", id);
 
-    // 3. Delete the land from database (cascades to folders, documents, display documents, reports, etc.)
+    // 5. Soft delete the land from database
     const { error } = await supabase
       .from("lands")
-      .delete()
+      .update({ is_active: false })
       .eq("id", id);
 
     if (error) {
@@ -247,7 +277,7 @@ export async function DELETE(request: Request) {
 
     return NextResponse.json({
       success: true,
-      message: "Land deleted successfully",
+      message: "Land soft deleted successfully",
     });
   } catch (error) {
     console.error("Lands DELETE error:", error);

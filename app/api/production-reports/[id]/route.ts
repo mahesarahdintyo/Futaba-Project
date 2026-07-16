@@ -19,11 +19,11 @@ export async function DELETE(
 
     const { error } = await supabase
       .from("production_reports")
-      .delete()
+      .update({ is_active: false })
       .eq("id", id);
 
     if (error) {
-      console.error("Error deleting production report:", error);
+      console.error("Error soft deleting production report:", error);
       return NextResponse.json(
         { error: error.message },
         { status: 500 }

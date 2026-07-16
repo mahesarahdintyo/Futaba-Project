@@ -8,6 +8,7 @@ export async function GET(request: Request) {
     const landId = searchParams.get("landId");
     const startDate = searchParams.get("startDate");
     const endDate = searchParams.get("endDate");
+    const showTrash = searchParams.get("trash") === "true";
 
     const supabase = await createClient();
 
@@ -17,6 +18,12 @@ export async function GET(request: Request) {
         *,
         land:lands(name)
       `);
+
+    if (showTrash) {
+      query = query.eq("is_active", false);
+    } else {
+      query = query.or("is_active.eq.true,is_active.is.null");
+    }
 
     // Only filter by land if landId is specified and is not "all"
     if (landId && landId !== "all" && landId !== "undefined") {
@@ -106,6 +113,7 @@ export async function POST(request: Request) {
         ng_qty: parseInt(ng_qty) || 0,
         ng_category: ng_category ? ng_category.trim() : null,
         break_minutes: parseInt(break_minutes) || 0,
+        is_active: true,
       })
       .select()
       .single();

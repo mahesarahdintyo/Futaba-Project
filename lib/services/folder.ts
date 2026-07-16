@@ -12,6 +12,7 @@ interface FolderQuery {
   parentId?: number | null;
   includeAll?: boolean;
   search?: string;
+  trash?: boolean;
 }
 
 export async function getFolders({
@@ -19,6 +20,7 @@ export async function getFolders({
   parentId,
   includeAll = false,
   search,
+  trash = false,
 }: FolderQuery = {}): Promise<Folder[]> {
   const params = new URLSearchParams();
 
@@ -36,6 +38,10 @@ export async function getFolders({
 
   if (search?.trim()) {
     params.set("search", search.trim());
+  }
+
+  if (trash) {
+    params.set("trash", "true");
   }
 
   const query = params.toString();

@@ -18,12 +18,16 @@ interface DocumentQuery {
   folderId?: number | null;
   landId?: string;
   search?: string;
+  trash?: boolean;
+  includeHidden?: boolean;
 }
 
 export async function getDocuments({
   folderId,
   landId,
   search,
+  trash = false,
+  includeHidden = false,
 }: DocumentQuery = {}): Promise<Document[]> {
   const params = new URLSearchParams();
 
@@ -37,6 +41,14 @@ export async function getDocuments({
 
   if (search?.trim()) {
     params.set("search", search.trim());
+  }
+
+  if (trash) {
+    params.set("trash", "true");
+  }
+
+  if (includeHidden) {
+    params.set("includeHidden", "true");
   }
 
   const query = params.toString();

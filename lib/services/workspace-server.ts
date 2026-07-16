@@ -9,7 +9,7 @@ export async function getInitialLands(): Promise<Land[]> {
   const { data, error } = await supabase
     .from("lands")
     .select("*")
-    .eq("is_active", true)
+    .or("is_active.eq.true,is_active.is.null")
     .eq("hidden_from_operator", false)
     .order("name", { ascending: true });
 
@@ -29,6 +29,7 @@ export async function getInitialFolders(landId: string): Promise<Folder[]> {
     .select("*")
     .eq("land_id", landId)
     .is("parent_id", null)
+    .or("is_active.eq.true,is_active.is.null")
     .order("name", { ascending: true });
 
   if (error) {
@@ -68,6 +69,7 @@ export async function getInitialDocuments(landId: string): Promise<Document[]> {
     .is("folder_id", null)
     .eq("land_id", landId)
     .eq("hidden_from_operator", false)
+    .or("is_active.eq.true,is_active.is.null")
     .order("created_at", { ascending: false });
 
   if (error) {

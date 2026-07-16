@@ -16,12 +16,14 @@ export interface ProductionReport {
   land?: {
     name: string;
   } | null;
+  is_active?: boolean;
 }
 
 export interface ProductionReportQuery {
   landId?: string;
   startDate?: string;
   endDate?: string;
+  trash?: boolean;
 }
 
 export async function getProductionReports(query?: ProductionReportQuery): Promise<ProductionReport[]> {
@@ -34,6 +36,9 @@ export async function getProductionReports(query?: ProductionReportQuery): Promi
   }
   if (query?.endDate) {
     params.set("endDate", query.endDate);
+  }
+  if (query?.trash) {
+    params.set("trash", "true");
   }
 
   const queryString = params.toString();

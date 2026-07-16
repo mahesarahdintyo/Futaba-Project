@@ -151,44 +151,17 @@ export async function DELETE(
 
     const supabase = await createClient()
 
-    // Get document to find file path
-    const { data: document, error: fetchError } = await supabase
-      .from('documents')
-      .select('file_path')
-      .eq('id', id)
-      .single()
-
-    if (fetchError || !document) {
-      return NextResponse.json(
-        { error: 'Document not found' },
-        { status: 404 }
-      )
-    }
-
-    // Delete file from storage
-    if (document.file_path) {
-      const { error: storageError } = await supabase.storage
-        .from('documents')
-        .remove([document.file_path])
-
-      if (storageError) {
-        console.error('Storage delete error:', storageError)
-        // Continue even if storage delete fails
-      }
-    }
-
-    // --- TAMBAHAN BARU: Hapus referensi dari layar display ---
-    // Membersihkan data di tabel display_documents agar langsung hilang di layar TV
+    // --- Hapus referensi dari layar display agar langsung hilang di layar TV ---
     await supabase.from('display_documents').delete().eq('document_id', id)
     
     // (Fail-safe) Jika skema menggunakan format JSON (document->>id)
     await supabase.from('display_documents').delete().eq('document->>id', id)
     // ---------------------------------------------------------
 
-    // Delete document record
+    // Soft delete document record (update is_active = false)
     const { error: deleteError } = await supabase
       .from('documents')
-      .delete()
+      .update({ is_active: false })
       .eq('id', id)
 
     if (deleteError) {

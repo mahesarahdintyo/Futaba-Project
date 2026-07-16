@@ -9,11 +9,18 @@ export async function GET(request: Request) {
     const landId = searchParams.get('landId')
     const includeAll = searchParams.get('includeAll') === 'true'
     const searchQuery = searchParams.get('search')?.trim()
+    const showTrash = searchParams.get('trash') === 'true'
     const parentId = parentIdStr ? parseInt(parentIdStr) : null
 
     const supabase = await createClient()
 
     let query = supabase.from('folders').select('*')
+
+    if (showTrash) {
+      query = query.eq('is_active', false)
+    } else {
+      query = query.or('is_active.eq.true,is_active.is.null')
+    }
 
     if (landId) {
       query = query.eq('land_id', landId)
@@ -46,11 +53,13 @@ export async function GET(request: Request) {
       .from('folders')
       .select('parent_id')
       .in('parent_id', folderIds)
+      .or('is_active.eq.true,is_active.is.null')
 
     let childDocumentQuery = supabase
       .from('documents')
       .select('folder_id')
       .in('folder_id', folderIds)
+      .or('is_active.eq.true,is_active.is.null')
 
     if (landId) {
       childFolderQuery = childFolderQuery.eq('land_id', landId)
@@ -122,6 +131,7 @@ export async function POST(request: Request) {
       .from('folders')
       .select('name')
       .ilike('name', `${baseName}%`)
+      .or('is_active.eq.true,is_active.is.null')
 
     if (landId) {
       siblingQuery = siblingQuery.eq('land_id', landId)
@@ -217,40 +227,34 @@ export async function DELETE(request: Request) {
       }
     }
 
-    // Ambil path file dokumen yang akan dihapus agar bisa dihapus dari storage
-    const { data: docsToQuery, error: docsFetchError } = await supabase
+    // 1. Ambil ID dokumen yang berada di dalam folder-folder ini untuk dihapus dari layar display
+    const { data: docsToClear, error: docsFetchError } = await supabase
       .from('documents')
-      .select('file_path')
+      .select('id')
       .in('folder_id', allFolderIds)
 
-    if (!docsFetchError && docsToQuery && docsToQuery.length > 0) {
-      const filePaths = docsToQuery
-        .map((d) => d.file_path)
-        .filter(Boolean)
-      if (filePaths.length > 0) {
-        const { error: storageError } = await supabase.storage
-          .from('documents')
-          .remove(filePaths)
-        if (storageError) {
-          console.error('Storage delete error on folder deletion:', storageError)
-        }
+    if (!docsFetchError && docsToClear && docsToClear.length > 0) {
+      const docIds = docsToClear.map((d) => d.id)
+      await supabase.from('display_documents').delete().in('document_id', docIds)
+      for (const docId of docIds) {
+        await supabase.from('display_documents').delete().eq('document->>id', docId)
       }
     }
 
-    // Hapus semua dokumen yang berada di dalam folder-folder tersebut
+    // 2. Soft delete semua dokumen yang berada di dalam folder-folder tersebut
     const { error: docDeleteError } = await supabase
       .from('documents')
-      .delete()
+      .update({ is_active: false })
       .in('folder_id', allFolderIds)
 
     if (docDeleteError) {
       return NextResponse.json({ error: docDeleteError.message }, { status: 500 })
     }
 
-    // Hapus semua folder (dari child ke root agar tidak ada FK violation)
+    // 3. Soft delete semua folder (dari child ke root)
     const { error: folderDeleteError } = await supabase
       .from('folders')
-      .delete()
+      .update({ is_active: false })
       .in('id', allFolderIds)
 
     if (folderDeleteError) {
@@ -259,7 +263,7 @@ export async function DELETE(request: Request) {
 
     return NextResponse.json({
       success: true,
-      message: 'Folder dan seluruh isinya berhasil dihapus',
+      message: 'Folder dan seluruh isinya berhasil di-soft delete',
       deletedFolderIds: allFolderIds,
     })
   } catch (error) {

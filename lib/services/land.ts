@@ -8,13 +8,21 @@ export interface Land {
 
 interface LandQuery {
   includeHidden?: boolean;
+  trash?: boolean;
 }
 
-export async function getLands({ includeHidden = false }: LandQuery = {}): Promise<Land[]> {
+export async function getLands({
+  includeHidden = false,
+  trash = false,
+}: LandQuery = {}): Promise<Land[]> {
   const params = new URLSearchParams();
 
   if (includeHidden) {
     params.set("includeHidden", "true");
+  }
+
+  if (trash) {
+    params.set("trash", "true");
   }
 
   const query = params.toString();

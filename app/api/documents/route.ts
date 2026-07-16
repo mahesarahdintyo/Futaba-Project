@@ -12,6 +12,7 @@ export async function GET(request: Request) {
     const landId = searchParams.get("landId");
     const searchQuery = searchParams.get("search")?.trim();
     const includeHidden = searchParams.get("includeHidden") === "true";
+    const showTrash = searchParams.get("trash") === "true";
 
     const supabase = await createClient();
 
@@ -37,14 +38,20 @@ export async function GET(request: Request) {
         )
       `);
 
+    if (showTrash) {
+      query = query.eq("is_active", false);
+    } else {
+      query = query.or("is_active.eq.true,is_active.is.null");
+    }
+
     // Filter berdasarkan folder
- if (searchQuery) {
-  // Saat search, jangan filter folder
-} else if (folderIdStr) {
-  query = query.eq("folder_id", folderId);
-} else {
-  query = query.is("folder_id", null);
-}
+    if (searchQuery) {
+      // Saat search, jangan filter folder
+    } else if (folderIdStr) {
+      query = query.eq("folder_id", folderId);
+    } else {
+      query = query.is("folder_id", null);
+    }
 
     // Filter search
     if (searchQuery) {
@@ -73,16 +80,16 @@ export async function GET(request: Request) {
 
     // Filter land di sisi server (sementara)
     const documents = landId
-  ? data.filter((doc: any) => {
-      // Kalau dokumen ada di dalam folder
-      if (doc.folder_id) {
-        return doc.folders?.land_id === landId
-      }
+      ? data.filter((doc: any) => {
+        // Kalau dokumen ada di dalam folder
+        if (doc.folder_id) {
+          return doc.folders?.land_id === landId
+        }
 
-      // Kalau dokumen berada di root Land
-      return doc.land_id === landId
-    })
-  : data
+        // Kalau dokumen berada di root Land
+        return doc.land_id === landId
+      })
+      : data
 
     const transformedDocuments = documents.map((doc: any) => ({
       id: doc.id,

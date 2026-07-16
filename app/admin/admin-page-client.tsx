@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useMemo, useEffect } from 'react'
-import { ChevronRight } from 'lucide-react'
+import { ChevronRight, Trash2 } from 'lucide-react'
+import Link from 'next/link'
 import { DocumentCard } from '@/components/ui/document-card'
 import { SearchBar } from '@/components/ui/search-bar'
 import { UploadDialog } from '@/components/ui/upload-dialog'
@@ -420,6 +421,13 @@ export default function Page({ initialLands = [] }: AdminPageProps) {
             >
               Kategori NG
             </button>
+            <Link
+              href="/admin/recycle-bin"
+              className="px-3 py-1.5 rounded-lg text-sm font-bold transition duration-200 cursor-pointer text-slate-500 hover:text-slate-800 hover:bg-slate-100 flex items-center gap-1.5"
+            >
+              <Trash2 className="w-4 h-4" />
+              Tempat Sampah
+            </Link>
           </div>
         }
       >
