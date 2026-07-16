@@ -358,7 +358,7 @@ export default function OperatorPage({
     <main className="min-h-screen bg-slate-100 text-slate-900">
       <OperatorHeader selectedLand={selectedLand?.name ?? ""} />
 
-      <div className="mx-auto max-w-5xl space-y-6 p-6">
+      <div className="mx-auto max-w-5xl space-y-4 sm:space-y-6 p-3 sm:p-6">
         <LandSelector
           value={selectedLand}
           lands={lands}
@@ -366,27 +366,27 @@ export default function OperatorPage({
         />
 
         {/* Menu Tabs Switcher */}
-        <div className="flex border-b border-slate-200">
+        <div className="flex border-b border-slate-200 overflow-x-auto">
           <button
             onClick={() => setActiveTab("display")}
-            className={`flex items-center gap-2 border-b-2 px-6 py-3 text-sm font-bold transition-all focus:outline-none cursor-pointer ${activeTab === "display"
+            className={`flex items-center gap-1.5 border-b-2 px-4 sm:px-6 py-2.5 sm:py-3 text-xs sm:text-sm font-bold transition-all focus:outline-none cursor-pointer whitespace-nowrap flex-shrink-0 ${activeTab === "display"
                 ? "border-emerald-600 text-emerald-700"
                 : "border-transparent text-slate-500 hover:text-slate-600"
               }`}
             type="button"
           >
-            <Tv className="h-4.5 w-4.5" />
+            <Tv className="h-4 w-4" />
             Display TV
           </button>
           <button
             onClick={() => setActiveTab("report")}
-            className={`flex items-center gap-2 border-b-2 px-6 py-3 text-sm font-bold transition-all focus:outline-none cursor-pointer ${activeTab === "report"
+            className={`flex items-center gap-1.5 border-b-2 px-4 sm:px-6 py-2.5 sm:py-3 text-xs sm:text-sm font-bold transition-all focus:outline-none cursor-pointer whitespace-nowrap flex-shrink-0 ${activeTab === "report"
                 ? "border-emerald-600 text-emerald-700"
                 : "border-transparent text-slate-500 hover:text-slate-600"
               }`}
             type="button"
           >
-            <ClipboardList className="h-4.5 w-4.5" />
+            <ClipboardList className="h-4 w-4" />
             Laporan Produksi
           </button>
         </div>

@@ -68,15 +68,15 @@ export function FolderCard({
     <>
       <div
         onClick={() => onEnter(id, name)}
-        className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md hover:border-blue-400 transition-all cursor-pointer group flex items-center justify-between text-gray-900"
+        className="bg-white border border-gray-200 rounded-lg p-3 sm:p-4 shadow-sm hover:shadow-md hover:border-blue-400 transition-all cursor-pointer group flex items-center justify-between text-gray-900 min-w-0"
         title={`Klik untuk masuk ke folder ${name}`}
       >
-        <div className="flex items-center gap-3 min-w-0">
-          <div className="flex-shrink-0 w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center group-hover:bg-yellow-200 transition-colors">
-            <Folder className="w-5 h-5 text-yellow-600 fill-yellow-600" />
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+          <div className="flex-shrink-0 w-9 h-9 sm:w-10 sm:h-10 bg-yellow-100 rounded-lg flex items-center justify-center group-hover:bg-yellow-200 transition-colors">
+            <Folder className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-600 fill-yellow-600" />
           </div>
-          <div className="min-w-0">
-            <h4 className="font-semibold text-gray-900 truncate group-hover:text-blue-600 transition-colors">
+          <div className="min-w-0 flex-1">
+            <h4 className="font-semibold text-sm sm:text-base text-gray-900 truncate group-hover:text-blue-600 transition-colors">
               {name}
             </h4>
             <p className="text-xs text-gray-500">
@@ -89,7 +89,7 @@ export function FolderCard({
           <Button
             size="sm"
             variant="ghost"
-            className="text-red-500 hover:text-red-700 hover:bg-red-50"
+            className="text-red-500 hover:text-red-700 hover:bg-red-50 flex-shrink-0"
             onClick={handleDeleteClick}
             disabled={isDeleting}
             title="Hapus Folder"

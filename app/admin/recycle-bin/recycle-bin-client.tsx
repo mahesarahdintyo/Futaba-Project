@@ -191,7 +191,7 @@ export default function RecycleBinClient() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-zinc-100 text-slate-900 font-sans pb-16">
       <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-200 shadow-sm">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:h-16 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-0 justify-between">
           <div className="flex items-center gap-3">
             <Link
               href="/admin"
@@ -203,8 +203,8 @@ export default function RecycleBinClient() {
               <div className="p-1.5 bg-rose-50 text-rose-600 rounded-lg border border-rose-100">
                 <Trash2 className="w-5 h-5" />
               </div>
-              <h1 className="text-xl font-bold tracking-tight text-slate-800">
-                Tempat Sampah (Recycle Bin)
+              <h1 className="text-base sm:text-xl font-bold tracking-tight text-slate-800">
+                Tempat Sampah
               </h1>
             </div>
           </div>
@@ -214,7 +214,7 @@ export default function RecycleBinClient() {
             size="sm"
             disabled={totalItemsCount === 0 || isLoading || isActionLoading}
             onClick={() => setShowEmptyConfirm(true)}
-            className="bg-red-600 hover:bg-red-700 text-white font-semibold transition-all duration-200 shadow-sm shadow-red-100 border border-transparent active:scale-95"
+            className="bg-red-600 hover:bg-red-700 text-white font-semibold transition-all duration-200 shadow-sm shadow-red-100 border border-transparent active:scale-95 w-full sm:w-auto"
           >
             <Trash2 className="w-4 h-4 mr-1" />
             Kosongkan Tempat Sampah
@@ -245,15 +245,16 @@ export default function RecycleBinClient() {
         </div>
 
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden mb-8">
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between border-b border-slate-200 p-4 gap-4 bg-slate-50/50">
-            <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200/50 self-start overflow-x-auto max-w-full">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between border-b border-slate-200 p-3 sm:p-4 gap-3 bg-slate-50/50">
+            <div className="overflow-x-auto">
+              <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200/50 w-max min-w-full sm:min-w-0">
               {tabs.map((tab) => {
                 const Icon = tab.icon
                 return (
                   <button
                     key={tab.id}
                     onClick={() => { setActiveTab(tab.id); setSearchQuery('') }}
-                    className={`flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg transition duration-200 cursor-pointer whitespace-nowrap ${
+                    className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold rounded-lg transition duration-200 cursor-pointer whitespace-nowrap ${
                       activeTab === tab.id
                         ? 'bg-white text-blue-700 shadow-sm font-bold border border-slate-200/40'
                         : 'text-slate-500 hover:text-slate-800'
@@ -264,6 +265,7 @@ export default function RecycleBinClient() {
                   </button>
                 )
               })}
+              </div>
             </div>
 
             <div className="relative flex-1 sm:max-w-xs">

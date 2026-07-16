@@ -380,44 +380,40 @@ export default function Page({ initialLands = [] }: AdminPageProps) {
       {/* Header */}
       <AppHeader
         logoAside={
-          <div className="flex items-center gap-1 sm:gap-2 ml-2 sm:ml-4 border-l border-gray-200 pl-2 sm:pl-4 select-none">
+          <div className="hidden sm:flex flex-wrap items-center gap-1 sm:gap-1.5 ml-2 sm:ml-4 border-l border-gray-200 pl-2 sm:pl-4 select-none">
             <button
               onClick={() => setActiveView('workspace')}
-              className={`px-3 py-1.5 rounded-lg text-sm font-bold transition duration-200 cursor-pointer ${
-                activeView === 'workspace'
+              className={`px-3 py-1.5 rounded-lg text-sm font-bold transition duration-200 cursor-pointer ${activeView === 'workspace'
                   ? 'bg-blue-50 text-blue-700 font-extrabold border border-blue-100'
                   : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'
-              }`}
+                }`}
             >
               Workspace
             </button>
             <button
               onClick={() => setActiveView('reports')}
-              className={`px-3 py-1.5 rounded-lg text-sm font-bold transition duration-200 cursor-pointer ${
-                activeView === 'reports'
+              className={`px-3 py-1.5 rounded-lg text-sm font-bold transition duration-200 cursor-pointer ${activeView === 'reports'
                   ? 'bg-blue-50 text-blue-700 font-extrabold border border-blue-100'
                   : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'
-              }`}
+                }`}
             >
               Laporan Produksi
             </button>
             <button
               onClick={() => setActiveView('part-numbers')}
-              className={`px-3 py-1.5 rounded-lg text-sm font-bold transition duration-200 cursor-pointer ${
-                activeView === 'part-numbers'
+              className={`px-3 py-1.5 rounded-lg text-sm font-bold transition duration-200 cursor-pointer ${activeView === 'part-numbers'
                   ? 'bg-blue-50 text-blue-700 font-extrabold border border-blue-100'
                   : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'
-              }`}
+                }`}
             >
               Part Number
             </button>
             <button
               onClick={() => setActiveView('ng-categories')}
-              className={`px-3 py-1.5 rounded-lg text-sm font-bold transition duration-200 cursor-pointer ${
-                activeView === 'ng-categories'
+              className={`px-3 py-1.5 rounded-lg text-sm font-bold transition duration-200 cursor-pointer ${activeView === 'ng-categories'
                   ? 'bg-rose-50 text-rose-700 font-extrabold border border-rose-100'
                   : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'
-              }`}
+                }`}
             >
               Kategori NG
             </button>
@@ -452,8 +448,59 @@ export default function Page({ initialLands = [] }: AdminPageProps) {
         <LogoutButton variant="header" />
       </AppHeader>
 
+      {/* Mobile Nav Tabs - visible only on small screens */}
+      <nav className="sm:hidden bg-white border-b border-gray-200 px-3 py-2 flex flex-wrap gap-1.5 shadow-sm">
+        <button
+          onClick={() => setActiveView('workspace')}
+          className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition duration-200 cursor-pointer ${
+            activeView === 'workspace'
+              ? 'bg-blue-50 text-blue-700 border border-blue-100'
+              : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'
+          }`}
+        >
+          Workspace
+        </button>
+        <button
+          onClick={() => setActiveView('reports')}
+          className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition duration-200 cursor-pointer ${
+            activeView === 'reports'
+              ? 'bg-blue-50 text-blue-700 border border-blue-100'
+              : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'
+          }`}
+        >
+          Laporan
+        </button>
+        <button
+          onClick={() => setActiveView('part-numbers')}
+          className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition duration-200 cursor-pointer ${
+            activeView === 'part-numbers'
+              ? 'bg-blue-50 text-blue-700 border border-blue-100'
+              : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'
+          }`}
+        >
+          Part Number
+        </button>
+        <button
+          onClick={() => setActiveView('ng-categories')}
+          className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition duration-200 cursor-pointer ${
+            activeView === 'ng-categories'
+              ? 'bg-rose-50 text-rose-700 border border-rose-100'
+              : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'
+          }`}
+        >
+          Kategori NG
+        </button>
+        <Link
+          href="/admin/recycle-bin"
+          className="px-2.5 py-1.5 rounded-lg text-xs font-bold transition duration-200 cursor-pointer text-slate-500 hover:text-slate-800 hover:bg-slate-100 flex items-center gap-1"
+        >
+          <Trash2 className="w-3.5 h-3.5" />
+          Sampah
+        </Link>
+      </nav>
+
       {/* Main Content */}
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-6xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
         {activeView === 'reports' ? (
           <ProductionReportsDashboard />
         ) : activeView === 'part-numbers' ? (
@@ -492,8 +539,8 @@ export default function Page({ initialLands = [] }: AdminPageProps) {
                   onClick={handleNavigateLandRoot}
                   disabled={folderPathHistory.length === 0}
                   className={`font-semibold transition-colors ${folderPathHistory.length === 0
-                      ? 'text-gray-800 cursor-default'
-                      : 'text-blue-600 hover:text-blue-700'
+                    ? 'text-gray-800 cursor-default'
+                    : 'text-blue-600 hover:text-blue-700'
                     }`}
                 >
                   {selectedLand.name}
@@ -507,8 +554,8 @@ export default function Page({ initialLands = [] }: AdminPageProps) {
                       onClick={() => handleNavigateBreadcrumb(index)}
                       disabled={index === folderPathHistory.length - 1}
                       className={`font-semibold transition-colors ${index === folderPathHistory.length - 1
-                          ? 'text-gray-800 cursor-default'
-                          : 'text-blue-600 hover:text-blue-700'
+                        ? 'text-gray-800 cursor-default'
+                        : 'text-blue-600 hover:text-blue-700'
                         }`}
                     >
                       {folder.name}

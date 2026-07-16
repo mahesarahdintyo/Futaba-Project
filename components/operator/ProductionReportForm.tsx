@@ -183,11 +183,10 @@ function NumericStepper({ label, value, onChange, required = false, hasError = f
       </label>
       <div className="space-y-1">
         <div
-          className={`flex h-14 items-center rounded border bg-white focus-within:ring-3 ${
-            hasError
+          className={`flex h-14 items-center rounded border bg-white focus-within:ring-3 ${hasError
               ? "border-red-400 focus-within:border-red-500 focus-within:ring-red-100"
               : "border-slate-300 focus-within:border-emerald-500 focus-within:ring-emerald-100"
-          }`}
+            }`}
         >
           <input
             type="number"
@@ -586,11 +585,10 @@ export default function ProductionReportForm({ landId }: ProductionReportFormPro
                                     key={cat.id}
                                     type="button"
                                     onClick={() => setNgCategory(cat.name)}
-                                    className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-semibold transition ${
-                                      isSelected
+                                    className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-semibold transition ${isSelected
                                         ? "border-rose-500 bg-rose-50 text-rose-700 ring-2 ring-rose-100"
                                         : "border-slate-200 bg-slate-50 text-slate-600 hover:border-slate-300 hover:bg-white"
-                                    }`}
+                                      }`}
                                   >
                                     <Tag className="h-3.5 w-3.5" />
                                     {cat.name}
