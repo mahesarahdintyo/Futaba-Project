@@ -184,6 +184,17 @@ TV Display
 | [docs/API_REFERENCE.md](./docs/API_REFERENCE.md) | Referensi semua API endpoint |
 | [docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md) | Panduan deploy ke Vercel & konfigurasi RLS produksi |
 
+### 🔗 Dokumentasi Integrasi Supabase (Template)
+
+Dokumentasi tambahan terkait template integrasi database cloud Supabase dapat ditemukan di folder [docs/supabase-integration/](./docs/supabase-integration/):
+- [START_HERE.md](./docs/supabase-integration/START_HERE.md) — Alur awal & orientasi integrasi.
+- [QUICK_REFERENCE.md](./docs/supabase-integration/QUICK_REFERENCE.md) — Panduan cepat penggunaan.
+- [SETUP_GUIDE.md](./docs/supabase-integration/SETUP_GUIDE.md) — Langkah-langkah detail setup & troubleshooting.
+- [IMPLEMENTATION_SUMMARY.md](./docs/supabase-integration/IMPLEMENTATION_SUMMARY.md) — Rangkuman teknis & database schema.
+- [SUPABASE_INTEGRATION_README.md](./docs/supabase-integration/SUPABASE_INTEGRATION_README.md) — Gambaran arsitektur integrasi.
+- [VERIFICATION_CHECKLIST.md](./docs/supabase-integration/VERIFICATION_CHECKLIST.md) — Checklist verifikasi fitur.
+
+
 ---
 
 ## 🗄️ Skema Database (Ringkasan)
