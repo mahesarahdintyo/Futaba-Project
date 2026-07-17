@@ -9,21 +9,29 @@ interface CreateFolderDialogProps {
   parentId: number | null
   landId: string
   onCreateSuccess?: () => void
+  onOpenChange?: (open: boolean) => void
 }
 
 export function CreateFolderDialog({
   parentId,
   landId,
-  onCreateSuccess
+  onCreateSuccess,
+  onOpenChange
 }: CreateFolderDialogProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [name, setName] = useState('')
   const [isLoading, setIsLoading] = useState(false)
 
+  const handleOpen = () => {
+    setIsOpen(true)
+    onOpenChange?.(true)
+  }
+
   const handleClose = () => {
     if (isLoading) return
     setIsOpen(false)
     setName('')
+    onOpenChange?.(false)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -67,6 +75,7 @@ export function CreateFolderDialog({
 
       setName('')
       setIsOpen(false)
+      onOpenChange?.(false)
       onCreateSuccess?.()
     } catch {
       toast.error('Gagal membuat folder. Periksa koneksi internet Anda.')
@@ -78,7 +87,7 @@ export function CreateFolderDialog({
   return (
     <>
       <Button
-        onClick={() => setIsOpen(true)}
+        onClick={handleOpen}
         variant="outline"
         className="border-gray-300 hover:bg-gray-50 w-full sm:w-auto flex items-center justify-center gap-2 h-9 px-4 rounded-lg text-gray-700 bg-white text-sm font-medium"
       >

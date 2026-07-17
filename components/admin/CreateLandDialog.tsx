@@ -7,14 +7,20 @@ import { toast } from 'sonner'
 
 interface CreateLandDialogProps {
   onCreateSuccess?: () => void
+  onOpenChange?: (open: boolean) => void
 }
 
-export function CreateLandDialog({ onCreateSuccess }: CreateLandDialogProps) {
+export function CreateLandDialog({ onCreateSuccess, onOpenChange }: CreateLandDialogProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [isDuplicate, setIsDuplicate] = useState(false)
+
+  const handleOpen = () => {
+    setIsOpen(true)
+    onOpenChange?.(true)
+  }
 
   const handleClose = () => {
     if (isLoading) return
@@ -22,6 +28,7 @@ export function CreateLandDialog({ onCreateSuccess }: CreateLandDialogProps) {
     setName('')
     setDescription('')
     setIsDuplicate(false)
+    onOpenChange?.(false)
   }
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -62,6 +69,7 @@ export function CreateLandDialog({ onCreateSuccess }: CreateLandDialogProps) {
       setName('')
       setDescription('')
       setIsOpen(false)
+      onOpenChange?.(false)
       onCreateSuccess?.()
     } catch {
       toast.error('Gagal membuat card. Periksa koneksi internet Anda.')
@@ -73,7 +81,7 @@ export function CreateLandDialog({ onCreateSuccess }: CreateLandDialogProps) {
   return (
     <>
       <Button
-        onClick={() => setIsOpen(true)}
+        onClick={handleOpen}
         className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto flex items-center justify-center h-9 px-4 rounded-lg text-white text-sm font-medium"
       >
         <FolderPlus className="w-4 h-4 mr-2" />

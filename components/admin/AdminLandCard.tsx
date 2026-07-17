@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Eye, EyeOff, Folder, Loader2, Pencil, Trash2, X, AlertTriangle } from 'lucide-react'
+import { Eye, EyeOff, Folder, Loader2, MoreVertical, Pencil, Trash2, X, AlertTriangle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import type { Land } from '@/lib/services/land'
@@ -19,6 +19,7 @@ export function AdminLandCard({
 }: AdminLandCardProps) {
   const [isEditOpen, setIsEditOpen] = useState(false)
   const [isDeleteOpen, setIsDeleteOpen] = useState(false)
+  const [isActionMenuOpen, setIsActionMenuOpen] = useState(false)
   const [name, setName] = useState(land.name)
   const [description, setDescription] = useState(land.description ?? '')
   const [isSaving, setIsSaving] = useState(false)
@@ -155,7 +156,7 @@ export function AdminLandCard({
       {/* Card */}
       <div
         onClick={() => onEnter(land)}
-        className={`bg-white border rounded-lg p-5 shadow-sm hover:shadow-md cursor-pointer transition-all ${
+        className={`group relative ${isActionMenuOpen ? 'z-20' : 'z-0'} bg-white border rounded-xl p-5 shadow-sm cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md ${
           isHiddenFromOperator
             ? 'border-amber-200 bg-amber-50/40 hover:border-amber-300'
             : 'border-gray-200 hover:border-blue-400'
@@ -174,6 +175,8 @@ export function AdminLandCard({
               <p className="text-sm text-gray-500 mt-1 line-clamp-2">
                 {land.description || 'Klik untuk membuka'}
               </p>
+              <p className="mt-3 text-xs font-medium text-gray-400">Total Dokumen: {land.document_count ?? 0}</p>
+
               {isHiddenFromOperator && (
                 <span className="mt-2 inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-700">
                   <EyeOff className="h-3.5 w-3.5" />
@@ -183,53 +186,20 @@ export function AdminLandCard({
             </div>
           </div>
 
-          <div className="flex items-center gap-1 flex-shrink-0">
-            <Button
-              size="icon-sm"
-              variant="ghost"
-              onClick={handleToggleVisibility}
-              disabled={isSavingVisibility}
-              title={isHiddenFromOperator ? 'Tampilkan ke Operator' : 'Sembunyikan dari Operator'}
-              aria-label={isHiddenFromOperator ? `Tampilkan card ${land.name} ke operator` : `Sembunyikan card ${land.name} dari operator`}
-              className={
-                isHiddenFromOperator
-                  ? 'text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50'
-                  : 'text-amber-600 hover:text-amber-700 hover:bg-amber-50'
-              }
-            >
-              {isSavingVisibility ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : isHiddenFromOperator ? (
-                <Eye className="w-4 h-4" />
-              ) : (
-                <EyeOff className="w-4 h-4" />
-              )}
+          <div className="relative flex-shrink-0" onClick={(event) => event.stopPropagation()}>
+            <Button size="icon-sm" variant="ghost" onClick={() => setIsActionMenuOpen((isOpen) => !isOpen)} title="Aksi card" aria-label={`Aksi untuk card ${land.name}`} className="text-gray-500 hover:bg-gray-100 hover:text-gray-800">
+              <MoreVertical className="w-5 h-5" />
             </Button>
-            <Button
-              size="icon-sm"
-              variant="ghost"
-              onClick={handleOpenEdit}
-              title="Edit Card"
-              aria-label={`Edit card ${land.name}`}
-              className="text-gray-500 hover:text-blue-700 hover:bg-blue-50"
-            >
-              <Pencil className="w-4 h-4" />
-            </Button>
-            <Button
-              size="icon-sm"
-              variant="ghost"
-              onClick={handleOpenDelete}
-              disabled={isDeleting}
-              title="Hapus Card"
-              aria-label={`Hapus card ${land.name}`}
-              className="text-red-500 hover:text-red-700 hover:bg-red-50"
-            >
-              {isDeleting ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Trash2 className="w-4 h-4" />
-              )}
-            </Button>
+            {isActionMenuOpen && (
+              <div className="absolute right-0 top-9 z-10 w-48 rounded-xl border border-gray-200 bg-white p-1.5 shadow-lg">
+                <button onClick={handleToggleVisibility} disabled={isSavingVisibility} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50">
+                  {isSavingVisibility ? <Loader2 className="w-4 h-4 animate-spin" /> : isHiddenFromOperator ? <Eye className="w-4 h-4 text-emerald-600" /> : <EyeOff className="w-4 h-4 text-amber-600" />}
+                  {isHiddenFromOperator ? 'Tampilkan ke Operator' : 'Sembunyikan dari Operator'}
+                </button>
+                <button onClick={handleOpenEdit} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-700"><Pencil className="w-4 h-4" /> Edit Card</button>
+                <button onClick={handleOpenDelete} disabled={isDeleting} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-medium text-red-600 hover:bg-red-50 disabled:opacity-50">{isDeleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />} Hapus Card</button>
+              </div>
+            )}
           </div>
         </div>
       </div>

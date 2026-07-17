@@ -20,14 +20,33 @@ export async function GET(request: Request) {
       query = query.eq("hidden_from_operator", false);
     }
 
-    const { data: lands, error } = await query.order("name", { ascending: true });
+    const [{ data: lands, error }, { data: documents, error: documentsError }] = await Promise.all([
+      query.order("name", { ascending: true }),
+      supabase
+        .from("documents")
+        .select("land_id, folders ( land_id )")
+        .or("is_active.eq.true,is_active.is.null"),
+    ]);
 
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error || documentsError) {
+      return NextResponse.json({ error: error?.message ?? documentsError?.message }, { status: 500 });
     }
 
-    return NextResponse.json(lands ?? []);
-  } catch (error) {
+    const documentCountByLandId = new Map<string, number>();
+    for (const document of documents ?? []) {
+      const folder = Array.isArray(document.folders) ? document.folders[0] : document.folders;
+      const landId = document.land_id ?? folder?.land_id;
+      if (landId) {
+        documentCountByLandId.set(landId, (documentCountByLandId.get(landId) ?? 0) + 1);
+      }
+    }
+
+    return NextResponse.json(
+      (lands ?? []).map((land) => ({
+        ...land,
+        document_count: documentCountByLandId.get(land.id) ?? 0,
+      }))
+    );  } catch (error) {
     console.error("Lands GET error:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }

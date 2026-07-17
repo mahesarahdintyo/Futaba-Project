@@ -14,6 +14,7 @@ interface UploadDialogProps {
   folderId: number | null
   landId: string
   onUploadSuccess?: () => void
+  onOpenChange?: (open: boolean) => void
 }
 
 function formatTwoDigitInput(value: string) {
@@ -48,7 +49,8 @@ function isAllowedFile(file: File) {
 export function UploadDialog({
   folderId,
   landId,
-  onUploadSuccess
+  onUploadSuccess,
+  onOpenChange
 }: UploadDialogProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -58,6 +60,17 @@ export function UploadDialog({
   const [targetDate, setTargetDate] = useState('')
   const [targetClock, setTargetClock] = useState('')
   const [error, setError] = useState('')
+
+  const handleOpen = () => {
+    setIsOpen(true)
+    onOpenChange?.(true)
+  }
+
+  const handleClose = () => {
+    if (isLoading) return
+    setIsOpen(false)
+    onOpenChange?.(false)
+  }
 
   const isValidTargetClock = /^([01]\d|2[0-3]):[0-5]\d$/.test(targetClock)
   const isTargetTimeValid = (!targetDate && !targetClock) || (Boolean(targetDate) && isValidTargetClock)
@@ -178,6 +191,7 @@ export function UploadDialog({
       setTargetDate('')
       setTargetClock('')
       setIsOpen(false)
+      onOpenChange?.(false)
 
       if (uploadedCount === 1) {
         toast.success(`Dokumen "${uploadedTitle}" berhasil diupload!`)
@@ -198,7 +212,7 @@ export function UploadDialog({
   return (
     <>
       <Button
-        onClick={() => setIsOpen(true)}
+        onClick={handleOpen}
         className="bg-green-600 hover:bg-green-700 w-full sm:w-auto flex items-center justify-center h-9 px-4 rounded-lg text-white text-sm font-medium"
       >
         <Upload className="w-4 h-4 mr-2" />
@@ -216,7 +230,7 @@ export function UploadDialog({
                 Upload Document
               </h2>
               <button
-                onClick={() => setIsOpen(false)}
+                onClick={handleClose}
                 disabled={isLoading}
                 className="text-gray-400 hover:text-gray-600 disabled:opacity-50"
               >
@@ -359,7 +373,7 @@ export function UploadDialog({
               <div className="flex gap-3 pt-4">
                 <button
                   type="button"
-                  onClick={() => setIsOpen(false)}
+                  onClick={handleClose}
                   disabled={isLoading}
                   className="flex-1 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 hover:text-gray-900 rounded-lg py-2 text-sm font-medium transition disabled:opacity-50"
                 >

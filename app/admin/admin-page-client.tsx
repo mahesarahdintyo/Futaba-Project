@@ -95,6 +95,7 @@ export default function Page({ initialLands = [] }: AdminPageProps) {
   const [error, setError] = useState('')
   const [activeView, setActiveView] = useState<'workspace' | 'reports' | 'part-numbers' | 'ng-categories'>('workspace')
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const [isAnyDialogOpen, setIsAnyDialogOpen] = useState(false)
   const pageTitle = {
     workspace: 'Workspace',
     reports: 'Laporan Produksi',
@@ -389,7 +390,7 @@ export default function Page({ initialLands = [] }: AdminPageProps) {
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900 lg:flex">
       {isSidebarOpen && <button aria-label="Tutup navigasi" className="fixed inset-0 z-30 bg-slate-950/40 lg:hidden" onClick={() => setIsSidebarOpen(false)} />}
-      <aside className={`fixed inset-y-0 left-0 z-40 flex w-72 flex-col border-r border-slate-200 bg-white p-4 shadow-xl transition-transform duration-300 lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 lg:shadow-none ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      <aside className={`fixed inset-y-0 left-0 z-40 flex w-72 flex-col border-r border-slate-200 bg-white p-4 shadow-xl transition-all duration-300 lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 lg:shadow-none ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} ${isAnyDialogOpen ? 'blur-md pointer-events-none opacity-40' : ''}`}>
         <div className="flex items-center justify-between border-b border-slate-100 px-2 pb-4">
           <Link href="/" aria-label="Kembali ke landing page" className="inline-flex"><Image src="/futaba-logo.png" alt="FUTABA Logo" width={150} height={52} className="h-10 w-auto object-contain" priority /></Link>
           <button aria-label="Tutup navigasi" className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 lg:hidden" onClick={() => setIsSidebarOpen(false)}><X className="h-5 w-5" /></button>
@@ -406,11 +407,11 @@ export default function Page({ initialLands = [] }: AdminPageProps) {
         </div>
       </aside>
       <div className="min-w-0 flex-1">
-        <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/95 backdrop-blur">
+        <header className="sticky top-0 z-20 border-b border-slate-200 bg-white">
           <div className="flex min-h-16 items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
             <div className="flex items-center gap-3"><button aria-label="Buka navigasi" className="rounded-lg p-2 text-slate-600 hover:bg-slate-100 lg:hidden" onClick={() => setIsSidebarOpen(true)}><Menu className="h-5 w-5" /></button><h1 className="text-lg font-bold tracking-tight text-slate-900 sm:text-xl">{pageTitle}</h1></div>
             <div className="flex flex-wrap items-center justify-end gap-2">
-              {activeView === 'workspace' && (showLandList ? <CreateLandDialog onCreateSuccess={loadLands} /> : selectedLand ? <><CreateFolderDialog parentId={currentFolder ? currentFolder.id : null} landId={selectedLand.id} onCreateSuccess={handleCreateFolderSuccess} /><UploadDialog folderId={currentFolder ? currentFolder.id : null} landId={selectedLand.id} onUploadSuccess={handleUploadSuccess} /></> : null)}
+              {activeView === 'workspace' && (showLandList ? <CreateLandDialog onCreateSuccess={loadLands} onOpenChange={setIsAnyDialogOpen} /> : selectedLand ? <><CreateFolderDialog parentId={currentFolder ? currentFolder.id : null} landId={selectedLand.id} onCreateSuccess={handleCreateFolderSuccess} onOpenChange={setIsAnyDialogOpen} /><UploadDialog folderId={currentFolder ? currentFolder.id : null} landId={selectedLand.id} onUploadSuccess={handleUploadSuccess} onOpenChange={setIsAnyDialogOpen} /></> : null)}
             </div>
           </div>
         </header>

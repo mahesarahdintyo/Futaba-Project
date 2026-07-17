@@ -4,6 +4,7 @@ export interface Land {
   description?: string;
   is_active: boolean;
   hidden_from_operator?: boolean;
+  document_count?: number;
 }
 
 interface LandQuery {
