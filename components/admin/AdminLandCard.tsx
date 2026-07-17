@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Eye, EyeOff, Folder, Loader2, MoreVertical, Pencil, Trash2, X, AlertTriangle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
@@ -21,6 +21,23 @@ export function AdminLandCard({
   const [isDeleteOpen, setIsDeleteOpen] = useState(false)
   const [isActionMenuOpen, setIsActionMenuOpen] = useState(false)
   const [name, setName] = useState(land.name)
+  const menuRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setIsActionMenuOpen(false)
+      }
+    }
+
+    if (isActionMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [isActionMenuOpen])
   const [description, setDescription] = useState(land.description ?? '')
   const [isSaving, setIsSaving] = useState(false)
   const [isSavingVisibility, setIsSavingVisibility] = useState(false)
@@ -186,18 +203,18 @@ export function AdminLandCard({
             </div>
           </div>
 
-          <div className="relative flex-shrink-0" onClick={(event) => event.stopPropagation()}>
+          <div ref={menuRef} className="relative flex-shrink-0" onClick={(event) => event.stopPropagation()}>
             <Button size="icon-sm" variant="ghost" onClick={() => setIsActionMenuOpen((isOpen) => !isOpen)} title="Aksi card" aria-label={`Aksi untuk card ${land.name}`} className="text-gray-500 hover:bg-gray-100 hover:text-gray-800">
               <MoreVertical className="w-5 h-5" />
             </Button>
             {isActionMenuOpen && (
               <div className="absolute right-0 top-9 z-10 w-48 rounded-xl border border-gray-200 bg-white p-1.5 shadow-lg">
-                <button onClick={handleToggleVisibility} disabled={isSavingVisibility} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50">
+                <button onClick={(e) => { setIsActionMenuOpen(false); handleToggleVisibility(e); }} disabled={isSavingVisibility} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50">
                   {isSavingVisibility ? <Loader2 className="w-4 h-4 animate-spin" /> : isHiddenFromOperator ? <Eye className="w-4 h-4 text-emerald-600" /> : <EyeOff className="w-4 h-4 text-amber-600" />}
                   {isHiddenFromOperator ? 'Tampilkan ke Operator' : 'Sembunyikan dari Operator'}
                 </button>
-                <button onClick={handleOpenEdit} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-700"><Pencil className="w-4 h-4" /> Edit Card</button>
-                <button onClick={handleOpenDelete} disabled={isDeleting} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-medium text-red-600 hover:bg-red-50 disabled:opacity-50">{isDeleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />} Hapus Card</button>
+                <button onClick={(e) => { setIsActionMenuOpen(false); handleOpenEdit(e); }} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-700"><Pencil className="w-4 h-4" /> Edit Card</button>
+                <button onClick={(e) => { setIsActionMenuOpen(false); handleOpenDelete(e); }} disabled={isDeleting} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-medium text-red-600 hover:bg-red-50 disabled:opacity-50">{isDeleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />} Hapus Card</button>
               </div>
             )}
           </div>
