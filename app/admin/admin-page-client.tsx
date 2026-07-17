@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useMemo, useEffect } from 'react'
-import { ChevronRight, Trash2 } from 'lucide-react'
+import { ChevronRight, FileText, FolderKanban, Menu, Tags, Trash2, X } from 'lucide-react'
+import Image from 'next/image'
 import Link from 'next/link'
 import { DocumentCard } from '@/components/ui/document-card'
 import { SearchBar } from '@/components/ui/search-bar'
@@ -10,7 +11,6 @@ import { FolderCard } from '@/components/ui/folder-card'
 import { CreateFolderDialog } from '@/components/ui/create-folder-dialog'
 import { CreateLandDialog } from '@/components/admin/CreateLandDialog'
 import { AdminLandCard } from '@/components/admin/AdminLandCard'
-import { AppHeader } from '@/components/ui/app-header'
 import { LogoutButton } from '@/components/ui/logout-button'
 import { getLands, type Land } from '@/lib/services/land'
 import ProductionReportsDashboard from '@/components/admin/ProductionReportsDashboard'
@@ -94,7 +94,18 @@ export default function Page({ initialLands = [] }: AdminPageProps) {
   const [isLoading, setIsLoading] = useState(initialLands.length === 0)
   const [error, setError] = useState('')
   const [activeView, setActiveView] = useState<'workspace' | 'reports' | 'part-numbers' | 'ng-categories'>('workspace')
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const pageTitle = {
+    workspace: 'Workspace',
+    reports: 'Laporan Produksi',
+    'part-numbers': 'Part Number',
+    'ng-categories': 'Kategori NG',
+  }[activeView]
 
+  const selectView = (view: typeof activeView) => {
+    setActiveView(view)
+    setIsSidebarOpen(false)
+  }
   const persistAdminLocation = (land: Land, history: BreadcrumbItem[]) => {
     window.localStorage.setItem(
       ADMIN_LOCATION_STORAGE_KEY,
@@ -376,132 +387,35 @@ export default function Page({ initialLands = [] }: AdminPageProps) {
   const showEmptyState = filteredDocuments.length === 0 && filteredFolders.length === 0
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900">
-      {/* Header */}
-      <AppHeader
-        logoAside={
-          <div className="hidden sm:flex flex-wrap items-center gap-1 sm:gap-1.5 ml-2 sm:ml-4 border-l border-gray-200 pl-2 sm:pl-4 select-none">
-            <button
-              onClick={() => setActiveView('workspace')}
-              className={`px-3 py-1.5 rounded-lg text-sm font-bold transition duration-200 cursor-pointer ${activeView === 'workspace'
-                  ? 'bg-blue-50 text-blue-700 font-extrabold border border-blue-100'
-                  : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'
-                }`}
-            >
-              Workspace
-            </button>
-            <button
-              onClick={() => setActiveView('reports')}
-              className={`px-3 py-1.5 rounded-lg text-sm font-bold transition duration-200 cursor-pointer ${activeView === 'reports'
-                  ? 'bg-blue-50 text-blue-700 font-extrabold border border-blue-100'
-                  : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'
-                }`}
-            >
-              Laporan Produksi
-            </button>
-            <button
-              onClick={() => setActiveView('part-numbers')}
-              className={`px-3 py-1.5 rounded-lg text-sm font-bold transition duration-200 cursor-pointer ${activeView === 'part-numbers'
-                  ? 'bg-blue-50 text-blue-700 font-extrabold border border-blue-100'
-                  : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'
-                }`}
-            >
-              Part Number
-            </button>
-            <button
-              onClick={() => setActiveView('ng-categories')}
-              className={`px-3 py-1.5 rounded-lg text-sm font-bold transition duration-200 cursor-pointer ${activeView === 'ng-categories'
-                  ? 'bg-rose-50 text-rose-700 font-extrabold border border-rose-100'
-                  : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'
-                }`}
-            >
-              Kategori NG
-            </button>
-            <Link
-              href="/admin/recycle-bin"
-              className="px-3 py-1.5 rounded-lg text-sm font-bold transition duration-200 cursor-pointer text-slate-500 hover:text-slate-800 hover:bg-slate-100 flex items-center gap-1.5"
-            >
-              <Trash2 className="w-4 h-4" />
-              Tempat Sampah
-            </Link>
+    <div className="min-h-screen bg-gray-50 text-gray-900 lg:flex">
+      {isSidebarOpen && <button aria-label="Tutup navigasi" className="fixed inset-0 z-30 bg-slate-950/40 lg:hidden" onClick={() => setIsSidebarOpen(false)} />}
+      <aside className={`fixed inset-y-0 left-0 z-40 flex w-72 flex-col border-r border-slate-200 bg-white p-4 shadow-xl transition-transform duration-300 lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 lg:shadow-none ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        <div className="flex items-center justify-between border-b border-slate-100 px-2 pb-4">
+          <Link href="/" aria-label="Kembali ke landing page" className="inline-flex"><Image src="/futaba-logo.png" alt="FUTABA Logo" width={150} height={52} className="h-10 w-auto object-contain" priority /></Link>
+          <button aria-label="Tutup navigasi" className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 lg:hidden" onClick={() => setIsSidebarOpen(false)}><X className="h-5 w-5" /></button>
+        </div>
+        <nav className="mt-6 space-y-1" aria-label="Navigasi utama">
+          <SidebarButton icon={FolderKanban} label="Workspace" active={activeView === 'workspace'} onClick={() => selectView('workspace')} />
+          <SidebarButton icon={FileText} label="Laporan Produksi" active={activeView === 'reports'} onClick={() => selectView('reports')} />
+          <SidebarButton icon={Tags} label="Part Number" active={activeView === 'part-numbers'} onClick={() => selectView('part-numbers')} />
+          <SidebarButton icon={Tags} label="Kategori NG" active={activeView === 'ng-categories'} onClick={() => selectView('ng-categories')} />
+        </nav>
+        <div className="mt-auto space-y-3 border-t border-slate-100 pt-4">
+          <Link href="/admin/recycle-bin" className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-900" onClick={() => setIsSidebarOpen(false)}><Trash2 className="h-5 w-5" />Tempat Sampah</Link>
+          <LogoutButton />
+        </div>
+      </aside>
+      <div className="min-w-0 flex-1">
+        <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/95 backdrop-blur">
+          <div className="flex min-h-16 items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center gap-3"><button aria-label="Buka navigasi" className="rounded-lg p-2 text-slate-600 hover:bg-slate-100 lg:hidden" onClick={() => setIsSidebarOpen(true)}><Menu className="h-5 w-5" /></button><h1 className="text-lg font-bold tracking-tight text-slate-900 sm:text-xl">{pageTitle}</h1></div>
+            <div className="flex flex-wrap items-center justify-end gap-2">
+              {activeView === 'workspace' && (showLandList ? <CreateLandDialog onCreateSuccess={loadLands} /> : selectedLand ? <><CreateFolderDialog parentId={currentFolder ? currentFolder.id : null} landId={selectedLand.id} onCreateSuccess={handleCreateFolderSuccess} /><UploadDialog folderId={currentFolder ? currentFolder.id : null} landId={selectedLand.id} onUploadSuccess={handleUploadSuccess} /></> : null)}
+            </div>
           </div>
-        }
-      >
-        {activeView === 'workspace' && (
-          showLandList ? (
-            <CreateLandDialog onCreateSuccess={loadLands} />
-          ) : selectedLand ? (
-            <>
-              <CreateFolderDialog
-                parentId={currentFolder ? currentFolder.id : null}
-                landId={selectedLand.id}
-                onCreateSuccess={handleCreateFolderSuccess}
-              />
-              <UploadDialog
-                folderId={currentFolder ? currentFolder.id : null}
-                landId={selectedLand.id}
-                onUploadSuccess={handleUploadSuccess}
-              />
-            </>
-          ) : null
-        )}
-        <LogoutButton variant="header" />
-      </AppHeader>
-
-      {/* Mobile Nav Tabs - visible only on small screens */}
-      <nav className="sm:hidden bg-white border-b border-gray-200 px-3 py-2 flex flex-wrap gap-1.5 shadow-sm">
-        <button
-          onClick={() => setActiveView('workspace')}
-          className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition duration-200 cursor-pointer ${
-            activeView === 'workspace'
-              ? 'bg-blue-50 text-blue-700 border border-blue-100'
-              : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'
-          }`}
-        >
-          Workspace
-        </button>
-        <button
-          onClick={() => setActiveView('reports')}
-          className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition duration-200 cursor-pointer ${
-            activeView === 'reports'
-              ? 'bg-blue-50 text-blue-700 border border-blue-100'
-              : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'
-          }`}
-        >
-          Laporan
-        </button>
-        <button
-          onClick={() => setActiveView('part-numbers')}
-          className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition duration-200 cursor-pointer ${
-            activeView === 'part-numbers'
-              ? 'bg-blue-50 text-blue-700 border border-blue-100'
-              : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'
-          }`}
-        >
-          Part Number
-        </button>
-        <button
-          onClick={() => setActiveView('ng-categories')}
-          className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition duration-200 cursor-pointer ${
-            activeView === 'ng-categories'
-              ? 'bg-rose-50 text-rose-700 border border-rose-100'
-              : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'
-          }`}
-        >
-          Kategori NG
-        </button>
-        <Link
-          href="/admin/recycle-bin"
-          className="px-2.5 py-1.5 rounded-lg text-xs font-bold transition duration-200 cursor-pointer text-slate-500 hover:text-slate-800 hover:bg-slate-100 flex items-center gap-1"
-        >
-          <Trash2 className="w-3.5 h-3.5" />
-          Sampah
-        </Link>
-      </nav>
-
-      {/* Main Content */}
-      <main className="max-w-6xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
-        {activeView === 'reports' ? (
+        </header>
+        <main className="mx-auto max-w-6xl px-3 py-4 sm:px-6 sm:py-8 lg:px-8">
+          {activeView === 'reports' ? (
           <ProductionReportsDashboard />
         ) : activeView === 'part-numbers' ? (
           <AdminPartNumbersPanel />
@@ -680,6 +594,11 @@ export default function Page({ initialLands = [] }: AdminPageProps) {
           </p>
         </div>
       </footer>
+      </div>
     </div>
   )
+}
+
+function SidebarButton({ icon: Icon, label, active, onClick }: { icon: typeof FolderKanban; label: string; active: boolean; onClick: () => void }) {
+  return <button onClick={onClick} className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-semibold transition ${active ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'}`}><Icon className="h-5 w-5" />{label}</button>
 }
