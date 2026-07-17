@@ -1,24 +1,49 @@
-import { createClient } from "@/lib/supabase/server";
+'use client'
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Monitor, Tv, ArrowRight, Activity } from "lucide-react";
+import { Monitor, Tv, ArrowRight, Activity, Loader2 } from "lucide-react";
+import { getLands, type Land } from "@/lib/services/land";
 
-export const revalidate = 0; // Selalu dapatkan data land yang paling baru
+export default function DisplayPage() {
+  const [lands, setLands] = useState<Land[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
 
-export default async function DisplayPage() {
-  const supabase = await createClient();
+  useEffect(() => {
+    let isMounted = true;
+    let timerId: NodeJS.Timeout;
 
-  // Ambil daftar land yang aktif (is_active = true atau null)
-  const { data: lands, error } = await supabase
-    .from("lands")
-    .select("*")
-    .or("is_active.eq.true,is_active.is.null")
-    .order("name", { ascending: true });
+    async function fetchLands() {
+      try {
+        const data = await getLands();
+        if (isMounted) {
+          setLands(data);
+          setError("");
+        }
+      } catch (err) {
+        console.error("Error loading lands on display page:", err);
+        if (isMounted) {
+          setError("Gagal memuat lini produksi.");
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    }
 
-  if (error) {
-    console.error("Error fetching lands for display page:", error);
-  }
+    // Ambil data pertama kali
+    fetchLands();
 
-  const activeLands = lands ?? [];
+    // Polling data setiap 3 detik
+    timerId = setInterval(fetchLands, 3000);
+
+    return () => {
+      isMounted = false;
+      clearInterval(timerId);
+    };
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-950 to-zinc-950 text-white flex flex-col justify-between select-none">
@@ -54,7 +79,18 @@ export default async function DisplayPage() {
           </p>
         </div>
 
-        {activeLands.length === 0 ? (
+        {isLoading && lands.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20">
+            <Loader2 className="h-10 w-10 text-emerald-400 animate-spin mb-4" />
+            <p className="text-slate-400 text-sm">Memuat daftar lini...</p>
+          </div>
+        ) : error && lands.length === 0 ? (
+          <div className="bg-red-950/20 border border-red-900/30 rounded-2xl p-8 text-center max-w-md w-full">
+            <Activity className="h-12 w-12 text-red-500 mx-auto mb-4" />
+            <h3 className="text-xl font-bold text-red-400">Terjadi Kesalahan</h3>
+            <p className="text-slate-400 text-sm mt-2">{error}</p>
+          </div>
+        ) : lands.length === 0 ? (
           <div className="bg-slate-900/50 border border-slate-800/80 rounded-2xl p-12 text-center max-w-md w-full">
             <Activity className="h-12 w-12 text-slate-600 mx-auto mb-4 animate-pulse" />
             <h3 className="text-xl font-bold text-slate-300">Tidak ada Lini aktif</h3>
@@ -64,7 +100,7 @@ export default async function DisplayPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 w-full">
-            {activeLands.map((land) => (
+            {lands.map((land) => (
               <Link
                 key={land.id}
                 href={`/display/${land.id}`}
