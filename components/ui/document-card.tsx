@@ -712,10 +712,10 @@ export function DocumentCard({
     <>
       <div
         onClick={showOperatorActions ? undefined : handleView}
-        className={`bg-white border rounded-lg p-4 shadow-sm hover:shadow-md transition-all group select-none text-gray-900 ${showOperatorActions ? '' : 'cursor-pointer'
+        className={`bg-card border rounded-lg p-4 shadow-sm hover:shadow-md transition-all group select-none text-foreground ${showOperatorActions ? '' : 'cursor-pointer'
           } ${currentHiddenFromOperator
             ? 'border-amber-200 bg-amber-50/40 hover:border-amber-300'
-            : 'border-gray-200 hover:border-blue-400'
+            : 'border-border hover:border-primary'
           }`}
         title={showOperatorActions ? undefined : 'Klik kartu ini untuk melihat/membuka dokumen'}
       >
@@ -743,7 +743,7 @@ export function DocumentCard({
                     type="text"
                     value={titleInput}
                     onChange={(e) => setTitleInput(e.target.value)}
-                    className="h-8 px-2 flex-1 rounded border border-gray-300 bg-white text-base font-semibold text-gray-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-100"
+                    className="h-8 px-2 flex-1 rounded border border-border bg-background text-base font-semibold text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary/20"
                     placeholder="Judul dokumen"
                     disabled={isSavingTitle}
                     autoFocus
@@ -758,7 +758,7 @@ export function DocumentCard({
                   <button
                     onClick={handleSaveTitle}
                     disabled={isSavingTitle || !titleInput.trim()}
-                    className="p-1.5 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 transition-colors flex items-center justify-center"
+                    className="p-1.5 bg-primary text-primary-foreground rounded hover:bg-primary/90 disabled:opacity-50 transition-colors flex items-center justify-center"
                     title="Simpan"
                   >
                     {isSavingTitle ? (
@@ -770,14 +770,14 @@ export function DocumentCard({
                   <button
                     onClick={() => setIsEditingTitle(false)}
                     disabled={isSavingTitle}
-                    className="p-1.5 bg-gray-100 text-gray-600 rounded hover:bg-gray-200 transition-colors flex items-center justify-center"
+                    className="p-1.5 bg-muted text-muted-foreground rounded hover:bg-muted/80 transition-colors flex items-center justify-center"
                     title="Batal"
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
                 </div>
               ) : (
-                <h3 className="text-lg font-semibold text-gray-900 truncate group-hover:text-blue-600 transition-colors inline-flex items-center gap-1.5 max-w-full">
+                <h3 className="text-lg font-semibold text-foreground truncate group-hover:text-primary transition-colors inline-flex items-center gap-1.5 max-w-full">
                   <span className="truncate">{currentTitle}</span>
                   {isAdmin && (
                     <button
@@ -786,7 +786,7 @@ export function DocumentCard({
                         setTitleInput(currentTitle)
                         setIsEditingTitle(true)
                       }}
-                      className="p-1 text-gray-400 hover:text-blue-600 rounded transition-colors flex-shrink-0"
+                      className="p-1 text-muted-foreground hover:text-primary rounded transition-colors flex-shrink-0"
                       title="Ubah judul dokumen"
                     >
                       <Pencil className="w-3.5 h-3.5" />
@@ -795,7 +795,7 @@ export function DocumentCard({
                 </h3>
               )}
               {description && (
-                <p className="text-sm text-gray-600 mt-1 line-clamp-2">
+                <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
                   {description}
                 </p>
               )}
@@ -813,19 +813,19 @@ export function DocumentCard({
                   </span>
                 )}
               </div>
-              <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-500">
+              <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
                 {isEditingFileName ? (
                   <div
                     className="flex items-center gap-1.5 w-full"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <FileText className="h-3.5 w-3.5 flex-shrink-0 text-gray-400" />
+                    <FileText className="h-3.5 w-3.5 flex-shrink-0 text-muted-foreground" />
                     <div className="flex flex-1 items-center gap-1 max-w-sm">
                       <input
                         type="text"
                         value={fileNameInput}
                         onChange={(e) => setFileNameInput(e.target.value)}
-                        className="h-7 px-2 flex-1 rounded border border-gray-300 bg-white text-xs text-gray-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-100"
+                        className="h-7 px-2 flex-1 rounded border border-border bg-background text-xs text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary/20"
                         placeholder="Nama file"
                         disabled={isSavingFileName}
                         autoFocus
@@ -838,14 +838,14 @@ export function DocumentCard({
                         }}
                       />
                       {currentFileName.lastIndexOf('.') !== -1 && (
-                        <span className="text-xs text-gray-500 select-none pr-1">
+                        <span className="text-xs text-muted-foreground select-none pr-1">
                           .{currentFileName.substring(currentFileName.lastIndexOf('.') + 1)}
                         </span>
                       )}
                       <button
                         onClick={handleSaveFileName}
                         disabled={isSavingFileName || !fileNameInput.trim()}
-                        className="p-1.5 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 transition-colors flex items-center justify-center"
+                        className="p-1.5 bg-primary text-primary-foreground rounded hover:bg-primary/90 disabled:opacity-50 transition-colors flex items-center justify-center"
                         title="Simpan"
                       >
                         {isSavingFileName ? (
@@ -857,7 +857,7 @@ export function DocumentCard({
                       <button
                         onClick={() => setIsEditingFileName(false)}
                         disabled={isSavingFileName}
-                        className="p-1.5 bg-gray-100 text-gray-600 rounded hover:bg-gray-200 transition-colors flex items-center justify-center"
+                        className="p-1.5 bg-muted text-muted-foreground rounded hover:bg-muted/80 transition-colors flex items-center justify-center"
                         title="Batal"
                       >
                         <X className="w-3.5 h-3.5" />
@@ -867,7 +867,7 @@ export function DocumentCard({
                 ) : (
                   <>
                     <span className="inline-flex min-w-0 max-w-full items-center gap-1.5">
-                      <FileText className="h-3.5 w-3.5 flex-shrink-0 text-gray-400" />
+                      <FileText className="h-3.5 w-3.5 flex-shrink-0 text-muted-foreground" />
                       <span className="truncate">{currentFileName}</span>
                       {isAdmin && (
                         <button
@@ -878,7 +878,7 @@ export function DocumentCard({
                             setFileNameInput(base)
                             setIsEditingFileName(true)
                           }}
-                          className="p-1 text-gray-400 hover:text-blue-600 rounded transition-colors"
+                          className="p-1 text-muted-foreground hover:text-primary rounded transition-colors"
                           title="Ubah nama file"
                         >
                           <Pencil className="w-3.5 h-3.5" />
@@ -886,12 +886,12 @@ export function DocumentCard({
                       )}
                     </span>
                     <span className="inline-flex items-center gap-1.5">
-                      <HardDrive className="h-3.5 w-3.5 text-gray-400" />
+                      <HardDrive className="h-3.5 w-3.5 text-muted-foreground" />
                       {formatFileSize(file.size)}
                     </span>
                     {formattedTargetTime && (
                       <span className="inline-flex items-center gap-1.5">
-                        <Clock className="h-3.5 w-3.5 text-gray-400" />
+                        <Clock className="h-3.5 w-3.5 text-muted-foreground" />
                         Target {formattedTargetTime}
                       </span>
                     )}
@@ -901,11 +901,11 @@ export function DocumentCard({
 
               {showTargetTimeEditor && (
                 <div
-                  className="mt-4 flex flex-col gap-2 rounded-lg border border-gray-200 bg-gray-50 p-3 sm:flex-row sm:items-end"
+                  className="mt-4 flex flex-col gap-2 rounded-lg border border-border bg-muted p-3 sm:flex-row sm:items-end"
                   onClick={(event) => event.stopPropagation()}
                 >
                   <label className="flex-1">
-                    <span className="mb-1 block text-xs font-semibold text-gray-600">
+                    <span className="mb-1 block text-xs font-semibold text-muted-foreground">
                       Target Waktu
                     </span>
                     <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
@@ -917,10 +917,10 @@ export function DocumentCard({
                             mergeLocalDateTimeInputValue(currentValue, 'date', event.target.value)
                           )
                         }}
-                        className="h-9 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                        className="h-9 w-full rounded-lg border border-border bg-background px-3 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
                         disabled={isSavingTargetTime}
                       />
-                      <div className="flex h-9 items-center rounded-lg border border-gray-300 bg-white px-2 text-sm text-gray-900 transition focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-100">
+                      <div className="flex h-9 items-center rounded-lg border border-border bg-background px-2 text-sm text-foreground transition focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20">
                         <input
                           type="text"
                           value={getClockHourValue(getLocalClockInputValue(targetTimeInput))}
@@ -979,7 +979,7 @@ export function DocumentCard({
                     size="sm"
                     onClick={handleSaveTargetTime}
                     disabled={isSavingTargetTime || !isTargetTimeInputValid}
-                    className="h-9 bg-blue-600 text-white hover:bg-blue-700"
+                    className="h-9 bg-primary text-primary-foreground hover:bg-primary/90"
                   >
                     {isSavingTargetTime ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
@@ -994,7 +994,7 @@ export function DocumentCard({
                     variant="outline"
                     onClick={handleResetTargetTime}
                     disabled={isSavingTargetTime || (!currentTargetTime && !targetTimeInput)}
-                    className="h-9 border-gray-300 bg-white text-gray-700 hover:bg-gray-100"
+                    className="h-9 border-border bg-background text-foreground hover:bg-muted"
                   >
                     {isSavingTargetTime ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
@@ -1009,16 +1009,11 @@ export function DocumentCard({
           </div>
 
           {showOperatorActions && (
-            <div className="grid w-full grid-cols-1 gap-2 border-t border-[#e5e7eb] pt-3 sm:flex sm:w-auto sm:flex-shrink-0 sm:self-start sm:border-t-0 sm:pt-0">
+            <div className="grid w-full grid-cols-1 gap-2 border-t border-border pt-3 sm:flex sm:w-auto sm:flex-shrink-0 sm:self-start sm:border-t-0 sm:pt-0">
               <button
-                className="inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-lg text-sm font-semibold sm:w-40"
+                className="inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-lg border border-border bg-background text-sm font-semibold text-foreground sm:w-40"
                 onClick={handlePreviewClick}
                 disabled={isViewing}
-                style={{
-                  backgroundColor: '#ffffff',
-                  border: '1px solid #cbd5e1',
-                  color: '#0f172a',
-                }}
                 title="Preview Dokumen"
                 type="button"
               >
@@ -1031,14 +1026,9 @@ export function DocumentCard({
               </button>
 
               <button
-                className="inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-lg text-sm font-semibold sm:w-40"
+                className="inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-lg bg-emerald-600 border border-emerald-600 text-sm font-semibold text-white sm:w-40"
                 onClick={handleShowOnDisplay}
                 disabled={isDisplaying}
-                style={{
-                  backgroundColor: '#059669',
-                  border: '1px solid #059669',
-                  color: '#ffffff',
-                }}
                 title="Tampilkan di Display"
                 type="button"
               >
@@ -1053,7 +1043,7 @@ export function DocumentCard({
           )}
 
           {onDelete && (
-            <div className="flex gap-2 sm:flex-shrink-0 self-end sm:self-start justify-end w-full sm:w-auto border-t sm:border-t-0 pt-3 sm:pt-0 mt-1 sm:mt-0">
+            <div className="flex gap-2 sm:flex-shrink-0 self-end sm:self-start justify-end w-full sm:w-auto border-t sm:border-t-0 border-border pt-3 sm:pt-0 mt-1 sm:mt-0">
               <Button
                 size="sm"
                 variant="ghost"

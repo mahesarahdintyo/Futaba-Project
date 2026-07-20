@@ -173,26 +173,26 @@ export function AdminLandCard({
       {/* Card */}
       <div
         onClick={() => onEnter(land)}
-        className={`group relative ${isActionMenuOpen ? 'z-20' : 'z-0'} bg-white border rounded-xl p-5 shadow-sm cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md ${
+        className={`group relative ${isActionMenuOpen ? 'z-20' : 'z-0'} bg-card border rounded-xl p-5 shadow-sm cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md ${
           isHiddenFromOperator
             ? 'border-amber-200 bg-amber-50/40 hover:border-amber-300'
-            : 'border-gray-200 hover:border-blue-400'
+            : 'border-border hover:border-primary'
         }`}
         title={`Klik untuk membuka ${land.name}`}
       >
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-start gap-3 min-w-0">
-            <div className="flex-shrink-0 w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center">
-              <Folder className="w-5 h-5 text-blue-600" />
+            <div className="flex-shrink-0 w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+              <Folder className="w-5 h-5 text-primary" />
             </div>
             <div className="min-w-0">
-              <h3 className="text-lg font-semibold text-gray-900 truncate">
+              <h3 className="text-lg font-semibold text-foreground truncate">
                 {land.name}
               </h3>
-              <p className="text-sm text-gray-500 mt-1 line-clamp-2">
+              <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
                 {land.description || 'Klik untuk membuka'}
               </p>
-              <p className="mt-3 text-xs font-medium text-gray-400">Total Dokumen: {land.document_count ?? 0}</p>
+              <p className="mt-3 text-xs font-medium text-muted-foreground">Total Dokumen: {land.document_count ?? 0}</p>
 
               {isHiddenFromOperator && (
                 <span className="mt-2 inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-700">
@@ -204,17 +204,17 @@ export function AdminLandCard({
           </div>
 
           <div ref={menuRef} className="relative flex-shrink-0" onClick={(event) => event.stopPropagation()}>
-            <Button size="icon-sm" variant="ghost" onClick={() => setIsActionMenuOpen((isOpen) => !isOpen)} title="Aksi card" aria-label={`Aksi untuk card ${land.name}`} className="text-gray-500 hover:bg-gray-100 hover:text-gray-800">
+            <Button size="icon-sm" variant="ghost" onClick={() => setIsActionMenuOpen((isOpen) => !isOpen)} title="Aksi card" aria-label={`Aksi untuk card ${land.name}`} className="text-muted-foreground hover:bg-muted hover:text-foreground">
               <MoreVertical className="w-5 h-5" />
             </Button>
             {isActionMenuOpen && (
-              <div className="absolute right-0 top-9 z-10 w-48 rounded-xl border border-gray-200 bg-white p-1.5 shadow-lg">
-                <button onClick={(e) => { setIsActionMenuOpen(false); handleToggleVisibility(e); }} disabled={isSavingVisibility} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50">
+              <div className="absolute right-0 top-9 z-10 w-48 rounded-xl border border-border bg-card p-1.5 shadow-lg">
+                <button onClick={(e) => { setIsActionMenuOpen(false); handleToggleVisibility(e); }} disabled={isSavingVisibility} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-medium text-foreground hover:bg-muted disabled:opacity-50">
                   {isSavingVisibility ? <Loader2 className="w-4 h-4 animate-spin" /> : isHiddenFromOperator ? <Eye className="w-4 h-4 text-emerald-600" /> : <EyeOff className="w-4 h-4 text-amber-600" />}
                   {isHiddenFromOperator ? 'Tampilkan ke Operator' : 'Sembunyikan dari Operator'}
                 </button>
-                <button onClick={(e) => { setIsActionMenuOpen(false); handleOpenEdit(e); }} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-700"><Pencil className="w-4 h-4" /> Edit Card</button>
-                <button onClick={(e) => { setIsActionMenuOpen(false); handleOpenDelete(e); }} disabled={isDeleting} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-medium text-red-600 hover:bg-red-50 disabled:opacity-50">{isDeleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />} Hapus Card</button>
+                <button onClick={(e) => { setIsActionMenuOpen(false); handleOpenEdit(e); }} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-medium text-foreground hover:bg-primary/10 hover:text-primary"><Pencil className="w-4 h-4" /> Edit Card</button>
+                <button onClick={(e) => { setIsActionMenuOpen(false); handleOpenDelete(e); }} disabled={isDeleting} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-medium text-destructive hover:bg-destructive/10 disabled:opacity-50">{isDeleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />} Hapus Card</button>
               </div>
             )}
           </div>
@@ -228,20 +228,20 @@ export function AdminLandCard({
           style={{ backgroundColor: 'rgba(0, 0, 0, 0.4)' }}
           onClick={(e) => { if (e.target === e.currentTarget && !isDeleting) setIsDeleteOpen(false) }}
         >
-          <div className="bg-white rounded-xl shadow-2xl max-w-sm w-full p-6 space-y-4">
+          <div className="bg-card rounded-xl shadow-2xl max-w-sm w-full p-6 space-y-4">
             <div className="flex items-center gap-3">
               <div className="flex-shrink-0 w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
                 <AlertTriangle className="w-5 h-5 text-red-600" />
               </div>
               <div>
-                <h2 className="text-base font-semibold text-gray-900">Hapus Card</h2>
-                <p className="text-sm text-gray-500 mt-0.5">Tindakan ini tidak dapat dibatalkan.</p>
+                <h2 className="text-base font-semibold text-foreground">Hapus Card</h2>
+                <p className="text-sm text-muted-foreground mt-0.5">Tindakan ini tidak dapat dibatalkan.</p>
               </div>
             </div>
 
-            <p className="text-sm text-gray-700">
+            <p className="text-sm text-foreground">
               Apakah Anda yakin ingin menghapus card{' '}
-              <span className="font-semibold text-gray-900">&quot;{land.name}&quot;</span>?
+              <span className="font-semibold text-foreground">&quot;{land.name}&quot;</span>?
             </p>
 
             <div className="flex gap-3 pt-1">
@@ -250,7 +250,7 @@ export function AdminLandCard({
                 variant="outline"
                 onClick={() => setIsDeleteOpen(false)}
                 disabled={isDeleting}
-                className="flex-1 border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                className="flex-1"
               >
                 Batal
               </Button>
@@ -258,7 +258,7 @@ export function AdminLandCard({
                 type="button"
                 onClick={handleDelete}
                 disabled={isDeleting}
-                className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+                className="flex-1 bg-destructive text-white hover:bg-destructive/90"
               >
                 {isDeleting ? (
                   <>
@@ -281,13 +281,13 @@ export function AdminLandCard({
           style={{ backgroundColor: 'rgba(0, 0, 0, 0.4)' }}
           onClick={(e) => { if (e.target === e.currentTarget && !isSaving) setIsEditOpen(false) }}
         >
-          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-              <h2 className="text-lg font-semibold text-gray-900">Edit Card</h2>
+          <div className="bg-card rounded-xl shadow-2xl max-w-md w-full">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-border">
+              <h2 className="text-lg font-semibold text-foreground">Edit Card</h2>
               <button
                 onClick={() => setIsEditOpen(false)}
                 disabled={isSaving}
-                className="text-gray-400 hover:text-gray-600 disabled:opacity-50 transition"
+                className="text-muted-foreground hover:text-foreground disabled:opacity-50 transition"
                 aria-label="Tutup"
               >
                 <X className="w-5 h-5" />
@@ -302,7 +302,7 @@ export function AdminLandCard({
               )}
 
               <div className="space-y-1.5">
-                <label className="block text-sm font-medium text-gray-700">
+                <label className="block text-sm font-medium text-foreground">
                   Nama Card <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -313,10 +313,10 @@ export function AdminLandCard({
                     if (isDuplicateName) setIsDuplicateName(false)
                     if (error) setError('')
                   }}
-                  className={`w-full px-4 py-2.5 border rounded-lg text-sm text-gray-900 outline-none focus:ring-2 transition
+                  className={`w-full px-4 py-2.5 border rounded-lg text-sm text-foreground outline-none focus:ring-2 transition
                     ${isDuplicateName
                       ? 'border-red-400 bg-red-50 focus:ring-red-200'
-                      : 'border-gray-300 focus:ring-blue-200 focus:border-blue-500'
+                      : 'border-border bg-background focus:ring-primary/20 focus:border-primary'
                     }`}
                   disabled={isSaving}
                   autoFocus
@@ -329,14 +329,14 @@ export function AdminLandCard({
               </div>
 
               <div className="space-y-1.5">
-                <label className="block text-sm font-medium text-gray-700">
-                  Deskripsi <span className="text-gray-400">(opsional)</span>
+                <label className="block text-sm font-medium text-foreground">
+                  Deskripsi <span className="text-muted-foreground">(opsional)</span>
                 </label>
                 <textarea
                   value={description}
                   onChange={(event) => setDescription(event.target.value)}
                   rows={3}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm text-gray-900 outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500 transition resize-none"
+                  className="w-full px-4 py-2.5 border border-border bg-background rounded-lg text-sm text-foreground outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition resize-none"
                   disabled={isSaving}
                 />
               </div>
@@ -347,14 +347,14 @@ export function AdminLandCard({
                   variant="outline"
                   onClick={() => setIsEditOpen(false)}
                   disabled={isSaving}
-                  className="flex-1 border-gray-300 bg-white text-gray-700 hover:bg-gray-50 hover:text-gray-900"
+                  className="flex-1"
                 >
                   Batal
                 </Button>
                 <Button
                   type="submit"
                   disabled={isSaving || !name.trim()}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700"
+                  className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90"
                 >
                   {isSaving ? (
                     <>

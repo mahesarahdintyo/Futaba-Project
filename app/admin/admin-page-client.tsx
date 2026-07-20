@@ -388,12 +388,12 @@ export default function Page({ initialLands = [] }: AdminPageProps) {
   const showEmptyState = filteredDocuments.length === 0 && filteredFolders.length === 0
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900 lg:flex">
-      {isSidebarOpen && <button aria-label="Tutup navigasi" className="fixed inset-0 z-30 bg-slate-950/40 lg:hidden" onClick={() => setIsSidebarOpen(false)} />}
-      <aside className={`fixed inset-y-0 left-0 z-40 flex w-72 flex-col border-r border-slate-200 bg-white p-4 shadow-xl transition-all duration-300 lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 lg:shadow-none ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} ${isAnyDialogOpen ? 'blur-md pointer-events-none opacity-40' : ''}`}>
-        <div className="flex items-center justify-between border-b border-slate-100 px-2 pb-4">
+    <div className="min-h-screen bg-background text-foreground lg:flex">
+      {isSidebarOpen && <button aria-label="Tutup navigasi" className="fixed inset-0 z-30 bg-background/80 lg:hidden" onClick={() => setIsSidebarOpen(false)} />}
+      <aside className={`fixed inset-y-0 left-0 z-40 flex w-72 flex-col border-r border-border bg-card p-4 shadow-xl transition-all duration-300 lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 lg:shadow-none ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} ${isAnyDialogOpen ? 'blur-md pointer-events-none opacity-40' : ''}`}>
+        <div className="flex items-center justify-between border-b border-border px-2 pb-4">
           <Link href="/" aria-label="Kembali ke landing page" className="inline-flex"><Image src="/futaba-logo.png" alt="FUTABA Logo" width={150} height={52} className="h-10 w-auto object-contain" priority /></Link>
-          <button aria-label="Tutup navigasi" className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 lg:hidden" onClick={() => setIsSidebarOpen(false)}><X className="h-5 w-5" /></button>
+          <button aria-label="Tutup navigasi" className="rounded-lg p-2 text-muted-foreground hover:bg-muted lg:hidden" onClick={() => setIsSidebarOpen(false)}><X className="h-5 w-5" /></button>
         </div>
         <nav className="mt-6 space-y-1" aria-label="Navigasi utama">
           <SidebarButton icon={FolderKanban} label="Workspace" active={activeView === 'workspace'} onClick={() => selectView('workspace')} />
@@ -401,15 +401,15 @@ export default function Page({ initialLands = [] }: AdminPageProps) {
           <SidebarButton icon={Tags} label="Part Number" active={activeView === 'part-numbers'} onClick={() => selectView('part-numbers')} />
           <SidebarButton icon={Tags} label="Kategori NG" active={activeView === 'ng-categories'} onClick={() => selectView('ng-categories')} />
         </nav>
-        <div className="mt-auto space-y-3 border-t border-slate-100 pt-4">
-          <Link href="/admin/recycle-bin" className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-900" onClick={() => setIsSidebarOpen(false)}><Trash2 className="h-5 w-5" />Tempat Sampah</Link>
+        <div className="mt-auto space-y-3 border-t border-border pt-4">
+          <Link href="/admin/recycle-bin" className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-muted-foreground transition hover:bg-muted hover:text-foreground" onClick={() => setIsSidebarOpen(false)}><Trash2 className="h-5 w-5" />Tempat Sampah</Link>
           <LogoutButton />
         </div>
       </aside>
       <div className="min-w-0 flex-1">
-        <header className="sticky top-0 z-20 border-b border-slate-200 bg-white">
+        <header className="sticky top-0 z-20 border-b border-border bg-card">
           <div className="flex min-h-16 items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center gap-3"><button aria-label="Buka navigasi" className="rounded-lg p-2 text-slate-600 hover:bg-slate-100 lg:hidden" onClick={() => setIsSidebarOpen(true)}><Menu className="h-5 w-5" /></button><h1 className="text-lg font-bold tracking-tight text-slate-900 sm:text-xl">{pageTitle}</h1></div>
+            <div className="flex items-center gap-3"><button aria-label="Buka navigasi" className="rounded-lg p-2 text-muted-foreground hover:bg-muted lg:hidden" onClick={() => setIsSidebarOpen(true)}><Menu className="h-5 w-5" /></button><h1 className="text-lg font-bold tracking-tight text-foreground sm:text-xl">{pageTitle}</h1></div>
             <div className="flex flex-wrap items-center justify-end gap-2">
               {activeView === 'workspace' && (showLandList ? <CreateLandDialog onCreateSuccess={loadLands} onOpenChange={setIsAnyDialogOpen} /> : selectedLand ? <><CreateFolderDialog parentId={currentFolder ? currentFolder.id : null} landId={selectedLand.id} onCreateSuccess={handleCreateFolderSuccess} onOpenChange={setIsAnyDialogOpen} /><UploadDialog folderId={currentFolder ? currentFolder.id : null} landId={selectedLand.id} onUploadSuccess={handleUploadSuccess} onOpenChange={setIsAnyDialogOpen} /></> : null)}
             </div>
@@ -439,23 +439,23 @@ export default function Page({ initialLands = [] }: AdminPageProps) {
 
             {/* Breadcrumb Navigation */}
             {(!showLandList && selectedLand) && (
-              <div className="flex items-center flex-wrap gap-2 text-sm text-gray-600 mb-6 bg-white p-3 rounded-lg border border-gray-200 shadow-sm select-none">
+              <div className="flex items-center flex-wrap gap-2 text-sm text-muted-foreground mb-6 bg-card p-3 rounded-lg border border-border shadow-sm select-none">
 
                 <button
                   onClick={() => handleNavigateBreadcrumb(-1)}
-                  className="font-semibold text-blue-600 hover:text-blue-700 transition-colors"
+                  className="font-semibold text-primary hover:text-primary/80 transition-colors"
                 >
                   Home
                 </button>
 
-                <ChevronRight className="w-4 h-4 text-gray-400" />
+                <ChevronRight className="w-4 h-4 text-muted-foreground" />
 
                 <button
                   onClick={handleNavigateLandRoot}
                   disabled={folderPathHistory.length === 0}
                   className={`font-semibold transition-colors ${folderPathHistory.length === 0
-                    ? 'text-gray-800 cursor-default'
-                    : 'text-blue-600 hover:text-blue-700'
+                    ? 'text-foreground cursor-default'
+                    : 'text-primary hover:text-primary/80'
                     }`}
                 >
                   {selectedLand.name}
@@ -463,14 +463,14 @@ export default function Page({ initialLands = [] }: AdminPageProps) {
 
                 {folderPathHistory.map((folder, index) => (
                   <div key={folder.id} className="flex items-center gap-2">
-                    <ChevronRight className="w-4 h-4 text-gray-400" />
+                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
 
                     <button
                       onClick={() => handleNavigateBreadcrumb(index)}
                       disabled={index === folderPathHistory.length - 1}
                       className={`font-semibold transition-colors ${index === folderPathHistory.length - 1
-                        ? 'text-gray-800 cursor-default'
-                        : 'text-blue-600 hover:text-blue-700'
+                        ? 'text-foreground cursor-default'
+                        : 'text-primary hover:text-primary/80'
                         }`}
                     >
                       {folder.name}
@@ -494,12 +494,12 @@ export default function Page({ initialLands = [] }: AdminPageProps) {
             )}
 
             {showLandList && !isLoading && filteredLands.length === 0 && (
-              <div className="text-center py-16 bg-white rounded-lg border border-gray-200 shadow-sm">
-                <p className="text-gray-400 text-lg font-medium">
+              <div className="text-center py-16 bg-card rounded-lg border border-border shadow-sm">
+                <p className="text-muted-foreground text-lg font-medium">
                   {searchQuery ? 'Tidak ada card yang cocok' : 'Belum ada card'}
                 </p>
                 {!searchQuery && (
-                  <p className="text-gray-400 text-xs mt-1">
+                  <p className="text-muted-foreground text-xs mt-1">
                     Buat card baru untuk memulai
                   </p>
                 )}
@@ -509,7 +509,7 @@ export default function Page({ initialLands = [] }: AdminPageProps) {
             {/* Folder List Grid */}
             {!showLandList && !isLoading && filteredFolders.length > 0 && (
               <div className="mb-8">
-                <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">
+                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">
                   Folder ({filteredFolders.length})
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
@@ -531,22 +531,22 @@ export default function Page({ initialLands = [] }: AdminPageProps) {
             <div className="space-y-3">
               {!showLandList && !isLoading && filteredDocuments.length > 0 && (
                 <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">
+                  <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
                     Dokumen ({filteredDocuments.length})
                   </h3>
                 </div>
               )}
 
               {error && (
-                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm mb-4">
+                <div className="bg-destructive/10 border border-destructive/30 text-destructive px-4 py-3 rounded-lg text-sm mb-4">
                   {error}
                 </div>
               )}
 
               {!showLandList && isLoading ? (
                 <div className="text-center py-12">
-                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                  <p className="text-gray-600 mt-4 text-sm">Memuat data...</p>
+                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                  <p className="text-muted-foreground mt-4 text-sm">Memuat data...</p>
                 </div>
               ) : !showLandList && filteredDocuments.length > 0 ? (
                 <div className="space-y-3">
@@ -571,12 +571,12 @@ export default function Page({ initialLands = [] }: AdminPageProps) {
 
               {/* Empty State */}
               {!showLandList && !isLoading && showEmptyState && (
-                <div className="text-center py-16 bg-white rounded-lg border border-gray-200 shadow-sm">
-                  <p className="text-gray-400 text-lg font-medium">
+                <div className="text-center py-16 bg-card rounded-lg border border-border shadow-sm">
+                  <p className="text-muted-foreground text-lg font-medium">
                     {searchQuery ? 'Tidak ada kecocokan pencarian' : 'Folder ini kosong'}
                   </p>
                   {!searchQuery && (
-                    <p className="text-gray-400 text-xs mt-1">
+                    <p className="text-muted-foreground text-xs mt-1">
                       Buat folder baru atau unggah dokumen di atas untuk memulai
                     </p>
                   )}
@@ -588,9 +588,9 @@ export default function Page({ initialLands = [] }: AdminPageProps) {
       </main>
 
       {/* Footer */}
-      <footer className="bg-white border-t border-gray-200 mt-12">
+      <footer className="bg-card border-t border-border mt-12">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <p className="text-center text-gray-500 text-sm">
+          <p className="text-center text-muted-foreground text-sm">
             © 2026 PKIS. Semua hak dilindungi.
           </p>
         </div>
@@ -601,5 +601,5 @@ export default function Page({ initialLands = [] }: AdminPageProps) {
 }
 
 function SidebarButton({ icon: Icon, label, active, onClick }: { icon: typeof FolderKanban; label: string; active: boolean; onClick: () => void }) {
-  return <button onClick={onClick} className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-semibold transition ${active ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'}`}><Icon className="h-5 w-5" />{label}</button>
+  return <button onClick={onClick} className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-semibold transition ${active ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted hover:text-foreground'}`}><Icon className="h-5 w-5" />{label}</button>
 }

@@ -68,7 +68,7 @@ export function FolderCard({
     <>
       <div
         onClick={() => onEnter(id, name)}
-        className="bg-white border border-gray-200 rounded-lg p-3 sm:p-4 shadow-sm hover:shadow-md hover:border-blue-400 transition-all cursor-pointer group flex items-center justify-between text-gray-900 min-w-0"
+        className="bg-card border border-border rounded-lg p-3 sm:p-4 shadow-sm hover:shadow-md hover:border-primary transition-all cursor-pointer group flex items-center justify-between text-foreground min-w-0"
         title={`Klik untuk masuk ke folder ${name}`}
       >
         <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
@@ -76,10 +76,10 @@ export function FolderCard({
             <Folder className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-600 fill-yellow-600" />
           </div>
           <div className="min-w-0 flex-1">
-            <h4 className="font-semibold text-sm sm:text-base text-gray-900 truncate group-hover:text-blue-600 transition-colors">
+            <h4 className="font-semibold text-sm sm:text-base text-foreground truncate group-hover:text-primary transition-colors">
               {name}
             </h4>
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-muted-foreground">
               {typeof itemCount === 'number' ? `${itemCount} isi` : 'Folder'}
             </p>
           </div>
