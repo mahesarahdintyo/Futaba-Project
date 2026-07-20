@@ -481,27 +481,47 @@ export default function Page({ initialLands = [] }: AdminPageProps) {
             )}
 
             {showLandList && (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-                {filteredLands.map((land) => (
-                  <AdminLandCard
-                    key={land.id}
-                    land={land}
-                    onEnter={handleEnterLand}
-                    onChangeSuccess={loadLands}
-                  />
-                ))}
-              </div>
+              isLoading ? (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                  <AdminLandCardSkeleton />
+                  <AdminLandCardSkeleton />
+                  <AdminLandCardSkeleton />
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                  {filteredLands.map((land) => (
+                    <AdminLandCard
+                      key={land.id}
+                      land={land}
+                      onEnter={handleEnterLand}
+                      onChangeSuccess={loadLands}
+                    />
+                  ))}
+                </div>
+              )
             )}
 
             {showLandList && !isLoading && filteredLands.length === 0 && (
-              <div className="text-center py-16 bg-card rounded-lg border border-border shadow-sm">
+              <div className="text-center py-16 bg-card rounded-lg border border-border shadow-sm flex flex-col items-center justify-center p-6">
                 <p className="text-muted-foreground text-lg font-medium">
                   {searchQuery ? 'Tidak ada card yang cocok' : 'Belum ada card'}
                 </p>
-                {!searchQuery && (
-                  <p className="text-muted-foreground text-xs mt-1">
-                    Buat card baru untuk memulai
-                  </p>
+                {!searchQuery ? (
+                  <div className="mt-4 flex flex-col items-center gap-2">
+                    <p className="text-muted-foreground text-xs">
+                      Buat card baru untuk memulai
+                    </p>
+                    <div className="mt-2">
+                      <CreateLandDialog onCreateSuccess={loadLands} onOpenChange={setIsAnyDialogOpen} />
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    className="mt-4 text-sm font-semibold text-primary hover:underline"
+                  >
+                    Bersihkan pencarian
+                  </button>
                 )}
               </div>
             )}
@@ -544,9 +564,27 @@ export default function Page({ initialLands = [] }: AdminPageProps) {
               )}
 
               {!showLandList && isLoading ? (
-                <div className="text-center py-12">
-                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                  <p className="text-muted-foreground mt-4 text-sm">Memuat data...</p>
+                <div className="space-y-6">
+                  {/* Folder Loading Skeleton */}
+                  <div>
+                    <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3 animate-pulse">
+                      Memuat Folder...
+                    </h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                      <FolderCardSkeleton />
+                      <FolderCardSkeleton />
+                      <FolderCardSkeleton />
+                    </div>
+                  </div>
+                  {/* Document Loading Skeleton */}
+                  <div className="space-y-3">
+                    <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-2 animate-pulse">
+                      Memuat Dokumen...
+                    </h3>
+                    <DocumentCardSkeleton />
+                    <DocumentCardSkeleton />
+                    <DocumentCardSkeleton />
+                  </div>
                 </div>
               ) : !showLandList && filteredDocuments.length > 0 ? (
                 <div className="space-y-3">
@@ -571,14 +609,37 @@ export default function Page({ initialLands = [] }: AdminPageProps) {
 
               {/* Empty State */}
               {!showLandList && !isLoading && showEmptyState && (
-                <div className="text-center py-16 bg-card rounded-lg border border-border shadow-sm">
+                <div className="text-center py-16 bg-card rounded-lg border border-border shadow-sm flex flex-col items-center justify-center p-6">
                   <p className="text-muted-foreground text-lg font-medium">
                     {searchQuery ? 'Tidak ada kecocokan pencarian' : 'Folder ini kosong'}
                   </p>
-                  {!searchQuery && (
-                    <p className="text-muted-foreground text-xs mt-1">
-                      Buat folder baru atau unggah dokumen di atas untuk memulai
-                    </p>
+                  {!searchQuery ? (
+                    <div className="mt-4 flex flex-col items-center gap-2">
+                      <p className="text-muted-foreground text-xs mb-2">
+                        Buat folder baru atau unggah dokumen di atas untuk memulai
+                      </p>
+                      <div className="flex flex-wrap items-center justify-center gap-3">
+                        <CreateFolderDialog
+                          parentId={currentFolder ? currentFolder.id : null}
+                          landId={selectedLand!.id}
+                          onCreateSuccess={handleCreateFolderSuccess}
+                          onOpenChange={setIsAnyDialogOpen}
+                        />
+                        <UploadDialog
+                          folderId={currentFolder ? currentFolder.id : null}
+                          landId={selectedLand!.id}
+                          onUploadSuccess={handleUploadSuccess}
+                          onOpenChange={setIsAnyDialogOpen}
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setSearchQuery('')}
+                      className="mt-4 text-sm font-semibold text-primary hover:underline"
+                    >
+                      Bersihkan pencarian
+                    </button>
                   )}
                 </div>
               )}
@@ -602,4 +663,51 @@ export default function Page({ initialLands = [] }: AdminPageProps) {
 
 function SidebarButton({ icon: Icon, label, active, onClick }: { icon: typeof FolderKanban; label: string; active: boolean; onClick: () => void }) {
   return <button onClick={onClick} className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-semibold transition ${active ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted hover:text-foreground'}`}><Icon className="h-5 w-5" />{label}</button>
+}
+
+function FolderCardSkeleton() {
+  return (
+    <div className="bg-card border border-border rounded-lg p-3 sm:p-4 shadow-sm flex items-center justify-between min-w-0 animate-pulse select-none">
+      <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+        <div className="flex-shrink-0 w-9 h-9 sm:w-10 sm:h-10 bg-muted rounded-lg" />
+        <div className="min-w-0 flex-1 space-y-2">
+          <div className="h-4 bg-muted rounded w-2/3" />
+          <div className="h-3 bg-muted rounded w-1/3" />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function DocumentCardSkeleton() {
+  return (
+    <div className="bg-card border border-border rounded-lg p-4 shadow-sm flex flex-col sm:flex-row sm:items-start justify-between gap-4 animate-pulse select-none">
+      <div className="flex items-start gap-4 min-w-0 flex-1">
+        <div className="flex-shrink-0 w-12 h-12 bg-muted rounded-lg" />
+        <div className="min-w-0 flex-1 space-y-2.5">
+          <div className="h-5 bg-muted rounded w-1/3" />
+          <div className="h-4 bg-muted rounded w-2/3" />
+          <div className="flex items-center gap-2 pt-1">
+            <div className="h-4 bg-muted rounded-full w-12" />
+            <div className="h-3 bg-muted rounded w-24" />
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function AdminLandCardSkeleton() {
+  return (
+    <div className="bg-card border border-border rounded-xl p-5 shadow-sm flex items-start justify-between gap-3 animate-pulse select-none">
+      <div className="flex items-start gap-3 min-w-0 flex-1">
+        <div className="flex-shrink-0 w-10 h-10 bg-muted rounded-lg" />
+        <div className="min-w-0 flex-1 space-y-2">
+          <div className="h-5 bg-muted rounded w-1/2" />
+          <div className="h-4 bg-muted rounded w-3/4" />
+          <div className="h-3 bg-muted rounded w-1/3 pt-1" />
+        </div>
+      </div>
+    </div>
+  )
 }
