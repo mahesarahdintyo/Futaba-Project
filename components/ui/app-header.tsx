@@ -23,7 +23,7 @@ export function AppHeader({ children, logoAside, disableLogoLink = false }: AppH
   )
 
   return (
-    <header className="bg-white border-b border-gray-200 shadow-sm">
+    <header className="bg-card border-b border-border shadow-sm">
       <div className="w-full px-4 sm:px-6 lg:px-8 py-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">

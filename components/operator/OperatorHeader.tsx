@@ -1,5 +1,6 @@
 import { AppHeader } from "@/components/ui/app-header";
 import { LogoutButton } from "@/components/ui/logout-button";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 interface OperatorHeaderProps {
   selectedLand: string;
@@ -20,6 +21,7 @@ export default function OperatorHeader({ selectedLand }: OperatorHeaderProps) {
         </div>
       }
     >
+      <ThemeToggle variant="icon" />
       <LogoutButton variant="header" />
     </AppHeader>
   );

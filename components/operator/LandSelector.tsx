@@ -13,9 +13,9 @@ export default function LandSelector({
   onChange,
 }: LandSelectorProps) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-3 sm:p-4 shadow-sm">
+    <div className="rounded-xl border border-border bg-card p-3 sm:p-4 shadow-sm text-foreground">
       <div className="mb-2 flex flex-wrap items-center justify-between gap-2 sm:gap-3">
-        <label className="block font-semibold text-slate-800">
+        <label className="block font-semibold text-foreground">
           Line
         </label>
 
@@ -24,7 +24,7 @@ export default function LandSelector({
             href={`/display/${encodeURIComponent(value.id)}`}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex h-8 sm:h-9 items-center gap-1.5 rounded-lg border border-emerald-600 bg-white px-2.5 sm:px-3 text-xs sm:text-sm font-semibold text-emerald-700 transition hover:bg-emerald-50"
+            className="inline-flex h-8 sm:h-9 items-center gap-1.5 rounded-lg border border-primary bg-card px-2.5 sm:px-3 text-xs sm:text-sm font-semibold text-primary transition hover:bg-primary/10"
           >
             <MonitorUp className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             Display
@@ -34,7 +34,7 @@ export default function LandSelector({
 
       <div className="flex flex-wrap gap-1.5 sm:gap-2">
         {lands.length === 0 ? (
-          <p className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-500">
+          <p className="rounded-lg border border-border bg-muted px-4 py-3 text-sm font-medium text-muted-foreground">
             Belum ada line tersedia
           </p>
         ) : (
@@ -47,10 +47,10 @@ export default function LandSelector({
                 type="button"
                 aria-pressed={isSelected}
                 onClick={() => onChange(land)}
-                className={`rounded-lg border px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-semibold shadow-sm transition focus:outline-none focus:ring-2 focus:ring-emerald-100 ${
+                className={`rounded-lg border px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-semibold shadow-sm transition focus:outline-none focus:ring-2 focus:ring-primary/20 ${
                   isSelected
-                    ? "border-emerald-600 bg-emerald-600 text-white hover:bg-emerald-700"
-                    : "border-slate-300 bg-white text-slate-800 hover:border-emerald-400 hover:bg-emerald-50 hover:text-emerald-700"
+                    ? "border-primary bg-primary text-primary-foreground hover:bg-primary/95"
+                    : "border-border bg-card text-muted-foreground hover:border-primary hover:bg-muted hover:text-foreground"
                 }`}
               >
                 {land.name}

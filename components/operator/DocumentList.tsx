@@ -22,7 +22,7 @@ export default function DocumentList({
 }: DocumentListProps) {
   if (isLoading) {
     return (
-      <div className="rounded-xl border border-slate-200 bg-white p-10 text-center text-slate-500 shadow-sm">
+      <div className="rounded-xl border border-border bg-card p-10 text-center text-muted-foreground shadow-sm animate-pulse">
         Memuat data...
       </div>
     );
@@ -30,7 +30,7 @@ export default function DocumentList({
 
   if (error) {
     return (
-      <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+      <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
         {error}
       </div>
     );
@@ -38,7 +38,7 @@ export default function DocumentList({
 
   if (folders.length === 0 && documents.length === 0) {
     return (
-      <div className="rounded-xl border border-slate-200 bg-white p-10 text-center text-slate-500 shadow-sm">
+      <div className="rounded-xl border border-border bg-card p-10 text-center text-muted-foreground shadow-sm">
         Data tidak ditemukan.
       </div>
     );
@@ -48,7 +48,7 @@ export default function DocumentList({
     <div className="space-y-8">
       {folders.length > 0 && (
         <div>
-          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">
+          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
             Folder ({folders.length})
           </h2>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
@@ -67,7 +67,7 @@ export default function DocumentList({
 
       {documents.length > 0 && (
         <div>
-          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">
+          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
             Dokumen ({documents.length})
           </h2>
           <div className="space-y-3">

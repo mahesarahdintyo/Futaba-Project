@@ -14,6 +14,7 @@ import { CreateFolderDialog } from '@/components/ui/create-folder-dialog'
 import { CreateLandDialog } from '@/components/admin/CreateLandDialog'
 import { AdminLandCard } from '@/components/admin/AdminLandCard'
 import { LogoutButton } from '@/components/ui/logout-button'
+import { ThemeToggle } from '@/components/ui/theme-toggle'
 import { getLands, type Land } from '@/lib/services/land'
 import ProductionReportsDashboard from '@/components/admin/ProductionReportsDashboard'
 import AdminPartNumbersPanel from '@/components/admin/AdminPartNumbersPanel'
@@ -405,6 +406,7 @@ export default function Page({ initialLands = [] }: AdminPageProps) {
         </nav>
         <div className="mt-auto space-y-3 border-t border-border pt-4">
           <Link href="/admin/recycle-bin" className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-muted-foreground transition hover:bg-muted hover:text-foreground" onClick={() => setIsSidebarOpen(false)}><Trash2 className="h-5 w-5" />Tempat Sampah</Link>
+          <ThemeToggle variant="sidebar" />
           <LogoutButton />
         </div>
       </aside>

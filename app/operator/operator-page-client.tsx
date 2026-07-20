@@ -355,7 +355,7 @@ export default function OperatorPage({
 
 
   return (
-    <main className="min-h-screen bg-slate-100 text-slate-900">
+    <main className="min-h-screen bg-background text-foreground">
       <OperatorHeader selectedLand={selectedLand?.name ?? ""} />
 
       <div className="mx-auto max-w-5xl space-y-4 sm:space-y-6 p-3 sm:p-6">
@@ -366,12 +366,12 @@ export default function OperatorPage({
         />
 
         {/* Menu Tabs Switcher */}
-        <div className="flex border-b border-slate-200 overflow-x-auto">
+        <div className="flex border-b border-border overflow-x-auto">
           <button
             onClick={() => setActiveTab("display")}
             className={`flex items-center gap-1.5 border-b-2 px-4 sm:px-6 py-2.5 sm:py-3 text-xs sm:text-sm font-bold transition-all focus:outline-none cursor-pointer whitespace-nowrap flex-shrink-0 ${activeTab === "display"
-                ? "border-emerald-600 text-emerald-700"
-                : "border-transparent text-slate-500 hover:text-slate-600"
+                ? "border-primary text-primary"
+                : "border-transparent text-muted-foreground hover:text-foreground"
               }`}
             type="button"
           >
@@ -381,8 +381,8 @@ export default function OperatorPage({
           <button
             onClick={() => setActiveTab("report")}
             className={`flex items-center gap-1.5 border-b-2 px-4 sm:px-6 py-2.5 sm:py-3 text-xs sm:text-sm font-bold transition-all focus:outline-none cursor-pointer whitespace-nowrap flex-shrink-0 ${activeTab === "report"
-                ? "border-emerald-600 text-emerald-700"
-                : "border-transparent text-slate-500 hover:text-slate-600"
+                ? "border-primary text-primary"
+                : "border-transparent text-muted-foreground hover:text-foreground"
               }`}
             type="button"
           >
@@ -396,10 +396,10 @@ export default function OperatorPage({
             <SearchBar value={searchQuery} onChange={setSearchQuery} />
 
             {folderPathHistory.length > 0 && !searchQuery && (
-              <div className="flex flex-wrap items-center gap-2 rounded-xl border border-slate-200 bg-white p-3 text-sm text-slate-600 shadow-sm">
+              <div className="flex flex-wrap items-center gap-2 rounded-xl border border-border bg-card p-3 text-sm text-muted-foreground shadow-sm">
                 <button
                   onClick={() => handleNavigateBreadcrumb(-1)}
-                  className="font-semibold text-emerald-700 transition hover:text-emerald-800"
+                  className="font-semibold text-primary transition hover:text-primary/80"
                   type="button"
                 >
                   Home
@@ -407,11 +407,11 @@ export default function OperatorPage({
 
                 {folderPathHistory.map((folder, index) => (
                   <div key={folder.id} className="flex items-center gap-2">
-                    <span className="text-slate-400">/</span>
+                    <span className="text-muted-foreground">/</span>
 
                     <button
                       onClick={() => handleNavigateBreadcrumb(index)}
-                      className="font-semibold text-slate-800 transition enabled:text-emerald-700 enabled:hover:text-emerald-800"
+                      className="font-semibold text-foreground transition enabled:text-primary enabled:hover:text-primary/80"
                       disabled={index === folderPathHistory.length - 1}
                       type="button"
                     >
@@ -437,7 +437,7 @@ export default function OperatorPage({
               <ProductionReportForm landId={selectedLand.id} />
             </div>
           ) : (
-            <div className="rounded-xl border border-slate-200 bg-white p-10 text-center text-slate-500 shadow-sm">
+            <div className="rounded-xl border border-border bg-card p-10 text-center text-muted-foreground shadow-sm">
               Silakan pilih Line terlebih dahulu untuk mengisi laporan produksi.
             </div>
           )

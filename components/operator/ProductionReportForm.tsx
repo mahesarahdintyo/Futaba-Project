@@ -116,14 +116,14 @@ function DateTimeField({
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between gap-3">
-        <label htmlFor={id} className="text-xs font-semibold uppercase tracking-wide text-slate-600">
+        <label htmlFor={id} className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           {label}
         </label>
         <button
           type="button"
           onClick={onEdit}
           disabled={disabled}
-          className="inline-flex h-7 items-center gap-1.5 rounded border border-slate-200 bg-white px-2.5 text-xs font-semibold text-slate-600 transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-50"
+          className="inline-flex h-7 items-center gap-1.5 rounded border border-border bg-card px-2.5 text-xs font-semibold text-muted-foreground transition hover:border-primary/50 hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
         >
           <Pencil className="h-3.5 w-3.5" />
           Edit
@@ -139,7 +139,7 @@ function DateTimeField({
             value={getDateTimeInputValue(date, time)}
             onChange={(event) => onChange(event.target.value)}
             disabled={disabled}
-            className="h-12 w-full rounded border border-slate-300 bg-white px-4 pr-11 text-base text-slate-950 outline-none transition focus:border-emerald-500 focus:ring-3 focus:ring-emerald-100 disabled:bg-slate-50 disabled:text-slate-400"
+            className="h-12 w-full rounded border border-border bg-card px-4 pr-11 text-base text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:bg-muted disabled:text-muted-foreground"
           />
         ) : (
           <input
@@ -148,10 +148,10 @@ function DateTimeField({
             value={displayValue}
             placeholder={placeholder}
             readOnly
-            className="h-12 w-full rounded border border-slate-300 bg-white px-4 pr-11 text-base font-medium text-slate-950 outline-none placeholder:text-slate-400"
+            className="h-12 w-full rounded border border-border bg-card px-4 pr-11 text-base font-medium text-foreground outline-none placeholder:text-muted-foreground"
           />
         )}
-        <CalendarDays className="pointer-events-none absolute right-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-500" />
+        <CalendarDays className="pointer-events-none absolute right-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
       </div>
     </div>
   );
@@ -177,15 +177,15 @@ function NumericStepper({ label, value, onChange, required = false, hasError = f
 
   return (
     <div className="grid grid-cols-[96px_minmax(0,1fr)] items-center gap-4">
-      <label className="text-sm font-semibold uppercase tracking-wide text-slate-600">
+      <label className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
         {label}
         {required && <span className="ml-1 text-red-500">*</span>}
       </label>
       <div className="space-y-1">
         <div
-          className={`flex h-14 items-center rounded border bg-white focus-within:ring-3 ${hasError
-              ? "border-red-400 focus-within:border-red-500 focus-within:ring-red-100"
-              : "border-slate-300 focus-within:border-emerald-500 focus-within:ring-emerald-100"
+          className={`flex h-14 items-center rounded border bg-card focus-within:ring-2 ${hasError
+              ? "border-red-400 focus-within:border-red-500 focus-within:ring-red-100/20"
+              : "border-border focus-within:border-primary focus-within:ring-primary/20"
             }`}
         >
           <input
@@ -207,13 +207,13 @@ function NumericStepper({ label, value, onChange, required = false, hasError = f
               }
               updateValue(Number(raw));
             }}
-            className="h-full min-w-0 flex-1 rounded-l border-0 bg-transparent px-4 text-lg font-medium text-slate-950 outline-none"
+            className="h-full min-w-0 flex-1 rounded-l border-0 bg-transparent px-4 text-lg font-medium text-foreground outline-none"
           />
-          <div className="flex h-full items-center gap-1 px-3 text-slate-600">
+          <div className="flex h-full items-center gap-1 px-3 text-muted-foreground">
             <button
               type="button"
               onClick={handleDecrement}
-              className="inline-flex h-9 w-9 items-center justify-center rounded transition hover:bg-slate-100 hover:text-slate-950"
+              className="inline-flex h-9 w-9 items-center justify-center rounded transition hover:bg-muted hover:text-foreground"
               aria-label={`Kurangi ${label}`}
             >
               <Minus className="h-5 w-5 stroke-[3]" />
@@ -221,7 +221,7 @@ function NumericStepper({ label, value, onChange, required = false, hasError = f
             <button
               type="button"
               onClick={handleIncrement}
-              className="inline-flex h-9 w-9 items-center justify-center rounded transition hover:bg-slate-100 hover:text-slate-950"
+              className="inline-flex h-9 w-9 items-center justify-center rounded transition hover:bg-muted hover:text-foreground"
               aria-label={`Tambah ${label}`}
             >
               <Plus className="h-5 w-5 stroke-[3]" />
@@ -242,7 +242,7 @@ function NumericStepper({ label, value, onChange, required = false, hasError = f
 function ChoiceRow({ label, value, onChange }: ChoiceRowProps) {
   return (
     <div className="grid grid-cols-[96px_minmax(0,1fr)] items-center gap-4">
-      <label className="text-sm font-semibold uppercase tracking-wide text-slate-600">
+      <label className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
         {label}
       </label>
       <div className="grid grid-cols-2 gap-2">
@@ -254,8 +254,8 @@ function ChoiceRow({ label, value, onChange }: ChoiceRowProps) {
               type="button"
               onClick={() => onChange(option)}
               className={`h-14 rounded border text-lg font-medium transition ${isSelected
-                ? "border-emerald-600 bg-emerald-50 text-emerald-800 ring-2 ring-emerald-100"
-                : "border-slate-200 bg-slate-50 text-slate-700 hover:border-slate-300 hover:bg-white"
+                ? "border-primary bg-primary/10 text-primary ring-2 ring-primary/20"
+                : "border-border bg-muted/50 text-muted-foreground hover:border-primary/50 hover:bg-card hover:text-foreground"
                 }`}
             >
               {option}
@@ -481,10 +481,10 @@ export default function ProductionReportForm({ landId }: ProductionReportFormPro
 
   return (
     <form onSubmit={handleSubmit} className="mx-auto max-w-[860px] pt-8">
-      <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm sm:p-7">
-        <div className="mb-6 border-b border-slate-200 pb-5">
-          <h2 className="text-lg font-semibold text-slate-950">Laporan Produksi</h2>
-          <p className="mt-1 text-sm text-slate-500">
+      <div className="rounded-lg border border-border bg-card p-6 shadow-sm sm:p-7">
+        <div className="mb-6 border-b border-border pb-5">
+          <h2 className="text-lg font-semibold text-foreground">Laporan Produksi</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
             Pilih part number, mulai produksi, lalu tekan Finish saat pekerjaan selesai.
           </p>
         </div>
@@ -492,15 +492,15 @@ export default function ProductionReportForm({ landId }: ProductionReportFormPro
         <div className="space-y-6">
 
           <div className="space-y-2">
-            <label htmlFor="part-number" className="text-xs font-semibold uppercase tracking-wide text-slate-600">
+            <label htmlFor="part-number" className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               Part Number
             </label>
-            <div className="relative rounded border border-slate-300 bg-white transition focus-within:border-emerald-500 focus-within:ring-3 focus-within:ring-emerald-100">
+            <div className="relative rounded border border-border bg-card transition focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20">
               <select
                 id="part-number"
                 value={partNumber}
                 onChange={(e) => handlePartNumberChange(e.target.value)}
-                className="h-12 w-full appearance-none bg-transparent px-4 pr-11 text-base font-medium text-slate-950 outline-none"
+                className="h-12 w-full appearance-none bg-transparent px-4 pr-11 text-base font-medium text-foreground outline-none cursor-pointer"
                 required
               >
                 <option value="">Pilih part number</option>
@@ -510,7 +510,7 @@ export default function ProductionReportForm({ landId }: ProductionReportFormPro
                   </option>
                 ))}
               </select>
-              <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-500" />
+              <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
             </div>
           </div>
 
@@ -540,18 +540,18 @@ export default function ProductionReportForm({ landId }: ProductionReportFormPro
               </div>
 
               {!endTime ? (
-                <div className="flex justify-end border-t border-slate-200 pt-5">
+                <div className="flex justify-end border-t border-border pt-5">
                   <Button
                     type="button"
                     onClick={handleFinish}
-                    className="h-11 rounded bg-slate-800 px-5 font-semibold text-white transition hover:bg-slate-950"
+                    className="h-11 rounded bg-primary px-5 font-semibold text-primary-foreground transition hover:bg-primary/95"
                   >
                     <TimerReset className="mr-2 h-4 w-4" />
                     Finish
                   </Button>
                 </div>
               ) : (
-                <div className="space-y-7 border-t border-slate-200 pt-6">
+                <div className="space-y-7 border-t border-border pt-6">
                   <div className="space-y-6">
                     <NumericStepper label="QTY" value={qty} onChange={setQty} required hasError={qty === 0} />
                     <NumericStepper
@@ -567,13 +567,13 @@ export default function ProductionReportForm({ landId }: ProductionReportFormPro
                     {/* Kategori NG — muncul hanya saat ngQty > 0 */}
                     {ngQty > 0 && (
                       <div className="grid grid-cols-[96px_minmax(0,1fr)] items-start gap-4">
-                        <label className="text-sm font-semibold uppercase tracking-wide text-slate-600 pt-1">
+                        <label className="text-sm font-semibold uppercase tracking-wide text-muted-foreground pt-1">
                           Kat. NG
                           <span className="ml-1 text-red-500">*</span>
                         </label>
                         <div className="space-y-2">
                           {ngCategories.length === 0 ? (
-                            <p className="text-sm text-slate-400 italic">
+                            <p className="text-sm text-muted-foreground italic">
                               Belum ada kategori NG. Hubungi admin.
                             </p>
                           ) : (
@@ -586,8 +586,8 @@ export default function ProductionReportForm({ landId }: ProductionReportFormPro
                                     type="button"
                                     onClick={() => setNgCategory(cat.name)}
                                     className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-semibold transition ${isSelected
-                                        ? "border-rose-500 bg-rose-50 text-rose-700 ring-2 ring-rose-100"
-                                        : "border-slate-200 bg-slate-50 text-slate-600 hover:border-slate-300 hover:bg-white"
+                                        ? "border-destructive bg-destructive/10 text-destructive ring-2 ring-destructive/20"
+                                        : "border-border bg-muted/50 text-muted-foreground hover:border-primary/50 hover:bg-card hover:text-foreground"
                                       }`}
                                   >
                                     <Tag className="h-3.5 w-3.5" />
@@ -612,11 +612,11 @@ export default function ProductionReportForm({ landId }: ProductionReportFormPro
                     <ChoiceRow label="PC-2" value={pc2} onChange={setPc2} />
                   </div>
 
-                  <div className="flex flex-col gap-3 border-t border-slate-200 pt-5 sm:flex-row sm:justify-end">
+                  <div className="flex flex-col gap-3 border-t border-border pt-5 sm:flex-row sm:justify-end">
                     <Button
                       type="button"
                       onClick={handleFinish}
-                      className="h-11 rounded border border-slate-300 bg-white px-5 font-semibold text-slate-700 transition hover:bg-slate-50"
+                      className="h-11 rounded border border-border bg-card px-5 font-semibold text-muted-foreground transition hover:bg-muted hover:text-foreground"
                     >
                       <TimerReset className="mr-2 h-4 w-4" />
                       Update Finish
@@ -624,7 +624,7 @@ export default function ProductionReportForm({ landId }: ProductionReportFormPro
                     <Button
                       type="submit"
                       disabled={isSubmitting}
-                      className="h-11 rounded bg-emerald-600 px-7 font-semibold text-white transition hover:bg-emerald-700"
+                      className="h-11 rounded bg-primary px-7 font-semibold text-primary-foreground transition hover:bg-primary/95"
                     >
                       {isSubmitting ? (
                         <>
