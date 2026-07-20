@@ -106,9 +106,9 @@ export default function RecycleBinClient() {
       const deleted = result.deleted
       const deletedCount = deleted
         ? (deleted.lands ?? 0) +
-          (deleted.folders ?? 0) +
-          (deleted.documents ?? 0) +
-          (deleted.productionReports ?? 0)
+        (deleted.folders ?? 0) +
+        (deleted.documents ?? 0) +
+        (deleted.productionReports ?? 0)
         : null
 
       toast.success(
@@ -224,11 +224,11 @@ export default function RecycleBinClient() {
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {totalItemsCount > 0 && (
-          <div className="mb-8 p-4 bg-amber-50/80 border border-amber-200 rounded-xl flex gap-3 shadow-sm select-none">
+          <div className="mb-8 p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl flex gap-3 shadow-sm select-none">
             <AlertTriangle className="w-6 h-6 text-amber-600 shrink-0 mt-0.5" />
             <div>
-              <h4 className="font-semibold text-amber-800 text-sm">Peringatan Penting</h4>
-              <p className="text-xs text-amber-700 mt-1 leading-relaxed">
+              <h4 className="font-semibold text-amber-600 text-sm">Peringatan Penting</h4>
+              <p className="text-xs text-amber-600/90 mt-1 leading-relaxed">
                 Item yang berada di tempat sampah ini dapat dipulihkan kapan saja. Namun, jika Anda mengeklik tombol{' '}
                 <strong>&quot;Kosongkan Tempat Sampah&quot;</strong>, semua data, laporan produksi, referensi display TV,
                 dan file dokumen fisik di Supabase Storage akan dihapus secara <strong>permanen dan tidak dapat dibatalkan</strong>.
@@ -238,44 +238,44 @@ export default function RecycleBinClient() {
         )}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <StatCard label="Card Terhapus" count={lands.length} icon={Layers} iconClassName="bg-blue-50 text-blue-600 border-blue-100" />
-          <StatCard label="Folder Terhapus" count={folders.length} icon={Folder} iconClassName="bg-emerald-50 text-emerald-600 border-emerald-100" />
-          <StatCard label="Dokumen Terhapus" count={documents.length} icon={FileText} iconClassName="bg-purple-50 text-purple-600 border-purple-100" />
-          <StatCard label="Laporan Terhapus" count={productionReports.length} icon={ClipboardList} iconClassName="bg-amber-50 text-amber-600 border-amber-100" />
+          <StatCard label="Card Terhapus" count={lands.length} icon={Layers} iconClassName="bg-blue-500/10 text-blue-500 border-blue-500/20" />
+          <StatCard label="Folder Terhapus" count={folders.length} icon={Folder} iconClassName="bg-emerald-500/10 text-emerald-500 border-emerald-500/20" />
+          <StatCard label="Dokumen Terhapus" count={documents.length} icon={FileText} iconClassName="bg-purple-500/10 text-purple-500 border-purple-500/20" />
+          <StatCard label="Laporan Terhapus" count={productionReports.length} icon={ClipboardList} iconClassName="bg-amber-500/10 text-amber-500 border-amber-500/20" />
         </div>
 
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden mb-8">
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between border-b border-slate-200 p-3 sm:p-4 gap-3 bg-slate-50/50">
+        <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden mb-8">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between border-b border-border p-3 sm:p-4 gap-3 bg-muted/30">
             <div className="overflow-x-auto">
-              <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200/50 w-max min-w-full sm:min-w-0">
-              {tabs.map((tab) => {
-                const Icon = tab.icon
-                return (
-                  <button
-                    key={tab.id}
-                    onClick={() => { setActiveTab(tab.id); setSearchQuery('') }}
-                    className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold rounded-lg transition duration-200 cursor-pointer whitespace-nowrap ${
-                      activeTab === tab.id
-                        ? 'bg-white text-blue-700 shadow-sm font-bold border border-slate-200/40'
-                        : 'text-slate-500 hover:text-slate-800'
-                    }`}
-                  >
-                    <Icon className="w-4 h-4" />
-                    {tab.label} ({tab.count})
-                  </button>
-                )
-              })}
+              <div className="flex bg-muted p-1 rounded-xl border border-border w-max min-w-full sm:min-w-0">
+                {tabs.map((tab) => {
+                  const Icon = tab.icon
+                  return (
+                    <button
+                      key={tab.id}
+                      onClick={() => { setActiveTab(tab.id); setSearchQuery('') }}
+                      className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold rounded-lg transition duration-200 cursor-pointer whitespace-nowrap ${
+                        activeTab === tab.id
+                          ? 'bg-card text-primary shadow-sm font-bold border border-border'
+                          : 'text-muted-foreground hover:text-foreground'
+                      }`}
+                    >
+                      <Icon className="w-4 h-4" />
+                      {tab.label} ({tab.count})
+                    </button>
+                  )
+                })}
               </div>
             </div>
 
             <div className="relative flex-1 sm:max-w-xs">
-              <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+              <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
               <input
                 type="text"
                 placeholder="Cari item terhapus..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-4 py-2 text-sm border border-slate-200 bg-white rounded-xl placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all duration-200"
+                className="w-full pl-9 pr-4 py-2 text-sm border border-border bg-card rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-200"
               />
             </div>
           </div>
@@ -283,7 +283,7 @@ export default function RecycleBinClient() {
           <div className="p-6">
             {isLoading ? (
               <div className="flex flex-col items-center justify-center py-20">
-                <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+                <Loader2 className="w-8 h-8 text-primary animate-spin" />
                 <p className="text-slate-500 text-sm mt-3 font-medium">Memuat data sampah...</p>
               </div>
             ) : (
@@ -433,15 +433,15 @@ export default function RecycleBinClient() {
 
       {showEmptyConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm transition-all duration-300">
-          <div className="bg-white rounded-3xl border border-slate-200 shadow-2xl p-6 max-w-md w-full select-none animate-in fade-in zoom-in duration-200">
+          <div className="bg-card rounded-3xl border border-border shadow-2xl p-6 max-w-md w-full select-none animate-in fade-in zoom-in duration-200">
             <div className="flex items-center gap-3 text-red-600 mb-4">
               <div className="p-2 bg-red-50 rounded-xl border border-red-100">
                 <AlertTriangle className="w-6 h-6" />
               </div>
-              <h3 className="text-lg font-bold">Kosongkan Tempat Sampah?</h3>
+              <h3 className="text-lg font-bold text-foreground">Kosongkan Tempat Sampah?</h3>
             </div>
 
-            <p className="text-sm text-slate-600 leading-relaxed">
+            <p className="text-sm text-muted-foreground leading-relaxed">
               Tindakan ini akan menghapus seluruh data secara <strong>permanen</strong> dari database dan menghapus semua file fisik dari Supabase Storage. Tindakan ini <strong>tidak dapat dibatalkan</strong>.
             </p>
 
@@ -450,7 +450,7 @@ export default function RecycleBinClient() {
                 variant="outline"
                 size="sm"
                 onClick={() => setShowEmptyConfirm(false)}
-                className="border-slate-300 bg-white text-slate-800 hover:bg-slate-100 hover:text-slate-950 font-semibold"
+                className="border-border bg-card text-muted-foreground hover:bg-muted hover:text-foreground font-semibold"
               >
                 Batal
               </Button>
@@ -482,10 +482,10 @@ function StatCard({
   iconClassName: string
 }) {
   return (
-    <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between transition-all duration-300 hover:shadow-md">
+    <div className="bg-card p-5 rounded-2xl border border-border shadow-sm flex items-center justify-between transition-all duration-300 hover:shadow-md">
       <div>
-        <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">{label}</p>
-        <h3 className="text-3xl font-extrabold text-slate-800 mt-1">{count}</h3>
+        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{label}</p>
+        <h3 className="text-3xl font-extrabold text-foreground mt-1">{count}</h3>
       </div>
       <div className={`p-3 rounded-2xl border ${iconClassName}`}>
         <Icon className="w-6 h-6" />
@@ -497,8 +497,8 @@ function StatCard({
 function EmptyState({ icon: Icon, message }: { icon: typeof Layers; message: string }) {
   return (
     <div className="text-center py-16">
-      <Icon className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-      <p className="text-slate-400 text-base font-medium">{message}</p>
+      <Icon className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
+      <p className="text-muted-foreground text-base font-medium">{message}</p>
     </div>
   )
 }
@@ -510,7 +510,7 @@ function RestoreButton({ disabled, onClick }: { disabled: boolean; onClick: () =
       size="xs"
       disabled={disabled}
       onClick={onClick}
-      className="border-blue-200 bg-white text-blue-700 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-900 active:scale-95 transition-all text-xs font-semibold shadow-sm"
+      className="border-primary/30 bg-card text-primary hover:border-primary/50 hover:bg-primary/10 active:scale-95 transition-all text-xs font-semibold shadow-sm"
     >
       <RotateCcw className="w-3 h-3 mr-1" />
       Pulihkan
