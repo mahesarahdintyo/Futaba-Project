@@ -60,6 +60,7 @@ export function UploadDialog({
   const [targetDate, setTargetDate] = useState('')
   const [targetClock, setTargetClock] = useState('')
   const [error, setError] = useState('')
+  const [isDragging, setIsDragging] = useState(false)
 
   const handleOpen = () => {
     setIsOpen(true)
@@ -75,45 +76,69 @@ export function UploadDialog({
   const isValidTargetClock = /^([01]\d|2[0-3]):[0-5]\d$/.test(targetClock)
   const isTargetTimeValid = (!targetDate && !targetClock) || (Boolean(targetDate) && isValidTargetClock)
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFiles = e.target.files ? Array.from(e.target.files) : []
-    if (selectedFiles.length > 0) {
-      setError('')
+  const addFiles = (selectedFiles: File[]) => {
+    if (selectedFiles.length === 0) return
+    setError('')
 
-      if (files.length + selectedFiles.length > MAX_FILE_COUNT) {
-        setError(`Maksimal upload adalah ${MAX_FILE_COUNT} file sekaligus.`)
-        e.target.value = ''
+    if (files.length + selectedFiles.length > MAX_FILE_COUNT) {
+      setError(`Maksimal upload adalah ${MAX_FILE_COUNT} file sekaligus.`)
+      return
+    }
+
+    const validFiles: File[] = []
+    for (const selectedFile of selectedFiles) {
+      if (!isAllowedFile(selectedFile)) {
+        setError(`Format file tidak diperbolehkan. Upload hanya menerima file ${ALLOWED_FILE_FORMAT_LABEL}.`)
         return
       }
 
-      const validFiles: File[] = []
-      for (const selectedFile of selectedFiles) {
-        if (!isAllowedFile(selectedFile)) {
-          setError(`Format file tidak diperbolehkan. Upload hanya menerima file ${ALLOWED_FILE_FORMAT_LABEL}.`)
-          e.target.value = ''
-          return
-        }
-
-        if (selectedFile.size > 50 * 1024 * 1024) {
-          setError(`Ukuran file "${selectedFile.name}" melebihi batas 50MB.`)
-          e.target.value = ''
-          return
-        }
-        validFiles.push(selectedFile)
+      if (selectedFile.size > 50 * 1024 * 1024) {
+        setError(`Ukuran file "${selectedFile.name}" melebihi batas 50MB.`)
+        return
       }
-
-      const nextFiles = [...files, ...validFiles]
-      setFiles(nextFiles)
-
-      if (nextFiles.length === 1) {
-        const defaultTitle = nextFiles[0].name.substring(0, nextFiles[0].name.lastIndexOf('.')) || nextFiles[0].name
-        setTitle(defaultTitle)
-      } else {
-        setTitle('')
-      }
-
-      e.target.value = ''
+      validFiles.push(selectedFile)
     }
+
+    const nextFiles = [...files, ...validFiles]
+    setFiles(nextFiles)
+
+    if (nextFiles.length === 1) {
+      const defaultTitle = nextFiles[0].name.substring(0, nextFiles[0].name.lastIndexOf('.')) || nextFiles[0].name
+      setTitle(defaultTitle)
+    } else {
+      setTitle('')
+    }
+  }
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFiles = e.target.files ? Array.from(e.target.files) : []
+    addFiles(selectedFiles)
+    e.target.value = ''
+  }
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (!isLoading) {
+      setIsDragging(true)
+    }
+  }
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(false)
+  }
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(false)
+
+    if (isLoading) return
+
+    const droppedFiles = e.dataTransfer.files ? Array.from(e.dataTransfer.files) : []
+    addFiles(droppedFiles)
   }
 
   const handleRemoveFile = (indexToRemove: number) => {
@@ -153,7 +178,7 @@ export function UploadDialog({
 
       for (let i = 0; i < files.length; i++) {
         const fileToUpload = files[i]
-        
+
         let fileTitle = title
         if (files.length > 1) {
           fileTitle = fileToUpload.name.substring(0, fileToUpload.name.lastIndexOf('.')) || fileToUpload.name
@@ -220,7 +245,7 @@ export function UploadDialog({
       </Button>
 
       {isOpen && (
-        <div 
+        <div
           className="fixed inset-0 flex items-center justify-center z-50 p-4 backdrop-blur-sm"
           style={{ backgroundColor: 'rgba(0, 0, 0, 0.4)' }}
         >
@@ -330,7 +355,16 @@ export function UploadDialog({
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   File * <span className="text-xs font-normal text-gray-500">(Maksimal {MAX_FILE_COUNT} file)</span>
                 </label>
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:bg-gray-50 transition">
+                <div
+                  className={`border-2 border-dashed rounded-lg p-4 text-center transition ${
+                    isDragging
+                      ? 'border-blue-500 bg-blue-50/50 dark:border-blue-400 dark:bg-blue-950/20'
+                      : 'border-gray-300 hover:bg-gray-50'
+                  }`}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                >
                   <input
                     type="file"
                     multiple
@@ -342,8 +376,14 @@ export function UploadDialog({
                   />
                   <label htmlFor="file-input" className="cursor-pointer block w-full h-full">
                     <div className="text-sm text-gray-600">
-                      <p className="font-medium">Click to select files</p>
-                      <p className="text-gray-500">or drag and drop</p>
+                      {isDragging ? (
+                        <p className="font-medium text-blue-600 dark:text-blue-400 animate-pulse">Lepaskan file di sini</p>
+                      ) : (
+                        <>
+                          <p className="font-medium">Click to select files</p>
+                          <p className="text-gray-500">or drag and drop</p>
+                        </>
+                      )}
                     </div>
                   </label>
                 </div>
