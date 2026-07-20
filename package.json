@@ -33,6 +33,13 @@
     "tailwindcss": "^4.2.0",
     "typescript": "5.7.3"
   },
+  "browserslist": [
+    "chrome >= 50",
+    "safari >= 10",
+    "ios >= 10",
+    "firefox >= 50",
+    "edge >= 12"
+  ],
   "pnpm": {
     "overrides": {
       "hono": "4.12.25"

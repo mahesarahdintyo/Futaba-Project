@@ -54,7 +54,7 @@ export function ThemeToggle({ variant = 'icon' }: ThemeToggleProps) {
   useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
     
-    const handleSystemThemeChange = (e: MediaQueryListEvent) => {
+    const handleSystemThemeChange = (e: MediaQueryListEvent | MediaQueryList) => {
       const storedTheme = localStorage.getItem(THEME_STORAGE_KEY) as Theme | null
       if (storedTheme === 'system' || !storedTheme) {
         const html = document.documentElement
@@ -68,9 +68,18 @@ export function ThemeToggle({ variant = 'icon' }: ThemeToggleProps) {
       }
     }
 
-    mediaQuery.addEventListener('change', handleSystemThemeChange)
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener('change', handleSystemThemeChange)
+    } else if ((mediaQuery as any).addListener) {
+      ;(mediaQuery as any).addListener(handleSystemThemeChange)
+    }
+
     return () => {
-      mediaQuery.removeEventListener('change', handleSystemThemeChange)
+      if (mediaQuery.removeEventListener) {
+        mediaQuery.removeEventListener('change', handleSystemThemeChange)
+      } else if ((mediaQuery as any).removeListener) {
+        ;(mediaQuery as any).removeListener(handleSystemThemeChange)
+      }
     }
   }, [])
 
