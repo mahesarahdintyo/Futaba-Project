@@ -456,7 +456,7 @@ export function DocumentCard({
       // --- TAMBAHAN BARU: Sinyal instan ke layar Display ---
       const displayStorageKey = getDisplayDocumentStorageKey(landId)
       const rawDisplayDoc = window.localStorage.getItem(displayStorageKey)
-      
+
       if (rawDisplayDoc) {
         try {
           const displayDoc = JSON.parse(rawDisplayDoc)
@@ -464,7 +464,7 @@ export function DocumentCard({
             window.localStorage.removeItem(displayStorageKey)
             window.dispatchEvent(
               new CustomEvent('futaba-display-document-change', {
-                detail: null, 
+                detail: null,
               })
             )
           }
