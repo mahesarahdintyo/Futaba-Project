@@ -53,17 +53,28 @@ function readOperatorLocation(): OperatorLocationState | null {
 }
 
 interface OperatorPageProps {
+  userRole?: string;
+  userLandId?: string | null;
   initialLands?: Land[];
   initialFolders?: Folder[];
   initialDocuments?: Document[];
 }
 
 export default function OperatorPage({
+  userRole = "operator",
+  userLandId,
   initialLands = [],
   initialFolders = [],
   initialDocuments = [],
 }: OperatorPageProps) {
-  const [selectedLand, setSelectedLand] = useState<Land | null>(initialLands[0] ?? null);
+  const isOperator = userRole === "operator";
+  const defaultLand = isOperator && userLandId
+    ? initialLands.find(
+        (l) => String(l.id).trim().toLowerCase() === String(userLandId).trim().toLowerCase()
+      ) ?? initialLands[0] ?? null
+    : initialLands[0] ?? null;
+
+  const [selectedLand, setSelectedLand] = useState<Land | null>(defaultLand);
   const [lands, setLands] = useState<Land[]>(initialLands);
   const [folders, setFolders] = useState<Folder[]>(initialFolders);
   const [documents, setDocuments] = useState<Document[]>(initialDocuments);
@@ -88,12 +99,24 @@ export default function OperatorPage({
     folderPathHistoryRef.current = folderPathHistory;
   }, [folderPathHistory]);
 
+  // For operators: clear any stale land from previous sessions on mount
+  useEffect(() => {
+    if (isOperator) {
+      window.localStorage.removeItem(LAND_STORAGE_KEY);
+      window.localStorage.removeItem(OPERATOR_LOCATION_STORAGE_KEY);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const persistOperatorLocation = (land: Land, history: BreadcrumbItem[]) => {
-    window.localStorage.setItem(LAND_STORAGE_KEY, land.id);
+    // For operators, don't persist landId to localStorage (it's enforced from profile)
+    if (!isOperator) {
+      window.localStorage.setItem(LAND_STORAGE_KEY, land.id);
+    }
     window.localStorage.setItem(
       OPERATOR_LOCATION_STORAGE_KEY,
       JSON.stringify({
-        landId: land.id,
+        landId: isOperator ? undefined : land.id,
         folderPathHistory: history,
       })
     );
@@ -123,18 +146,24 @@ export default function OperatorPage({
 
         setLands(activeLands);
 
-        const savedLocation = readOperatorLocation();
-        const savedLandId =
-          savedLocation?.landId ?? window.localStorage.getItem(LAND_STORAGE_KEY);
+        const savedLocation = isOperator ? null : readOperatorLocation();
+        const savedLandId = isOperator
+          ? null
+          : savedLocation?.landId ?? window.localStorage.getItem(LAND_STORAGE_KEY);
 
         setSelectedLand((currentLand) => {
-          const preferredLandId = preferSavedLocation
+          const preferredLandId = isOperator && userLandId
+            ? userLandId
+            : preferSavedLocation
             ? savedLandId
             : currentLand?.id ?? savedLandId;
           const nextSelectedLand =
-            activeLands.find((land) => land.id === preferredLandId) ??
-            activeLands[0] ??
-            null;
+            activeLands.find(
+              (land) =>
+                String(land.id).trim().toLowerCase() ===
+                String(preferredLandId).trim().toLowerCase()
+            ) ??
+            (isOperator ? currentLand ?? activeLands[0] ?? null : activeLands[0] ?? null);
 
           if (!nextSelectedLand) {
             clearOperatorLocation();
@@ -181,7 +210,7 @@ export default function OperatorPage({
         console.error("Failed to load lands", error);
       }
     },
-    []
+    [isOperator, userLandId]
   );
 
   useEffect(() => {
@@ -359,11 +388,13 @@ export default function OperatorPage({
       <OperatorHeader selectedLand={selectedLand?.name ?? ""} />
 
       <div className="mx-auto max-w-5xl space-y-4 sm:space-y-6 p-3 sm:p-6">
-        <LandSelector
-          value={selectedLand}
-          lands={lands}
-          onChange={handleLandChange}
-        />
+        {userRole === "admin" && (
+          <LandSelector
+            value={selectedLand}
+            lands={lands}
+            onChange={handleLandChange}
+          />
+        )}
 
         {/* Menu Tabs Switcher */}
         <div className="flex border-b border-border overflow-x-auto">

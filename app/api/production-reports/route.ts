@@ -1,14 +1,18 @@
 import { createClient } from "@/lib/supabase/server";
+import { getCurrentUserProfile } from "@/lib/services/auth-server";
 import { NextResponse } from "next/server";
 
 // GET - Fetch production reports with optional filtering (for operator or admin)
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const landId = searchParams.get("landId");
+    const reqLandId = searchParams.get("landId");
     const startDate = searchParams.get("startDate");
     const endDate = searchParams.get("endDate");
     const showTrash = searchParams.get("trash") === "true";
+
+    const userProfile = await getCurrentUserProfile();
+    const landId = userProfile.role === "operator" && userProfile.landId ? userProfile.landId : reqLandId;
 
     const supabase = await createClient();
 
@@ -65,7 +69,7 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     const {
-      land_id,
+      land_id: reqLandId,
       report_date,
       shift,
       operator_name,
@@ -77,6 +81,9 @@ export async function POST(request: Request) {
       ng_category,
       break_minutes,
     } = body;
+
+    const userProfile = await getCurrentUserProfile();
+    const land_id = userProfile.role === "operator" && userProfile.landId ? userProfile.landId : reqLandId;
 
     // Validate required fields
     if (

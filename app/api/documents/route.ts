@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { getCurrentUserProfile } from "@/lib/services/auth-server";
 import { NextResponse } from "next/server";
 
 // GET - Fetch documents
@@ -9,10 +10,13 @@ export async function GET(request: Request) {
     const folderIdStr = searchParams.get("folderId");
     const folderId = folderIdStr ? parseInt(folderIdStr) : null;
 
-    const landId = searchParams.get("landId");
+    const reqLandId = searchParams.get("landId");
     const searchQuery = searchParams.get("search")?.trim();
     const includeHidden = searchParams.get("includeHidden") === "true";
     const showTrash = searchParams.get("trash") === "true";
+
+    const userProfile = await getCurrentUserProfile();
+    const landId = userProfile.role === "operator" && userProfile.landId ? userProfile.landId : reqLandId;
 
     const supabase = await createClient();
 

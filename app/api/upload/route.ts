@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { getCurrentUserProfile } from '@/lib/services/auth-server'
 import { NextResponse } from 'next/server'
 
 const ALLOWED_FILE_TYPES = ['application/pdf', 'image/jpeg', 'image/png']
@@ -20,8 +21,11 @@ export async function POST(request: Request) {
     const title = formData.get('title') as string
     const description = formData.get('description') as string
     const folderId = formData.get('folderId') as string
-    const landId = formData.get('landId') as string
+    const reqLandId = formData.get('landId') as string
     const targetTime = formData.get('targetTime') as string | null
+
+    const userProfile = await getCurrentUserProfile()
+    const landId = userProfile.role === 'operator' && userProfile.landId ? userProfile.landId : reqLandId
 
     if (!file) {
       return NextResponse.json(

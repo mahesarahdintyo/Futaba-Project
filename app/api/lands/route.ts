@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { getCurrentUserProfile } from "@/lib/services/auth-server";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
@@ -6,18 +7,21 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const includeHidden = searchParams.get("includeHidden") === "true";
     const showTrash = searchParams.get("trash") === "true";
+    const userProfile = await getCurrentUserProfile();
     const supabase = await createClient();
 
     let query = supabase.from("lands").select("*");
+
+    if (userProfile.role === "operator" && userProfile.landId) {
+      query = query.eq("id", userProfile.landId);
+    } else if (!includeHidden) {
+      query = query.eq("hidden_from_operator", false);
+    }
 
     if (showTrash) {
       query = query.eq("is_active", false);
     } else {
       query = query.or("is_active.eq.true,is_active.is.null");
-    }
-
-    if (!includeHidden) {
-      query = query.eq("hidden_from_operator", false);
     }
 
     const [{ data: lands, error }, { data: documents, error: documentsError }] = await Promise.all([

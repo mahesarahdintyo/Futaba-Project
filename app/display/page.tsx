@@ -2,10 +2,12 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Monitor, Tv, ArrowRight, Activity, Loader2 } from "lucide-react";
 import { getLands, type Land } from "@/lib/services/land";
 
 export default function DisplayPage() {
+  const router = useRouter();
   const [lands, setLands] = useState<Land[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -20,6 +22,9 @@ export default function DisplayPage() {
         if (isMounted) {
           setLands(data);
           setError("");
+          if (data.length === 1 && data[0]?.id) {
+            router.replace(`/display/${data[0].id}`);
+          }
         }
       } catch (err) {
         console.error("Error loading lands on display page:", err);

@@ -36,21 +36,22 @@ export async function login(state: any, formData: FormData) {
     return { error: "User tidak ditemukan." };
   }
 
-  // Ambil role dari tabel profiles
+  // Ambil role dan land_id dari tabel profiles
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
-    .select("role")
+    .select("role, land_id")
     .eq("id", user.id)
     .single();
 
   if (profileError || !profile) {
-    return { success: true, redirectUrl: "/operator" };
+    return { success: true, redirectUrl: "/operator", role: "operator", landId: null };
   }
 
   const role = profile.role;
+  const landId = profile.land_id ?? null;
   const redirectUrl = role === "admin" ? "/admin" : "/operator";
 
-  return { success: true, redirectUrl };
+  return { success: true, redirectUrl, role, landId };
 }
 
 export async function logout() {

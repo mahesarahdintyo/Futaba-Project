@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { getCurrentUserProfile } from '@/lib/services/auth-server'
 import { NextResponse } from 'next/server'
 
 // GET - Fetch all folders for a specific parent (or root if parent_id is null)
@@ -6,11 +7,14 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
     const parentIdStr = searchParams.get('parentId')
-    const landId = searchParams.get('landId')
+    const reqLandId = searchParams.get('landId')
     const includeAll = searchParams.get('includeAll') === 'true'
     const searchQuery = searchParams.get('search')?.trim()
     const showTrash = searchParams.get('trash') === 'true'
     const parentId = parentIdStr ? parseInt(parentIdStr) : null
+
+    const userProfile = await getCurrentUserProfile()
+    const landId = userProfile.role === 'operator' && userProfile.landId ? userProfile.landId : reqLandId
 
     const supabase = await createClient()
 
@@ -113,7 +117,7 @@ export async function POST(request: Request) {
   try {
     const body = await request.json()
 
-    const { name, parentId, landId } = body
+    const { name, parentId, landId: reqLandId } = body
 
     if (!name || typeof name !== 'string' || !name.trim()) {
       return NextResponse.json(
@@ -121,6 +125,9 @@ export async function POST(request: Request) {
         { status: 400 }
       )
     }
+
+    const userProfile = await getCurrentUserProfile()
+    const landId = userProfile.role === 'operator' && userProfile.landId ? userProfile.landId : reqLandId
 
     const baseName = name.trim()
     const supabase = await createClient()
