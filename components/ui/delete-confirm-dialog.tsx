@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import { AlertTriangle, Loader2, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
@@ -24,7 +25,24 @@ export function DeleteConfirmDialog({
   onConfirm,
   onCancel,
 }: DeleteConfirmDialogProps) {
-  if (!isOpen) return null
+  const [isVisible, setIsVisible] = useState(isOpen)
+  const [isClosing, setIsClosing] = useState(false)
+
+  useEffect(() => {
+    if (isOpen) {
+      setIsClosing(false)
+      setIsVisible(true)
+    } else if (isVisible) {
+      setIsClosing(true)
+      const timer = setTimeout(() => {
+        setIsVisible(false)
+        setIsClosing(false)
+      }, 200)
+      return () => clearTimeout(timer)
+    }
+  }, [isOpen])
+
+  if (!isVisible) return null
 
   return (
     <div
@@ -34,7 +52,11 @@ export function DeleteConfirmDialog({
         if (e.target === e.currentTarget && !isLoading) onCancel()
       }}
     >
-      <div className="bg-white rounded-xl shadow-2xl max-w-md w-full">
+      <div className={`bg-white rounded-xl shadow-2xl max-w-md w-full ${
+        isClosing
+          ? 'animate-out fade-out zoom-out-95 duration-200 [animation-fill-mode:forwards]'
+          : 'animate-in fade-in zoom-in-95 duration-200'
+      }`}>
         {/* Icon + Judul */}
         <div className="flex items-start gap-4 px-6 pt-6 pb-4">
           <div className="flex-shrink-0 w-11 h-11 rounded-full bg-red-100 flex items-center justify-center">
