@@ -399,7 +399,7 @@ export default function Page({ initialLands = [] }: AdminPageProps) {
       {/* Desktop sidebar — width-animated wrapper + border toggle button */}
       <div className="hidden lg:block relative flex-shrink-0">
         <div className={`overflow-hidden transition-[width] duration-300 ease-in-out ${isDesktopSidebarCollapsed ? 'w-0' : 'w-72'}`}>
-          <aside className={`sticky top-0 h-screen w-72 flex flex-col border-r border-border bg-card p-4 ${isAnyDialogOpen ? 'blur-md pointer-events-none opacity-40' : ''}`}>
+          <aside className={`sticky top-0 h-screen w-72 flex flex-col border-r border-border bg-card p-4 transition-all duration-300 ${isAnyDialogOpen ? 'blur-md pointer-events-none opacity-40' : ''}`}>
             <div className="flex items-center justify-between border-b border-border px-2 pb-4">
               <Link href="/" aria-label="Kembali ke landing page" className="inline-flex"><Image src="/futaba-logo.png" alt="FUTABA Logo" width={150} height={52} className="h-10 w-auto object-contain" priority /></Link>
             </div>
@@ -419,7 +419,7 @@ export default function Page({ initialLands = [] }: AdminPageProps) {
         {/* Floating toggle button on the sidebar border */}
         <button
           aria-label={isDesktopSidebarCollapsed ? 'Tampilkan sidebar' : 'Sembunyikan sidebar'}
-          className="absolute top-16 right-0 translate-x-1/2 z-50 flex h-6 w-6 items-center justify-center rounded-full border border-border bg-card text-muted-foreground shadow-sm hover:bg-muted hover:text-foreground transition-colors duration-200 cursor-pointer"
+          className="absolute top-16 right-0 translate-x-1/2 z-50 flex h-6 w-6 items-center justify-center rounded-full border border-border bg-card text-muted-foreground shadow-sm hover:bg-muted hover:text-foreground transition-colors duration-200 cursor-pointer active:scale-90"
           onClick={() => setIsDesktopSidebarCollapsed(prev => !prev)}
         >
           {isDesktopSidebarCollapsed ? <ChevronRight className="h-3.5 w-3.5" /> : <ChevronLeft className="h-3.5 w-3.5" />}
