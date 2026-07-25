@@ -30,7 +30,7 @@ export default function DocumentList({
 
   if (error) {
     return (
-      <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
+      <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive animate-in fade-in duration-300">
         {error}
       </div>
     );
@@ -38,7 +38,7 @@ export default function DocumentList({
 
   if (folders.length === 0 && documents.length === 0) {
     return (
-      <div className="rounded-xl border border-border bg-card p-10 text-center text-muted-foreground shadow-sm">
+      <div className="rounded-xl border border-border bg-card p-10 text-center text-muted-foreground shadow-sm animate-in fade-in duration-300">
         Data tidak ditemukan.
       </div>
     );
