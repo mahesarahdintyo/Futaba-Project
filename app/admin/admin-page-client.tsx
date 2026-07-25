@@ -419,7 +419,7 @@ export default function Page({ initialLands = [] }: AdminPageProps) {
             </div>
           </div>
         </header>
-        <main className="mx-auto max-w-6xl px-3 py-4 sm:px-6 sm:py-8 lg:px-8">
+        <main className="mx-auto max-w-6xl px-3 py-4 sm:px-6 sm:py-8 lg:px-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
           {activeView === 'reports' ? (
             <ProductionReportsDashboard />
           ) : activeView === 'part-numbers' ? (

@@ -712,7 +712,7 @@ export function DocumentCard({
     <>
       <div
         onClick={showOperatorActions ? undefined : handleView}
-        className={`bg-card border rounded-lg p-4 shadow-sm hover:shadow-md transition-all group select-none text-foreground ${showOperatorActions ? '' : 'cursor-pointer'
+        className={`bg-card border rounded-lg p-4 shadow-sm hover:shadow-md transition-all duration-200 group select-none text-foreground ${showOperatorActions ? '' : 'cursor-pointer'
           } ${currentHiddenFromOperator
             ? 'border-amber-200 bg-amber-50/40 hover:border-amber-300'
             : 'border-border hover:border-primary'
@@ -724,7 +724,7 @@ export function DocumentCard({
           <div className="flex items-start gap-4 min-w-0 flex-1">
             <div className="flex-shrink-0">
               <div
-                className={`flex items-center justify-center w-12 h-12 rounded-lg transition-colors ${fileIconMeta.containerClassName}`}
+                className={`flex items-center justify-center w-12 h-12 rounded-lg transition-all duration-200 ${fileIconMeta.containerClassName}`}
                 style={fileIconMeta.containerStyle}
               >
                 <TypeIcon
@@ -758,7 +758,7 @@ export function DocumentCard({
                   <button
                     onClick={handleSaveTitle}
                     disabled={isSavingTitle || !titleInput.trim()}
-                    className="p-1.5 bg-primary text-primary-foreground rounded hover:bg-primary/90 disabled:opacity-50 transition-colors flex items-center justify-center"
+                    className="p-1.5 bg-primary text-primary-foreground rounded hover:bg-primary/90 disabled:opacity-50 transition-all duration-200 flex items-center justify-center"
                     title="Simpan"
                   >
                     {isSavingTitle ? (
@@ -770,14 +770,14 @@ export function DocumentCard({
                   <button
                     onClick={() => setIsEditingTitle(false)}
                     disabled={isSavingTitle}
-                    className="p-1.5 bg-muted text-muted-foreground rounded hover:bg-muted/80 transition-colors flex items-center justify-center"
+                    className="p-1.5 bg-muted text-muted-foreground rounded hover:bg-muted/80 transition-all duration-200 flex items-center justify-center"
                     title="Batal"
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
                 </div>
               ) : (
-                <h3 className="text-lg font-semibold text-foreground truncate group-hover:text-primary transition-colors inline-flex items-center gap-1.5 max-w-full">
+                <h3 className="text-lg font-semibold text-foreground truncate group-hover:text-primary transition-all duration-200 inline-flex items-center gap-1.5 max-w-full">
                   <span className="truncate">{currentTitle}</span>
                   {isAdmin && (
                     <button
@@ -786,7 +786,7 @@ export function DocumentCard({
                         setTitleInput(currentTitle)
                         setIsEditingTitle(true)
                       }}
-                      className="p-1 text-muted-foreground hover:text-primary rounded transition-colors flex-shrink-0"
+                      className="p-1 text-muted-foreground hover:text-primary rounded transition-all duration-200 flex-shrink-0"
                       title="Ubah judul dokumen"
                     >
                       <Pencil className="w-3.5 h-3.5" />
@@ -845,7 +845,7 @@ export function DocumentCard({
                       <button
                         onClick={handleSaveFileName}
                         disabled={isSavingFileName || !fileNameInput.trim()}
-                        className="p-1.5 bg-primary text-primary-foreground rounded hover:bg-primary/90 disabled:opacity-50 transition-colors flex items-center justify-center"
+                        className="p-1.5 bg-primary text-primary-foreground rounded hover:bg-primary/90 disabled:opacity-50 transition-all duration-200 flex items-center justify-center"
                         title="Simpan"
                       >
                         {isSavingFileName ? (
@@ -857,7 +857,7 @@ export function DocumentCard({
                       <button
                         onClick={() => setIsEditingFileName(false)}
                         disabled={isSavingFileName}
-                        className="p-1.5 bg-muted text-muted-foreground rounded hover:bg-muted/80 transition-colors flex items-center justify-center"
+                        className="p-1.5 bg-muted text-muted-foreground rounded hover:bg-muted/80 transition-all duration-200 flex items-center justify-center"
                         title="Batal"
                       >
                         <X className="w-3.5 h-3.5" />
@@ -878,7 +878,7 @@ export function DocumentCard({
                             setFileNameInput(base)
                             setIsEditingFileName(true)
                           }}
-                          className="p-1 text-muted-foreground hover:text-primary rounded transition-colors"
+                          className="p-1 text-muted-foreground hover:text-primary rounded transition-all duration-200"
                           title="Ubah nama file"
                         >
                           <Pencil className="w-3.5 h-3.5" />
@@ -917,10 +917,10 @@ export function DocumentCard({
                             mergeLocalDateTimeInputValue(currentValue, 'date', event.target.value)
                           )
                         }}
-                        className="h-9 w-full rounded-lg border border-border bg-background px-3 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+                        className="h-9 w-full rounded-lg border border-border bg-background px-3 text-sm text-foreground outline-none transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20"
                         disabled={isSavingTargetTime}
                       />
-                      <div className="flex h-9 items-center rounded-lg border border-border bg-background px-2 text-sm text-foreground transition focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20">
+                      <div className="flex h-9 items-center rounded-lg border border-border bg-background px-2 text-sm text-foreground transition-all duration-200 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20">
                         <input
                           type="text"
                           value={getClockHourValue(getLocalClockInputValue(targetTimeInput))}

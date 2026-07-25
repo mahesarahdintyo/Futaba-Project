@@ -310,7 +310,7 @@ export function AdminLandCard({
               <button
                 onClick={() => setIsEditOpen(false)}
                 disabled={isSaving}
-                className="text-muted-foreground hover:text-foreground disabled:opacity-50 transition"
+                className="text-muted-foreground hover:text-foreground disabled:opacity-50 transition-all duration-200"
                 aria-label="Tutup"
               >
                 <X className="w-5 h-5" />
@@ -336,7 +336,7 @@ export function AdminLandCard({
                     if (isDuplicateName) setIsDuplicateName(false)
                     if (error) setError('')
                   }}
-                  className={`w-full px-4 py-2.5 border rounded-lg text-sm text-foreground outline-none focus:ring-2 transition
+                  className={`w-full px-4 py-2.5 border rounded-lg text-sm text-foreground outline-none focus:ring-2 transition-all duration-200
                     ${isDuplicateName
                       ? 'border-red-400 bg-red-50 focus:ring-red-200'
                       : 'border-border bg-background focus:ring-primary/20 focus:border-primary'
@@ -359,7 +359,7 @@ export function AdminLandCard({
                   value={description}
                   onChange={(event) => setDescription(event.target.value)}
                   rows={3}
-                  className="w-full px-4 py-2.5 border border-border bg-background rounded-lg text-sm text-foreground outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition resize-none"
+                  className="w-full px-4 py-2.5 border border-border bg-background rounded-lg text-sm text-foreground outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 resize-none"
                   disabled={isSaving}
                 />
               </div>
