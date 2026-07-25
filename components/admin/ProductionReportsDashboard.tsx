@@ -46,7 +46,17 @@ export default function ProductionReportsDashboard() {
   // Modal Delete state
   const [deleteTarget, setDeleteTarget] = useState<ProductionReport | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isDeleteClosing, setIsDeleteClosing] = useState(false);
   const [deleteError, setDeleteError] = useState("");
+
+  const closeDeleteModal = () => {
+    if (!deleteTarget || isDeleteClosing) return;
+    setIsDeleteClosing(true);
+    setTimeout(() => {
+      setDeleteTarget(null);
+      setIsDeleteClosing(false);
+    }, 200);
+  };
 
   // Modal Detail state
   const [detailReport, setDetailReport] = useState<ProductionReport | null>(null);
@@ -271,7 +281,7 @@ export default function ProductionReportsDashboard() {
 
       // Update UI state local
       setReports((prev) => prev.filter((r) => r.id !== deleteTarget.id));
-      setDeleteTarget(null);
+      closeDeleteModal();
     } catch (err) {
       setDeleteError(err instanceof Error ? err.message : "Gagal menghapus laporan");
     } finally {
@@ -889,10 +899,25 @@ Istirahat: ${breakMin}
 
       {/* Delete Confirmation Modal */}
       {deleteTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
-          <div className="relative w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-xl animate-in fade-in zoom-in-95 duration-200">
+        <div
+          className={`fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs ${
+            isDeleteClosing
+              ? "animate-out fade-out duration-200 [animation-fill-mode:forwards]"
+              : "animate-in fade-in duration-200"
+          }`}
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !isDeleting) closeDeleteModal();
+          }}
+        >
+          <div
+            className={`relative w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-xl ${
+              isDeleteClosing
+                ? "animate-out fade-out zoom-out-95 duration-200 [animation-fill-mode:forwards]"
+                : "animate-in fade-in zoom-in-95 duration-200"
+            }`}
+          >
             <button
-              onClick={() => setDeleteTarget(null)}
+              onClick={closeDeleteModal}
               className="absolute right-4 top-4 rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors duration-200"
             >
               <X className="h-5 w-5" />
@@ -930,7 +955,7 @@ Istirahat: ${breakMin}
             <div className="mt-6 flex justify-end gap-3">
               <Button
                 disabled={isDeleting}
-                onClick={() => setDeleteTarget(null)}
+                onClick={closeDeleteModal}
                 className="h-10 bg-slate-500 hover:bg-slate-600 text-white font-semibold flex items-center justify-center cursor-pointer"
               >
                 Batal

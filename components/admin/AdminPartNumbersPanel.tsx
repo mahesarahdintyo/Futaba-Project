@@ -28,6 +28,16 @@ export default function AdminPartNumbersPanel() {
   // Delete modal state
   const [deleteTarget, setDeleteTarget] = useState<PartNumber | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isDeleteClosing, setIsDeleteClosing] = useState(false);
+
+  const closeDeleteModal = () => {
+    if (!deleteTarget || isDeleteClosing) return;
+    setIsDeleteClosing(true);
+    setTimeout(() => {
+      setDeleteTarget(null);
+      setIsDeleteClosing(false);
+    }, 200);
+  };
 
   const loadData = async () => {
     try {
@@ -72,7 +82,7 @@ export default function AdminPartNumbersPanel() {
       await deletePartNumber(deleteTarget.id);
       setPartNumbers((prev) => prev.filter((pn) => pn.id !== deleteTarget.id));
       toast.success(`Part number "${deleteTarget.code}" berhasil dihapus.`);
-      setDeleteTarget(null);
+      closeDeleteModal();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Gagal menghapus part number");
     } finally {
@@ -216,8 +226,23 @@ export default function AdminPartNumbersPanel() {
 
       {/* Delete Confirmation Modal */}
       {deleteTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
-          <div className="relative w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-xl animate-in fade-in zoom-in-95 duration-200 select-none">
+        <div
+          className={`fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs ${
+            isDeleteClosing
+              ? "animate-out fade-out duration-200 [animation-fill-mode:forwards]"
+              : "animate-in fade-in duration-200"
+          }`}
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !isDeleting) closeDeleteModal();
+          }}
+        >
+          <div
+            className={`relative w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-xl select-none ${
+              isDeleteClosing
+                ? "animate-out fade-out zoom-out-95 duration-200 [animation-fill-mode:forwards]"
+                : "animate-in fade-in zoom-in-95 duration-200"
+            }`}
+          >
             <div className="flex items-start gap-4">
               <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-red-50 border border-red-100 text-red-600">
                 <AlertTriangle className="h-5 w-5" />
@@ -236,7 +261,7 @@ export default function AdminPartNumbersPanel() {
             <div className="mt-6 flex justify-end gap-3">
               <button
                 disabled={isDeleting}
-                onClick={() => setDeleteTarget(null)}
+                onClick={closeDeleteModal}
                 className="h-10 px-4 border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-xl transition duration-200 cursor-pointer"
               >
                 Batal
