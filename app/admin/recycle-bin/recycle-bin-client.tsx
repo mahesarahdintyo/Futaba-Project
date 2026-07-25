@@ -30,6 +30,7 @@ export default function RecycleBinClient() {
   const [isLoading, setIsLoading] = useState(true)
   const [isActionLoading, setIsActionLoading] = useState(false)
   const [showEmptyConfirm, setShowEmptyConfirm] = useState(false)
+  const [itemToDelete, setItemToDelete] = useState<{ type: RestoreType; id: string | number; name: string } | null>(null)
 
   const [lands, setLands] = useState<Land[]>([])
   const [folders, setFolders] = useState<FolderType[]>([])
@@ -84,6 +85,34 @@ export default function RecycleBinClient() {
     } catch (error) {
       console.error(error)
       toast.error(error instanceof Error ? error.message : 'Terjadi kesalahan saat memulihkan')
+    } finally {
+      setIsActionLoading(false)
+    }
+  }
+
+  const handleDeleteSingleItem = async (type: RestoreType, id: string | number) => {
+    try {
+      setIsActionLoading(true)
+      setItemToDelete(null)
+      const response = await fetch('/api/admin/recycle-bin', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ type, id }),
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error ?? 'Gagal menghapus item secara permanen')
+      }
+
+      toast.success(result.message ?? 'Item berhasil dihapus secara permanen!')
+      await loadData()
+    } catch (error) {
+      console.error(error)
+      toast.error(error instanceof Error ? error.message : 'Terjadi kesalahan saat menghapus item')
     } finally {
       setIsActionLoading(false)
     }
@@ -303,7 +332,13 @@ export default function RecycleBinClient() {
                               <h4 className="font-bold text-slate-800 truncate">{land.name}</h4>
                               <p className="text-xs text-slate-400 truncate mt-1">{land.description || 'Tidak ada deskripsi'}</p>
                             </div>
-                            <RestoreButton disabled={isActionLoading} onClick={() => handleRestore('land', land.id)} />
+                            <div className="flex items-center gap-2 shrink-0">
+                              <RestoreButton disabled={isActionLoading} onClick={() => handleRestore('land', land.id)} />
+                              <DeleteButton
+                                disabled={isActionLoading}
+                                onClick={() => setItemToDelete({ type: 'land', id: land.id, name: land.name })}
+                              />
+                            </div>
                           </div>
                         ))}
                       </div>
@@ -336,7 +371,13 @@ export default function RecycleBinClient() {
                                 </td>
                                 <td className="py-3 px-2 text-xs text-slate-400">#{folder.id}</td>
                                 <td className="py-3 px-2 text-right">
-                                  <RestoreButton disabled={isActionLoading} onClick={() => handleRestore('folder', folder.id)} />
+                                  <div className="flex items-center justify-end gap-2">
+                                    <RestoreButton disabled={isActionLoading} onClick={() => handleRestore('folder', folder.id)} />
+                                    <DeleteButton
+                                      disabled={isActionLoading}
+                                      onClick={() => setItemToDelete({ type: 'folder', id: folder.id, name: folder.name })}
+                                    />
+                                  </div>
                                 </td>
                               </tr>
                             ))}
@@ -374,7 +415,13 @@ export default function RecycleBinClient() {
                                 <td className="py-3 px-2 text-xs text-slate-500 max-w-[200px] truncate">{doc.file.name}</td>
                                 <td className="py-3 px-2 text-xs text-slate-400">{doc.type.toUpperCase()} / {formatBytes(doc.file.size)}</td>
                                 <td className="py-3 px-2 text-right">
-                                  <RestoreButton disabled={isActionLoading} onClick={() => handleRestore('document', doc.id)} />
+                                  <div className="flex items-center justify-end gap-2">
+                                    <RestoreButton disabled={isActionLoading} onClick={() => handleRestore('document', doc.id)} />
+                                    <DeleteButton
+                                      disabled={isActionLoading}
+                                      onClick={() => setItemToDelete({ type: 'document', id: doc.id, name: doc.title })}
+                                    />
+                                  </div>
                                 </td>
                               </tr>
                             ))}
@@ -415,7 +462,17 @@ export default function RecycleBinClient() {
                                   {report.qty} total / {report.ng_qty} NG / {formatTime(report.start_time)}-{formatTime(report.end_time)}
                                 </td>
                                 <td className="py-3 px-2 text-right">
-                                  <RestoreButton disabled={isActionLoading} onClick={() => handleRestore('production_report', report.id)} />
+                                  <div className="flex items-center justify-end gap-2">
+                                    <RestoreButton disabled={isActionLoading} onClick={() => handleRestore('production_report', report.id)} />
+                                    <DeleteButton
+                                      disabled={isActionLoading}
+                                      onClick={() => setItemToDelete({
+                                        type: 'production_report',
+                                        id: report.id,
+                                        name: `Laporan ${report.operator_name} (${report.part_number})`
+                                      })}
+                                    />
+                                  </div>
                                 </td>
                               </tr>
                             ))}
@@ -430,6 +487,42 @@ export default function RecycleBinClient() {
           </div>
         </div>
       </main>
+
+      {itemToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm transition-all duration-300">
+          <div className="bg-card rounded-3xl border border-border shadow-2xl p-6 max-w-md w-full select-none animate-in fade-in zoom-in duration-200">
+            <div className="flex items-center gap-3 text-red-600 mb-4">
+              <div className="p-2 bg-red-50 rounded-xl border border-red-100">
+                <AlertTriangle className="w-6 h-6" />
+              </div>
+              <h3 className="text-lg font-bold text-foreground">Hapus Item Permanen?</h3>
+            </div>
+
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Apakah Anda yakin ingin menghapus <strong className="text-foreground">&quot;{itemToDelete.name}&quot;</strong> secara <strong>permanen</strong>? File dan data tidak dapat dipulihkan kembali.
+            </p>
+
+            <div className="flex items-center justify-end gap-3 mt-6">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setItemToDelete(null)}
+                className="border-border bg-card text-muted-foreground hover:bg-muted hover:text-foreground font-semibold"
+              >
+                Batal
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => handleDeleteSingleItem(itemToDelete.type, itemToDelete.id)}
+                className="bg-red-600 hover:bg-red-700 text-white font-semibold shadow-sm shadow-red-100"
+              >
+                Ya, Hapus Permanen
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showEmptyConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm transition-all duration-300">
@@ -514,6 +607,21 @@ function RestoreButton({ disabled, onClick }: { disabled: boolean; onClick: () =
     >
       <RotateCcw className="w-3 h-3 mr-1" />
       Pulihkan
+    </Button>
+  )
+}
+
+function DeleteButton({ disabled, onClick }: { disabled: boolean; onClick: () => void }) {
+  return (
+    <Button
+      variant="outline"
+      size="xs"
+      disabled={disabled}
+      onClick={onClick}
+      className="border-red-200 bg-card text-red-600 hover:border-red-300 hover:bg-red-50 active:scale-95 transition-all text-xs font-semibold shadow-sm"
+    >
+      <Trash2 className="w-3 h-3 mr-1" />
+      Hapus Permanen
     </Button>
   )
 }
