@@ -419,10 +419,10 @@ export default function Page({ initialLands = [] }: AdminPageProps) {
         {/* Floating toggle button on the sidebar border */}
         <button
           aria-label={isDesktopSidebarCollapsed ? 'Tampilkan sidebar' : 'Sembunyikan sidebar'}
-          className="absolute top-16 right-0 translate-x-1/2 z-50 flex h-6 w-6 items-center justify-center rounded-full border border-border bg-card text-muted-foreground shadow-sm hover:bg-muted hover:text-foreground transition-colors duration-200 cursor-pointer active:scale-90"
+          className="absolute top-16 right-0 translate-x-1/2 z-50 flex h-8 w-8 items-center justify-center rounded-full border border-border bg-card text-muted-foreground shadow-sm hover:bg-muted hover:text-foreground transition-colors duration-200 cursor-pointer active:scale-90"
           onClick={() => setIsDesktopSidebarCollapsed(prev => !prev)}
         >
-          <ChevronLeft className={`h-3.5 w-3.5 transition-transform duration-300 ${isDesktopSidebarCollapsed ? 'rotate-180' : 'rotate-0'}`} />
+          <ChevronLeft className={`h-4 w-4 transition-transform duration-300 ${isDesktopSidebarCollapsed ? 'rotate-180' : 'rotate-0'}`} />
         </button>
       </div>
 
