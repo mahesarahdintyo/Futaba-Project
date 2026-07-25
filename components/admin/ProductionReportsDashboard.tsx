@@ -27,6 +27,7 @@ import {
 } from "@/lib/services/production-report";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
+import { toast } from "sonner";
 
 const PRODUCTION_REPORT_REFRESH_INTERVAL_MS = 3000;
 
@@ -60,8 +61,18 @@ export default function ProductionReportsDashboard() {
 
   // Modal Detail state
   const [detailReport, setDetailReport] = useState<ProductionReport | null>(null);
+  const [isDetailClosing, setIsDetailClosing] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
   const reportsRequestIdRef = useRef(0);
+
+  const closeDetailModal = () => {
+    if (!detailReport || isDetailClosing) return;
+    setIsDetailClosing(true);
+    setTimeout(() => {
+      setDetailReport(null);
+      setIsDetailClosing(false);
+    }, 200);
+  };
 
   const loadReports = useCallback(
     async ({ showLoading = true }: { showLoading?: boolean } = {}) => {
@@ -327,8 +338,37 @@ export default function ProductionReportsDashboard() {
     return `${day} ${monthName} ${year}`;
   };
 
+  // Copy helper with fallback for non-secure HTTP contexts (e.g. network IP)
+  const copyToClipboard = async (text: string): Promise<boolean> => {
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(text);
+        return true;
+      }
+    } catch {
+      // fallback if clipboard API fails
+    }
+
+    try {
+      const textArea = document.createElement("textarea");
+      textArea.value = text;
+      textArea.style.position = "fixed";
+      textArea.style.left = "-999999px";
+      textArea.style.top = "-999999px";
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      const successful = document.execCommand("copy");
+      document.body.removeChild(textArea);
+      return successful;
+    } catch (err) {
+      console.error("Fallback copy failed", err);
+      return false;
+    }
+  };
+
   // Copy receipt text to clipboard
-  const handleCopyDetail = () => {
+  const handleCopyDetail = async () => {
     if (!detailReport) return;
     const landName = detailReport.land?.name ?? "Unknown Line";
     const breakMin = detailReport.break_minutes > 0 ? `${detailReport.break_minutes} Menit` : "-";
@@ -351,9 +391,14 @@ Jam Akhir: ${formatTime(detailReport.end_time)}
 Istirahat: ${breakMin}
 ===================================`;
 
-    navigator.clipboard.writeText(text);
-    setIsCopied(true);
-    setTimeout(() => setIsCopied(false), 2000);
+    const success = await copyToClipboard(text);
+    if (success) {
+      setIsCopied(true);
+      toast.success("Detail laporan berhasil disalin ke clipboard!");
+      setTimeout(() => setIsCopied(false), 2000);
+    } else {
+      toast.error("Gagal menyalin detail laporan");
+    }
   };
 
   return (
@@ -754,8 +799,23 @@ Istirahat: ${breakMin}
 
       {/* Detail Laporan Modal (Modern Light Theme Modal) */}
       {detailReport && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
-          <div className="relative w-full max-w-lg rounded-2xl bg-white border border-slate-200 shadow-2xl p-6 select-text overflow-hidden animate-in fade-in zoom-in-95 duration-200 text-slate-800">
+        <div
+          className={`fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs ${
+            isDetailClosing
+              ? "animate-out fade-out duration-200 [animation-fill-mode:forwards]"
+              : "animate-in fade-in duration-200"
+          }`}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) closeDetailModal();
+          }}
+        >
+          <div
+            className={`relative w-full max-w-lg rounded-2xl bg-white border border-slate-200 shadow-2xl p-6 select-text overflow-hidden text-slate-800 ${
+              isDetailClosing
+                ? "animate-out fade-out zoom-out-95 duration-200 [animation-fill-mode:forwards]"
+                : "animate-in fade-in zoom-in-95 duration-200"
+            }`}
+          >
             {/* Header */}
             <div className="flex items-start justify-between border-b border-slate-100 pb-4">
               <div className="flex items-center gap-3">
@@ -768,7 +828,7 @@ Istirahat: ${breakMin}
                 </div>
               </div>
               <button
-                onClick={() => setDetailReport(null)}
+                onClick={closeDetailModal}
                 className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors duration-200 cursor-pointer"
                 aria-label="Tutup"
               >
@@ -887,7 +947,7 @@ Istirahat: ${breakMin}
               </button>
               <button
                 type="button"
-                onClick={() => setDetailReport(null)}
+                onClick={closeDetailModal}
                 className="flex-1 h-10 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl transition duration-200 cursor-pointer text-center"
               >
                 Tutup
