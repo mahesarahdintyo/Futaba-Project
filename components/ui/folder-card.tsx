@@ -68,7 +68,7 @@ export function FolderCard({
     <>
       <div
         onClick={() => onEnter(id, name)}
-        className="bg-card border border-border rounded-lg p-3 sm:p-4 shadow-sm hover:shadow-md hover:border-primary transition-all duration-200 cursor-pointer group flex items-center justify-between text-foreground min-w-0"
+        className="bg-card border border-border rounded-lg p-3 sm:p-4 shadow-sm hover:shadow-md hover:border-primary active:scale-[0.99] active:shadow-sm transition-all duration-200 cursor-pointer group flex items-center justify-between text-foreground min-w-0"
         title={`Klik untuk masuk ke folder ${name}`}
       >
         <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">

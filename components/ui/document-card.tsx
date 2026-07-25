@@ -712,7 +712,7 @@ export function DocumentCard({
     <>
       <div
         onClick={showOperatorActions ? undefined : handleView}
-        className={`bg-card border rounded-lg p-4 shadow-sm hover:shadow-md transition-all duration-200 group select-none text-foreground ${showOperatorActions ? '' : 'cursor-pointer'
+        className={`bg-card border rounded-lg p-4 shadow-sm hover:shadow-md active:scale-[0.99] active:shadow-sm transition-all duration-200 group select-none text-foreground ${showOperatorActions ? '' : 'cursor-pointer'
           } ${currentHiddenFromOperator
             ? 'border-amber-200 bg-amber-50/40 hover:border-amber-300'
             : 'border-border hover:border-primary'
