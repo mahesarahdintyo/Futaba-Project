@@ -404,7 +404,7 @@ export default function OperatorPage({
         <div className="flex border-b border-border overflow-x-auto">
           <button
             onClick={() => setActiveTab("display")}
-            className={`flex items-center gap-1.5 border-b-2 px-4 sm:px-6 py-2.5 sm:py-3 text-xs sm:text-sm font-bold transition-all focus:outline-none cursor-pointer whitespace-nowrap flex-shrink-0 ${activeTab === "display"
+            className={`flex items-center gap-1.5 border-b-2 px-4 sm:px-6 py-2.5 sm:py-3 text-xs sm:text-sm font-bold transition-all duration-200 active:scale-[0.97] focus:outline-none cursor-pointer whitespace-nowrap flex-shrink-0 ${activeTab === "display"
                 ? "border-primary text-primary"
                 : "border-transparent text-muted-foreground hover:text-foreground"
               }`}
@@ -415,7 +415,7 @@ export default function OperatorPage({
           </button>
           <button
             onClick={() => setActiveTab("report")}
-            className={`flex items-center gap-1.5 border-b-2 px-4 sm:px-6 py-2.5 sm:py-3 text-xs sm:text-sm font-bold transition-all focus:outline-none cursor-pointer whitespace-nowrap flex-shrink-0 ${activeTab === "report"
+            className={`flex items-center gap-1.5 border-b-2 px-4 sm:px-6 py-2.5 sm:py-3 text-xs sm:text-sm font-bold transition-all duration-200 active:scale-[0.97] focus:outline-none cursor-pointer whitespace-nowrap flex-shrink-0 ${activeTab === "report"
                 ? "border-primary text-primary"
                 : "border-transparent text-muted-foreground hover:text-foreground"
               }`}
