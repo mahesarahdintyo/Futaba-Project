@@ -48,7 +48,7 @@ export default function DocumentList({
     <div className="space-y-8">
       {folders.length > 0 && (
         <div>
-          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground transition-opacity duration-200">
             Folder ({folders.length})
           </h2>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
@@ -72,7 +72,7 @@ export default function DocumentList({
 
       {documents.length > 0 && (
         <div>
-          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground transition-opacity duration-200">
             Dokumen ({documents.length})
           </h2>
           <div className="space-y-3">
