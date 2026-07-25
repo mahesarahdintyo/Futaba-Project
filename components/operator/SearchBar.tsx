@@ -10,7 +10,7 @@ export default function SearchBar({ value, onChange }: SearchBarProps) {
       value={value}
       onChange={(event) => onChange(event.target.value)}
       placeholder="Cari nomor drawing atau nama file..."
-      className="w-full rounded-xl border border-border bg-card p-4 text-foreground placeholder:text-muted-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+      className="w-full rounded-xl border border-border bg-card p-4 text-foreground placeholder:text-muted-foreground outline-none transition-colors duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20"
     />
   );
 }
