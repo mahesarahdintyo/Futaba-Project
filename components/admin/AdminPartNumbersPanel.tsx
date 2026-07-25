@@ -183,8 +183,12 @@ export default function AdminPartNumbersPanel() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {partNumbers.map((pn) => (
-                    <tr key={pn.id} className="hover:bg-slate-50/50 transition">
+                  {partNumbers.map((pn, index) => (
+                    <tr
+                      key={pn.id}
+                      className="hover:bg-slate-50/50 transition animate-in fade-in slide-in-from-bottom-1 duration-300 fill-mode-backwards"
+                      style={{ animationDelay: `${Math.min(index * 30, 300)}ms` }}
+                    >
                       <td className="py-3 px-5 font-bold text-slate-800 whitespace-nowrap">
                         {pn.code}
                       </td>

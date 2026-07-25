@@ -207,10 +207,11 @@ export default function AdminNgCategoriesPanel() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {categories.map((cat) => (
+                  {categories.map((cat, index) => (
                     <tr
                       key={cat.id}
-                      className="hover:bg-slate-50/50 transition"
+                      className="hover:bg-slate-50/50 transition animate-in fade-in slide-in-from-bottom-1 duration-300 fill-mode-backwards"
+                      style={{ animationDelay: `${Math.min(index * 30, 300)}ms` }}
                     >
                       <td className="py-3 px-5 whitespace-nowrap">
                         <span className="inline-flex items-center gap-1.5 rounded-md bg-rose-50 border border-rose-100 px-2.5 py-1 text-xs font-bold text-rose-700">

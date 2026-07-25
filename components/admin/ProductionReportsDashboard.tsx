@@ -630,7 +630,7 @@ Istirahat: ${breakMin}
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {filteredReports.map((report) => {
+                {filteredReports.map((report, index) => {
                   const okQty = report.qty - report.ng_qty;
                   const ngRate = report.qty > 0 ? (report.ng_qty / report.qty) * 100 : 0;
                   const isNgHigh = report.ng_qty > 0;
@@ -638,7 +638,8 @@ Istirahat: ${breakMin}
                   return (
                     <tr
                       key={report.id}
-                      className="hover:bg-slate-50 transition-colors group"
+                      className="hover:bg-slate-50 transition-colors group animate-in fade-in slide-in-from-bottom-1 duration-300 fill-mode-backwards"
+                      style={{ animationDelay: `${Math.min(index * 30, 300)}ms` }}
                     >
                       {/* Tanggal */}
                       <td className="py-3.5 px-4 font-medium text-slate-900 whitespace-nowrap">
