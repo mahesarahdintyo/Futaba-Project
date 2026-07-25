@@ -392,18 +392,18 @@ export default function Page({ initialLands = [] }: AdminPageProps) {
   const showEmptyState = filteredDocuments.length === 0 && filteredFolders.length === 0
 
   return (
-    <div className="min-h-screen bg-background text-foreground lg:flex">
+    <div className="h-screen w-full bg-background text-foreground lg:flex overflow-hidden">
       {/* Mobile backdrop */}
       {isSidebarOpen && <button aria-label="Tutup navigasi" className="fixed inset-0 z-30 bg-background/80 lg:hidden" onClick={() => setIsSidebarOpen(false)} />}
 
       {/* Desktop sidebar — width-animated wrapper + border toggle button */}
-      <div className="hidden lg:block relative flex-shrink-0">
-        <div className={`overflow-hidden transition-[width] duration-300 ease-in-out ${isDesktopSidebarCollapsed ? 'w-0' : 'w-72'}`}>
-          <aside className={`sticky top-0 h-screen w-72 flex flex-col border-r border-border bg-card p-4 transition-all duration-300 ${isAnyDialogOpen ? 'blur-md pointer-events-none opacity-40' : ''}`}>
+      <div className="hidden lg:block relative flex-shrink-0 h-full">
+        <div className={`h-full overflow-hidden transition-[width] duration-300 ease-in-out ${isDesktopSidebarCollapsed ? 'w-0' : 'w-72'}`}>
+          <aside className={`h-full w-72 flex flex-col border-r border-border bg-card p-4 transition-all duration-300 ${isAnyDialogOpen ? 'blur-md pointer-events-none opacity-40' : ''}`}>
             <div className="flex items-center justify-between border-b border-border px-2 pb-4">
               <Link href="/" aria-label="Kembali ke landing page" className="inline-flex"><Image src="/futaba-logo.png" alt="FUTABA Logo" width={150} height={52} className="h-10 w-auto object-contain" priority /></Link>
             </div>
-            <nav className="mt-6 space-y-1" aria-label="Navigasi utama">
+            <nav className="mt-6 flex-1 overflow-y-auto space-y-1" aria-label="Navigasi utama">
               <SidebarButton icon={FolderKanban} label="Workspace" active={activeView === 'workspace'} onClick={() => selectView('workspace')} />
               <SidebarButton icon={FileText} label="Laporan Produksi" active={activeView === 'reports'} onClick={() => selectView('reports')} />
               <SidebarButton icon={Tags} label="Part Number" active={activeView === 'part-numbers'} onClick={() => selectView('part-numbers')} />
@@ -432,7 +432,7 @@ export default function Page({ initialLands = [] }: AdminPageProps) {
           <Link href="/" aria-label="Kembali ke landing page" className="inline-flex"><Image src="/futaba-logo.png" alt="FUTABA Logo" width={150} height={52} className="h-10 w-auto object-contain" priority /></Link>
           <button aria-label="Tutup navigasi" className="rounded-lg p-2 text-muted-foreground hover:bg-muted" onClick={() => setIsSidebarOpen(false)}><X className="h-5 w-5" /></button>
         </div>
-        <nav className="mt-6 space-y-1" aria-label="Navigasi utama">
+        <nav className="mt-6 flex-1 overflow-y-auto space-y-1" aria-label="Navigasi utama">
           <SidebarButton icon={FolderKanban} label="Workspace" active={activeView === 'workspace'} onClick={() => selectView('workspace')} />
           <SidebarButton icon={FileText} label="Laporan Produksi" active={activeView === 'reports'} onClick={() => selectView('reports')} />
           <SidebarButton icon={Tags} label="Part Number" active={activeView === 'part-numbers'} onClick={() => selectView('part-numbers')} />
@@ -445,7 +445,7 @@ export default function Page({ initialLands = [] }: AdminPageProps) {
         </div>
       </aside>
 
-      <div className="min-w-0 flex-1">
+      <div className="min-w-0 flex-1 flex flex-col h-full overflow-y-auto">
         <header className="sticky top-0 z-20 border-b border-border bg-card">
           <div className="flex min-h-16 items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
             <div className="flex items-center gap-3">
@@ -458,7 +458,7 @@ export default function Page({ initialLands = [] }: AdminPageProps) {
             </div>
           </div>
         </header>
-        <main className="mx-auto max-w-6xl px-3 py-4 sm:px-6 sm:py-8 lg:px-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
+        <main className="flex-1 mx-auto w-full max-w-6xl px-3 py-4 sm:px-6 sm:py-8 lg:px-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
           {activeView === 'reports' ? (
             <ProductionReportsDashboard />
           ) : activeView === 'part-numbers' ? (
@@ -697,7 +697,7 @@ export default function Page({ initialLands = [] }: AdminPageProps) {
         </main>
 
         {/* Footer */}
-        <footer className="bg-card border-t border-border mt-12">
+        <footer className="bg-card border-t border-border mt-auto">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
             <p className="text-center text-muted-foreground text-sm">
               © 2026 PKIS. Semua hak dilindungi.
