@@ -228,7 +228,7 @@ export function AdminLandCard({
           style={{ backgroundColor: 'rgba(0, 0, 0, 0.4)' }}
           onClick={(e) => { if (e.target === e.currentTarget && !isDeleting) setIsDeleteOpen(false) }}
         >
-          <div className="bg-card rounded-xl shadow-2xl max-w-sm w-full p-6 space-y-4">
+          <div className="bg-card rounded-xl shadow-2xl max-w-sm w-full p-6 space-y-4 animate-in fade-in zoom-in-95 duration-200">
             <div className="flex items-center gap-3">
               <div className="flex-shrink-0 w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
                 <AlertTriangle className="w-5 h-5 text-red-600" />
@@ -281,7 +281,7 @@ export function AdminLandCard({
           style={{ backgroundColor: 'rgba(0, 0, 0, 0.4)' }}
           onClick={(e) => { if (e.target === e.currentTarget && !isSaving) setIsEditOpen(false) }}
         >
-          <div className="bg-card rounded-xl shadow-2xl max-w-md w-full">
+          <div className="bg-card rounded-xl shadow-2xl max-w-md w-full animate-in fade-in zoom-in-95 duration-200">
             <div className="flex items-center justify-between px-6 py-4 border-b border-border">
               <h2 className="text-lg font-semibold text-foreground">Edit Card</h2>
               <button

@@ -94,7 +94,7 @@ export function CreateLandDialog({ onCreateSuccess, onOpenChange }: CreateLandDi
           style={{ backgroundColor: 'rgba(0, 0, 0, 0.4)' }}
           onClick={(e) => { if (e.target === e.currentTarget) handleClose() }}
         >
-          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full animate-scaleIn">
+          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full animate-in fade-in zoom-in-95 duration-200">
             {/* Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
               <h2 className="text-lg font-semibold text-gray-900">Buat Card Baru</h2>
