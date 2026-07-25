@@ -434,7 +434,7 @@ export default function OperatorPage({
               <div className="flex flex-wrap items-center gap-2 rounded-xl border border-border bg-card p-3 text-sm text-muted-foreground shadow-sm">
                 <button
                   onClick={() => handleNavigateBreadcrumb(-1)}
-                  className="font-semibold text-primary transition hover:text-primary/80"
+                  className="font-semibold text-primary transition-colors duration-200 active:scale-[0.97] hover:text-primary/80"
                   type="button"
                 >
                   Home
@@ -446,7 +446,7 @@ export default function OperatorPage({
 
                     <button
                       onClick={() => handleNavigateBreadcrumb(index)}
-                      className="font-semibold text-foreground transition enabled:text-primary enabled:hover:text-primary/80"
+                      className="font-semibold text-foreground transition-colors duration-200 active:scale-[0.97] enabled:text-primary enabled:hover:text-primary/80"
                       disabled={index === folderPathHistory.length - 1}
                       type="button"
                     >
