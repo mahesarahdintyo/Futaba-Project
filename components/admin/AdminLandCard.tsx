@@ -18,11 +18,31 @@ export function AdminLandCard({
   onChangeSuccess,
 }: AdminLandCardProps) {
   const [isEditOpen, setIsEditOpen] = useState(false)
+  const [isEditClosing, setIsEditClosing] = useState(false)
   const [isDeleteOpen, setIsDeleteOpen] = useState(false)
+  const [isDeleteClosing, setIsDeleteClosing] = useState(false)
   const [isActionMenuOpen, setIsActionMenuOpen] = useState(false)
   const [isActionMenuClosing, setIsActionMenuClosing] = useState(false)
   const [name, setName] = useState(land.name)
   const menuRef = useRef<HTMLDivElement>(null)
+
+  const closeDeleteModal = () => {
+    if (!isDeleteOpen || isDeleteClosing) return
+    setIsDeleteClosing(true)
+    setTimeout(() => {
+      setIsDeleteOpen(false)
+      setIsDeleteClosing(false)
+    }, 200)
+  }
+
+  const closeEditModal = () => {
+    if (!isEditOpen || isEditClosing) return
+    setIsEditClosing(true)
+    setTimeout(() => {
+      setIsEditOpen(false)
+      setIsEditClosing(false)
+    }, 200)
+  }
 
   const closeActionMenu = () => {
     if (!isActionMenuOpen || isActionMenuClosing) return
@@ -192,11 +212,10 @@ export function AdminLandCard({
       {/* Card */}
       <div
         onClick={() => onEnter(land)}
-        className={`group relative ${isActionMenuOpen ? 'z-20' : 'z-0'} bg-card border rounded-xl p-5 shadow-sm cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md ${
-          isHiddenFromOperator
+        className={`group relative ${isActionMenuOpen ? 'z-20' : 'z-0'} bg-card border rounded-xl p-5 shadow-sm cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md ${isHiddenFromOperator
             ? 'border-amber-200 bg-amber-50/40 hover:border-amber-300'
             : 'border-border hover:border-primary'
-        }`}
+          }`}
         title={`Klik untuk membuka ${land.name}`}
       >
         <div className="flex items-start justify-between gap-3">
@@ -227,11 +246,10 @@ export function AdminLandCard({
               <MoreVertical className="w-5 h-5" />
             </Button>
             {isActionMenuOpen && (
-              <div className={`absolute right-0 top-9 z-10 w-48 rounded-xl border border-border bg-card p-1.5 shadow-lg ${
-                isActionMenuClosing
+              <div className={`absolute right-0 top-9 z-10 w-48 rounded-xl border border-border bg-card p-1.5 shadow-lg ${isActionMenuClosing
                   ? 'animate-out fade-out slide-out-to-top-2 duration-150 [animation-fill-mode:forwards]'
                   : 'animate-in fade-in slide-in-from-top-2 duration-150'
-              }`}>
+                }`}>
                 <button onClick={(e) => { closeActionMenu(); handleToggleVisibility(e); }} disabled={isSavingVisibility} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-medium text-foreground hover:bg-muted disabled:opacity-50">
                   {isSavingVisibility ? <Loader2 className="w-4 h-4 animate-spin" /> : isHiddenFromOperator ? <Eye className="w-4 h-4 text-emerald-600" /> : <EyeOff className="w-4 h-4 text-amber-600" />}
                   {isHiddenFromOperator ? 'Tampilkan ke Operator' : 'Sembunyikan dari Operator'}
@@ -247,11 +265,19 @@ export function AdminLandCard({
       {/* Modal Konfirmasi Hapus */}
       {isDeleteOpen && (
         <div
-          className="fixed inset-0 flex items-center justify-center z-50 p-4 backdrop-blur-sm"
+          className={`fixed inset-0 flex items-center justify-center z-50 p-4 backdrop-blur-sm ${
+            isDeleteClosing
+              ? 'animate-out fade-out duration-200 [animation-fill-mode:forwards]'
+              : 'animate-in fade-in duration-200'
+          }`}
           style={{ backgroundColor: 'rgba(0, 0, 0, 0.4)' }}
-          onClick={(e) => { if (e.target === e.currentTarget && !isDeleting) setIsDeleteOpen(false) }}
+          onClick={(e) => { if (e.target === e.currentTarget && !isDeleting) closeDeleteModal() }}
         >
-          <div className="bg-card rounded-xl shadow-2xl max-w-sm w-full p-6 space-y-4 animate-in fade-in zoom-in-95 duration-200">
+          <div className={`bg-card rounded-xl shadow-2xl max-w-sm w-full p-6 space-y-4 ${
+            isDeleteClosing
+              ? 'animate-out fade-out zoom-out-95 duration-200 [animation-fill-mode:forwards]'
+              : 'animate-in fade-in zoom-in-95 duration-200'
+          }`}>
             <div className="flex items-center gap-3">
               <div className="flex-shrink-0 w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
                 <AlertTriangle className="w-5 h-5 text-red-600" />
@@ -271,7 +297,7 @@ export function AdminLandCard({
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => setIsDeleteOpen(false)}
+                onClick={closeDeleteModal}
                 disabled={isDeleting}
                 className="flex-1"
               >
@@ -300,15 +326,23 @@ export function AdminLandCard({
       {/* Modal Edit */}
       {isEditOpen && (
         <div
-          className="fixed inset-0 flex items-center justify-center z-50 p-4 backdrop-blur-sm"
+          className={`fixed inset-0 flex items-center justify-center z-50 p-4 backdrop-blur-sm ${
+            isEditClosing
+              ? 'animate-out fade-out duration-200 [animation-fill-mode:forwards]'
+              : 'animate-in fade-in duration-200'
+          }`}
           style={{ backgroundColor: 'rgba(0, 0, 0, 0.4)' }}
-          onClick={(e) => { if (e.target === e.currentTarget && !isSaving) setIsEditOpen(false) }}
+          onClick={(e) => { if (e.target === e.currentTarget && !isSaving) closeEditModal() }}
         >
-          <div className="bg-card rounded-xl shadow-2xl max-w-md w-full animate-in fade-in zoom-in-95 duration-200">
+          <div className={`bg-card rounded-xl shadow-2xl max-w-md w-full ${
+            isEditClosing
+              ? 'animate-out fade-out zoom-out-95 duration-200 [animation-fill-mode:forwards]'
+              : 'animate-in fade-in zoom-in-95 duration-200'
+          }`}>
             <div className="flex items-center justify-between px-6 py-4 border-b border-border">
               <h2 className="text-lg font-semibold text-foreground">Edit Card</h2>
               <button
-                onClick={() => setIsEditOpen(false)}
+                onClick={closeEditModal}
                 disabled={isSaving}
                 className="text-muted-foreground hover:text-foreground disabled:opacity-50 transition-all duration-200"
                 aria-label="Tutup"
@@ -368,7 +402,7 @@ export function AdminLandCard({
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => setIsEditOpen(false)}
+                  onClick={closeEditModal}
                   disabled={isSaving}
                   className="flex-1"
                 >
