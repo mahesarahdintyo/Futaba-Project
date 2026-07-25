@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo, useEffect } from 'react'
-import { ChevronRight, FileText, FolderKanban, Menu, Tags, Trash2, X } from 'lucide-react'
+import { ChevronLeft, ChevronRight, FileText, FolderKanban, Menu, Tags, Trash2, X } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { toast } from 'sonner'
@@ -98,6 +98,7 @@ export default function Page({ initialLands = [] }: AdminPageProps) {
   const [error, setError] = useState('')
   const [activeView, setActiveView] = useState<'workspace' | 'reports' | 'part-numbers' | 'ng-categories'>('workspace')
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const [isDesktopSidebarCollapsed, setIsDesktopSidebarCollapsed] = useState(false)
   const [isAnyDialogOpen, setIsAnyDialogOpen] = useState(false)
   const pageTitle = {
     workspace: 'Workspace',
@@ -392,11 +393,44 @@ export default function Page({ initialLands = [] }: AdminPageProps) {
 
   return (
     <div className="min-h-screen bg-background text-foreground lg:flex">
+      {/* Mobile backdrop */}
       {isSidebarOpen && <button aria-label="Tutup navigasi" className="fixed inset-0 z-30 bg-background/80 lg:hidden" onClick={() => setIsSidebarOpen(false)} />}
-      <aside className={`fixed inset-y-0 left-0 z-40 flex w-72 flex-col border-r border-border bg-card p-4 shadow-xl transition-all duration-300 lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 lg:shadow-none ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} ${isAnyDialogOpen ? 'blur-md pointer-events-none opacity-40' : ''}`}>
+
+      {/* Desktop sidebar — width-animated wrapper + border toggle button */}
+      <div className="hidden lg:block relative flex-shrink-0">
+        <div className={`overflow-hidden transition-[width] duration-300 ease-in-out ${isDesktopSidebarCollapsed ? 'w-0' : 'w-72'}`}>
+          <aside className={`sticky top-0 h-screen w-72 flex flex-col border-r border-border bg-card p-4 ${isAnyDialogOpen ? 'blur-md pointer-events-none opacity-40' : ''}`}>
+            <div className="flex items-center justify-between border-b border-border px-2 pb-4">
+              <Link href="/" aria-label="Kembali ke landing page" className="inline-flex"><Image src="/futaba-logo.png" alt="FUTABA Logo" width={150} height={52} className="h-10 w-auto object-contain" priority /></Link>
+            </div>
+            <nav className="mt-6 space-y-1" aria-label="Navigasi utama">
+              <SidebarButton icon={FolderKanban} label="Workspace" active={activeView === 'workspace'} onClick={() => selectView('workspace')} />
+              <SidebarButton icon={FileText} label="Laporan Produksi" active={activeView === 'reports'} onClick={() => selectView('reports')} />
+              <SidebarButton icon={Tags} label="Part Number" active={activeView === 'part-numbers'} onClick={() => selectView('part-numbers')} />
+              <SidebarButton icon={Tags} label="Kategori NG" active={activeView === 'ng-categories'} onClick={() => selectView('ng-categories')} />
+            </nav>
+            <div className="mt-auto space-y-3 border-t border-border pt-4">
+              <Link href="/admin/recycle-bin" className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-muted-foreground transition-colors duration-200 hover:bg-muted hover:text-foreground"><Trash2 className="h-5 w-5" />Tempat Sampah</Link>
+              <ThemeToggle variant="sidebar" />
+              <LogoutButton />
+            </div>
+          </aside>
+        </div>
+        {/* Floating toggle button on the sidebar border */}
+        <button
+          aria-label={isDesktopSidebarCollapsed ? 'Tampilkan sidebar' : 'Sembunyikan sidebar'}
+          className="absolute top-16 right-0 translate-x-1/2 z-50 flex h-6 w-6 items-center justify-center rounded-full border border-border bg-card text-muted-foreground shadow-sm hover:bg-muted hover:text-foreground transition-colors duration-200 cursor-pointer"
+          onClick={() => setIsDesktopSidebarCollapsed(prev => !prev)}
+        >
+          {isDesktopSidebarCollapsed ? <ChevronRight className="h-3.5 w-3.5" /> : <ChevronLeft className="h-3.5 w-3.5" />}
+        </button>
+      </div>
+
+      {/* Mobile sidebar — fixed + translate */}
+      <aside className={`fixed inset-y-0 left-0 z-40 lg:hidden flex w-72 flex-col border-r border-border bg-card p-4 shadow-xl transition-all duration-300 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} ${isAnyDialogOpen ? 'blur-md pointer-events-none opacity-40' : ''}`}>
         <div className="flex items-center justify-between border-b border-border px-2 pb-4">
           <Link href="/" aria-label="Kembali ke landing page" className="inline-flex"><Image src="/futaba-logo.png" alt="FUTABA Logo" width={150} height={52} className="h-10 w-auto object-contain" priority /></Link>
-          <button aria-label="Tutup navigasi" className="rounded-lg p-2 text-muted-foreground hover:bg-muted lg:hidden" onClick={() => setIsSidebarOpen(false)}><X className="h-5 w-5" /></button>
+          <button aria-label="Tutup navigasi" className="rounded-lg p-2 text-muted-foreground hover:bg-muted" onClick={() => setIsSidebarOpen(false)}><X className="h-5 w-5" /></button>
         </div>
         <nav className="mt-6 space-y-1" aria-label="Navigasi utama">
           <SidebarButton icon={FolderKanban} label="Workspace" active={activeView === 'workspace'} onClick={() => selectView('workspace')} />
@@ -405,15 +439,20 @@ export default function Page({ initialLands = [] }: AdminPageProps) {
           <SidebarButton icon={Tags} label="Kategori NG" active={activeView === 'ng-categories'} onClick={() => selectView('ng-categories')} />
         </nav>
         <div className="mt-auto space-y-3 border-t border-border pt-4">
-          <Link href="/admin/recycle-bin" className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-muted-foreground transition hover:bg-muted hover:text-foreground" onClick={() => setIsSidebarOpen(false)}><Trash2 className="h-5 w-5" />Tempat Sampah</Link>
+          <Link href="/admin/recycle-bin" className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-muted-foreground transition-colors duration-200 hover:bg-muted hover:text-foreground" onClick={() => setIsSidebarOpen(false)}><Trash2 className="h-5 w-5" />Tempat Sampah</Link>
           <ThemeToggle variant="sidebar" />
           <LogoutButton />
         </div>
       </aside>
+
       <div className="min-w-0 flex-1">
         <header className="sticky top-0 z-20 border-b border-border bg-card">
           <div className="flex min-h-16 items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center gap-3"><button aria-label="Buka navigasi" className="rounded-lg p-2 text-muted-foreground hover:bg-muted lg:hidden" onClick={() => setIsSidebarOpen(true)}><Menu className="h-5 w-5" /></button><h1 className="text-lg font-bold tracking-tight text-foreground sm:text-xl">{pageTitle}</h1></div>
+            <div className="flex items-center gap-3">
+              {/* Mobile: hamburger */}
+              <button aria-label="Buka navigasi" className="rounded-lg p-2 text-muted-foreground hover:bg-muted transition-colors duration-200 lg:hidden" onClick={() => setIsSidebarOpen(true)}><Menu className="h-5 w-5" /></button>
+              <h1 className="text-lg font-bold tracking-tight text-foreground sm:text-xl">{pageTitle}</h1>
+            </div>
             <div className="flex flex-wrap items-center justify-end gap-2">
               {activeView === 'workspace' && (showLandList ? <CreateLandDialog onCreateSuccess={loadLands} onOpenChange={setIsAnyDialogOpen} /> : selectedLand ? <><CreateFolderDialog parentId={currentFolder ? currentFolder.id : null} landId={selectedLand.id} onCreateSuccess={handleCreateFolderSuccess} onOpenChange={setIsAnyDialogOpen} /><UploadDialog folderId={currentFolder ? currentFolder.id : null} landId={selectedLand.id} onUploadSuccess={handleUploadSuccess} onOpenChange={setIsAnyDialogOpen} /></> : null)}
             </div>
