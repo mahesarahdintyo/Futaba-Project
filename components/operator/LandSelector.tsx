@@ -24,7 +24,7 @@ export default function LandSelector({
             href={`/display/${encodeURIComponent(value.id)}`}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex h-8 sm:h-9 items-center gap-1.5 rounded-lg border border-primary bg-card px-2.5 sm:px-3 text-xs sm:text-sm font-semibold text-primary transition hover:bg-primary/10"
+            className="inline-flex h-8 sm:h-9 items-center gap-1.5 rounded-lg border border-primary bg-card px-2.5 sm:px-3 text-xs sm:text-sm font-semibold text-primary transition-colors duration-200 active:scale-[0.97] hover:bg-primary/10"
           >
             <MonitorUp className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             Display
@@ -47,7 +47,7 @@ export default function LandSelector({
                 type="button"
                 aria-pressed={isSelected}
                 onClick={() => onChange(land)}
-                className={`rounded-lg border px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-semibold shadow-sm transition focus:outline-none focus:ring-2 focus:ring-primary/20 ${
+                className={`rounded-lg border px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-semibold shadow-sm transition-colors duration-200 active:scale-[0.97] focus:outline-none focus:ring-2 focus:ring-primary/20 ${
                   isSelected
                     ? "border-primary bg-primary text-primary-foreground hover:bg-primary/95"
                     : "border-border bg-card text-muted-foreground hover:border-primary hover:bg-muted hover:text-foreground"
