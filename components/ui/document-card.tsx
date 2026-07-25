@@ -1011,7 +1011,7 @@ export function DocumentCard({
           {showOperatorActions && (
             <div className="grid w-full grid-cols-1 gap-2 border-t border-border pt-3 sm:flex sm:w-auto sm:flex-shrink-0 sm:self-start sm:border-t-0 sm:pt-0">
               <button
-                className="inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-lg border border-border bg-background text-sm font-semibold text-foreground sm:w-40"
+                className="inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-lg border border-border bg-background text-sm font-semibold text-foreground sm:w-40 transition-colors duration-200 active:scale-[0.97] hover:bg-muted"
                 onClick={handlePreviewClick}
                 disabled={isViewing}
                 title="Preview Dokumen"
@@ -1026,7 +1026,7 @@ export function DocumentCard({
               </button>
 
               <button
-                className="inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-lg bg-emerald-600 border border-emerald-600 text-sm font-semibold text-white sm:w-40"
+                className="inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-lg bg-emerald-600 border border-emerald-600 text-sm font-semibold text-white sm:w-40 transition-colors duration-200 active:scale-[0.97] hover:bg-emerald-700"
                 onClick={handleShowOnDisplay}
                 disabled={isDisplaying}
                 title="Tampilkan di Display"
