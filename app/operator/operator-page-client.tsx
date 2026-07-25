@@ -84,6 +84,7 @@ export default function OperatorPage({
   const [isLoading, setIsLoading] = useState(initialLands.length === 0);
   const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState<"display" | "report">("display");
+  const [documentListKey, setDocumentListKey] = useState(0);
   const workspaceRequestIdRef = useRef(0);
   const landsRequestIdRef = useRef(0);
   const isMountedRef = useRef(true);
@@ -289,6 +290,9 @@ export default function OperatorPage({
 
         setFolders(landFolders);
         setDocuments(landDocuments);
+        if (showLoading) {
+          setDocumentListKey((prev) => prev + 1);
+        }
       } catch (error) {
         console.error("Failed to load operator workspace", error);
 
@@ -454,6 +458,7 @@ export default function OperatorPage({
             )}
 
             <DocumentList
+              key={documentListKey}
               folders={folders}
               documents={documents}
               isLoading={isLoading}
