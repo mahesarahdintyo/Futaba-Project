@@ -123,7 +123,7 @@ function DateTimeField({
           type="button"
           onClick={onEdit}
           disabled={disabled}
-          className="inline-flex h-7 items-center gap-1.5 rounded border border-border bg-card px-2.5 text-xs font-semibold text-muted-foreground transition hover:border-primary/50 hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
+          className="inline-flex h-7 items-center gap-1.5 rounded border border-border bg-card px-2.5 text-xs font-semibold text-muted-foreground transition-colors duration-200 active:scale-[0.97] hover:border-primary/50 hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
         >
           <Pencil className="h-3.5 w-3.5" />
           Edit
@@ -139,7 +139,7 @@ function DateTimeField({
             value={getDateTimeInputValue(date, time)}
             onChange={(event) => onChange(event.target.value)}
             disabled={disabled}
-            className="h-12 w-full rounded border border-border bg-card px-4 pr-11 text-base text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:bg-muted disabled:text-muted-foreground"
+            className="h-12 w-full rounded border border-border bg-card px-4 pr-11 text-base text-foreground outline-none transition-colors duration-200 focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:bg-muted disabled:text-muted-foreground"
           />
         ) : (
           <input
@@ -213,7 +213,7 @@ function NumericStepper({ label, value, onChange, required = false, hasError = f
             <button
               type="button"
               onClick={handleDecrement}
-              className="inline-flex h-9 w-9 items-center justify-center rounded transition hover:bg-muted hover:text-foreground"
+              className="inline-flex h-9 w-9 items-center justify-center rounded transition-colors duration-200 active:scale-[0.97] hover:bg-muted hover:text-foreground"
               aria-label={`Kurangi ${label}`}
             >
               <Minus className="h-5 w-5 stroke-[3]" />
@@ -221,7 +221,7 @@ function NumericStepper({ label, value, onChange, required = false, hasError = f
             <button
               type="button"
               onClick={handleIncrement}
-              className="inline-flex h-9 w-9 items-center justify-center rounded transition hover:bg-muted hover:text-foreground"
+              className="inline-flex h-9 w-9 items-center justify-center rounded transition-colors duration-200 active:scale-[0.97] hover:bg-muted hover:text-foreground"
               aria-label={`Tambah ${label}`}
             >
               <Plus className="h-5 w-5 stroke-[3]" />
@@ -253,7 +253,7 @@ function ChoiceRow({ label, value, onChange }: ChoiceRowProps) {
               key={option}
               type="button"
               onClick={() => onChange(option)}
-              className={`h-14 rounded border text-lg font-medium transition ${isSelected
+              className={`h-14 rounded border text-lg font-medium transition-colors duration-200 active:scale-[0.97] ${isSelected
                 ? "border-primary bg-primary/10 text-primary ring-2 ring-primary/20"
                 : "border-border bg-muted/50 text-muted-foreground hover:border-primary/50 hover:bg-card hover:text-foreground"
                 }`}
@@ -495,7 +495,7 @@ export default function ProductionReportForm({ landId }: ProductionReportFormPro
             <label htmlFor="part-number" className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               Part Number
             </label>
-            <div className="relative rounded border border-border bg-card transition focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20">
+            <div className="relative rounded border border-border bg-card transition-colors duration-200 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20">
               <select
                 id="part-number"
                 value={partNumber}
@@ -544,7 +544,7 @@ export default function ProductionReportForm({ landId }: ProductionReportFormPro
                   <Button
                     type="button"
                     onClick={handleFinish}
-                    className="h-11 rounded bg-primary px-5 font-semibold text-primary-foreground transition hover:bg-primary/95"
+                    className="h-11 rounded bg-primary px-5 font-semibold text-primary-foreground transition-colors duration-200 active:scale-[0.97] hover:bg-primary/95"
                   >
                     <TimerReset className="mr-2 h-4 w-4" />
                     Finish
@@ -585,7 +585,7 @@ export default function ProductionReportForm({ landId }: ProductionReportFormPro
                                     key={cat.id}
                                     type="button"
                                     onClick={() => setNgCategory(cat.name)}
-                                    className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-semibold transition ${isSelected
+                                    className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-semibold transition-colors duration-200 active:scale-[0.97] ${isSelected
                                         ? "border-destructive bg-destructive/10 text-destructive ring-2 ring-destructive/20"
                                         : "border-border bg-muted/50 text-muted-foreground hover:border-primary/50 hover:bg-card hover:text-foreground"
                                       }`}
@@ -616,7 +616,7 @@ export default function ProductionReportForm({ landId }: ProductionReportFormPro
                     <Button
                       type="button"
                       onClick={handleFinish}
-                      className="h-11 rounded border border-border bg-card px-5 font-semibold text-muted-foreground transition hover:bg-muted hover:text-foreground"
+                      className="h-11 rounded border border-border bg-card px-5 font-semibold text-muted-foreground transition-colors duration-200 active:scale-[0.97] hover:bg-muted hover:text-foreground"
                     >
                       <TimerReset className="mr-2 h-4 w-4" />
                       Update Finish
@@ -624,7 +624,7 @@ export default function ProductionReportForm({ landId }: ProductionReportFormPro
                     <Button
                       type="submit"
                       disabled={isSubmitting}
-                      className="h-11 rounded bg-primary px-7 font-semibold text-primary-foreground transition hover:bg-primary/95"
+                      className="h-11 rounded bg-primary px-7 font-semibold text-primary-foreground transition-colors duration-200 active:scale-[0.97] hover:bg-primary/95"
                     >
                       {isSubmitting ? (
                         <>
