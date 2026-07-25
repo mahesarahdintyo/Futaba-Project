@@ -2,6 +2,7 @@ import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import { Toaster } from 'sonner'
+import { IosTouchListener } from '@/components/ui/ios-touch-listener'
 import './globals.css'
 
 const geistSans = Geist({ variable: '--font-geist-sans', subsets: ['latin'] })
@@ -57,6 +58,7 @@ export default function RootLayout({
         />
       </head>
       <body className="font-sans antialiased">
+        <IosTouchListener />
         {children}
         <Toaster richColors position="bottom-right" closeButton />
         {process.env.NODE_ENV === 'production' && <Analytics />}
