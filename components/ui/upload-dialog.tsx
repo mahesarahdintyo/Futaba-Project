@@ -246,7 +246,7 @@ export function UploadDialog({
 
       {isOpen && (
         <div
-          className="fixed inset-0 flex items-center justify-center z-50 p-4 backdrop-blur-sm"
+          className="fixed inset-0 flex items-center justify-center z-50 p-4 bg-black/50 backdrop-blur-[2px]"
           style={{ backgroundColor: 'rgba(0, 0, 0, 0.4)' }}
         >
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full">

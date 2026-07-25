@@ -66,7 +66,7 @@ export function DeleteConfirmDialog({
 
   const dialogContent = (
     <div
-      className={`fixed inset-0 z-[100] flex items-center justify-center p-4 backdrop-blur-sm ${
+      className={`fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-[2px] ${
         isClosing
           ? 'animate-out fade-out duration-200 [animation-fill-mode:forwards]'
           : 'animate-in fade-in duration-200'

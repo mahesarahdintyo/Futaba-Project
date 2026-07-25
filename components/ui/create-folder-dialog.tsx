@@ -97,7 +97,7 @@ export function CreateFolderDialog({
 
       {isOpen && (
         <div
-          className="fixed inset-0 flex items-center justify-center z-50 p-4 backdrop-blur-sm"
+          className="fixed inset-0 flex items-center justify-center z-50 p-4 bg-black/50 backdrop-blur-[2px]"
           style={{ backgroundColor: 'rgba(0, 0, 0, 0.4)' }}
           onClick={(e) => { if (e.target === e.currentTarget) handleClose() }}
         >
