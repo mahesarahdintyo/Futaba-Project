@@ -493,13 +493,18 @@ export default function Page({ initialLands = [] }: AdminPageProps) {
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-                    {filteredLands.map((land) => (
-                      <AdminLandCard
+                    {filteredLands.map((land, index) => (
+                      <div
                         key={land.id}
-                        land={land}
-                        onEnter={handleEnterLand}
-                        onChangeSuccess={loadLands}
-                      />
+                        className="animate-in fade-in slide-in-from-bottom-2 duration-300 fill-mode-backwards"
+                        style={{ animationDelay: `${index * 40}ms` }}
+                      >
+                        <AdminLandCard
+                          land={land}
+                          onEnter={handleEnterLand}
+                          onChangeSuccess={loadLands}
+                        />
+                      </div>
                     ))}
                   </div>
                 )
