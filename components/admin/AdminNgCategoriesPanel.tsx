@@ -124,7 +124,7 @@ export default function AdminNgCategoriesPanel() {
                 placeholder="Contoh: Dimensi, Permukaan, Material..."
                 required
                 disabled={isSubmitting}
-                className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-800 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 disabled:opacity-50"
+                className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-800 outline-none transition-colors duration-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 disabled:opacity-50"
               />
             </div>
 
@@ -142,7 +142,7 @@ export default function AdminNgCategoriesPanel() {
                 placeholder="Penjelasan opsional tentang kategori ini..."
                 rows={3}
                 disabled={isSubmitting}
-                className="w-full rounded-lg border border-slate-300 bg-white p-3 text-sm text-slate-800 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 disabled:opacity-50 resize-none"
+                className="w-full rounded-lg border border-slate-300 bg-white p-3 text-sm text-slate-800 outline-none transition-colors duration-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 disabled:opacity-50 resize-none"
               />
             </div>
 
@@ -210,7 +210,7 @@ export default function AdminNgCategoriesPanel() {
                   {categories.map((cat, index) => (
                     <tr
                       key={cat.id}
-                      className="hover:bg-slate-50/50 transition animate-in fade-in slide-in-from-bottom-1 duration-300 fill-mode-backwards"
+                      className="hover:bg-slate-50/50 transition-colors duration-200 animate-in fade-in slide-in-from-bottom-1 duration-300 fill-mode-backwards"
                       style={{ animationDelay: `${Math.min(index * 30, 300)}ms` }}
                     >
                       <td className="py-3 px-5 whitespace-nowrap">
@@ -228,7 +228,7 @@ export default function AdminNgCategoriesPanel() {
                         <button
                           type="button"
                           onClick={() => setDeleteTarget(cat)}
-                          className="inline-flex items-center justify-center h-8 w-8 rounded text-slate-400 hover:text-red-600 hover:bg-red-50 transition cursor-pointer"
+                          className="inline-flex items-center justify-center h-8 w-8 rounded text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors duration-200 cursor-pointer"
                           title="Hapus Kategori"
                         >
                           <Trash2 className="h-4 w-4" />

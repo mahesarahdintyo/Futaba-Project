@@ -381,7 +381,7 @@ Istirahat: ${breakMin}
       {/* KPI Stats Cards - Rich Aesthetics */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         {/* Total QTY Card */}
-        <div className="relative overflow-hidden rounded-xl border border-blue-100 bg-gradient-to-br from-blue-50 to-white p-5 shadow-sm transition hover:shadow-md">
+        <div className="relative overflow-hidden rounded-xl border border-blue-100 bg-gradient-to-br from-blue-50 to-white p-5 shadow-sm transition-all duration-200 hover:shadow-md">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold uppercase tracking-wider text-blue-600">
               Total Produksi
@@ -398,7 +398,7 @@ Istirahat: ${breakMin}
         </div>
 
         {/* OK QTY Card */}
-        <div className="relative overflow-hidden rounded-xl border border-emerald-100 bg-gradient-to-br from-emerald-50 to-white p-5 shadow-sm transition hover:shadow-md">
+        <div className="relative overflow-hidden rounded-xl border border-emerald-100 bg-gradient-to-br from-emerald-50 to-white p-5 shadow-sm transition-all duration-200 hover:shadow-md">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold uppercase tracking-wider text-emerald-600">
               Total QTY OK
@@ -419,7 +419,7 @@ Istirahat: ${breakMin}
         </div>
 
         {/* NG QTY Card */}
-        <div className="relative overflow-hidden rounded-xl border border-rose-100 bg-gradient-to-br from-rose-50 to-white p-5 shadow-sm transition hover:shadow-md">
+        <div className="relative overflow-hidden rounded-xl border border-rose-100 bg-gradient-to-br from-rose-50 to-white p-5 shadow-sm transition-all duration-200 hover:shadow-md">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold uppercase tracking-wider text-rose-600">
               Total QTY NG
@@ -438,7 +438,7 @@ Istirahat: ${breakMin}
         </div>
 
         {/* Break Duration Card */}
-        <div className="relative overflow-hidden rounded-xl border border-amber-100 bg-gradient-to-br from-amber-50 to-white p-5 shadow-sm transition hover:shadow-md">
+        <div className="relative overflow-hidden rounded-xl border border-amber-100 bg-gradient-to-br from-amber-50 to-white p-5 shadow-sm transition-all duration-200 hover:shadow-md">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold uppercase tracking-wider text-amber-600">
               Total Istirahat
@@ -455,7 +455,7 @@ Istirahat: ${breakMin}
         </div>
 
         {/* Active Lines Card */}
-        <div className="relative overflow-hidden rounded-xl border border-purple-100 bg-gradient-to-br from-purple-50 to-white p-5 shadow-sm transition hover:shadow-md">
+        <div className="relative overflow-hidden rounded-xl border border-purple-100 bg-gradient-to-br from-purple-50 to-white p-5 shadow-sm transition-all duration-200 hover:shadow-md">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold uppercase tracking-wider text-purple-600">
               Line Aktif
@@ -485,7 +485,7 @@ Istirahat: ${breakMin}
             <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">
               Line (Card)
             </label>
-            <div className="relative rounded border border-slate-300 bg-white hover:border-slate-400 transition-colors">
+            <div className="relative rounded border border-slate-300 bg-white hover:border-slate-400 transition-colors duration-200">
               <select
                 value={selectedLandId}
                 onChange={(e) => setSelectedLandId(e.target.value)}
@@ -507,7 +507,7 @@ Istirahat: ${breakMin}
             <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">
               Shift
             </label>
-            <div className="relative rounded border border-slate-300 bg-white hover:border-slate-400 transition-colors">
+            <div className="relative rounded border border-slate-300 bg-white hover:border-slate-400 transition-colors duration-200">
               <select
                 value={selectedShift}
                 onChange={(e) => setSelectedShift(e.target.value)}
@@ -526,7 +526,7 @@ Istirahat: ${breakMin}
             <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">
               Tanggal Mulai
             </label>
-            <div className="relative flex items-center rounded border border-slate-300 bg-white hover:border-slate-400 transition-colors px-3">
+            <div className="relative flex items-center rounded border border-slate-300 bg-white hover:border-slate-400 transition-colors duration-200 px-3">
               <input
                 type="date"
                 value={startDate}
@@ -542,7 +542,7 @@ Istirahat: ${breakMin}
             <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">
               Tanggal Akhir
             </label>
-            <div className="relative flex items-center rounded border border-slate-300 bg-white hover:border-slate-400 transition-colors px-3">
+            <div className="relative flex items-center rounded border border-slate-300 bg-white hover:border-slate-400 transition-colors duration-200 px-3">
               <input
                 type="date"
                 value={endDate}
@@ -558,7 +558,7 @@ Istirahat: ${breakMin}
             <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">
               Pencarian
             </label>
-            <div className="relative flex items-center rounded border border-slate-300 bg-white hover:border-slate-400 transition-colors px-3">
+            <div className="relative flex items-center rounded border border-slate-300 bg-white hover:border-slate-400 transition-colors duration-200 px-3">
               <input
                 type="text"
                 placeholder="Operator / Part Number..."
@@ -638,7 +638,7 @@ Istirahat: ${breakMin}
                   return (
                     <tr
                       key={report.id}
-                      className="hover:bg-slate-50 transition-colors group animate-in fade-in slide-in-from-bottom-1 duration-300 fill-mode-backwards"
+                      className="hover:bg-slate-50 transition-colors duration-200 group animate-in fade-in slide-in-from-bottom-1 duration-300 fill-mode-backwards"
                       style={{ animationDelay: `${Math.min(index * 30, 300)}ms` }}
                     >
                       {/* Tanggal */}
@@ -718,7 +718,7 @@ Istirahat: ${breakMin}
                           <button
                             type="button"
                             onClick={() => setDetailReport(report)}
-                            className="inline-flex items-center justify-center h-8 w-8 rounded text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition cursor-pointer"
+                            className="inline-flex items-center justify-center h-8 w-8 rounded text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors duration-200 cursor-pointer"
                             title="Lihat Detail"
                           >
                             <Eye className="h-4 w-4" />
@@ -726,7 +726,7 @@ Istirahat: ${breakMin}
                           <button
                             type="button"
                             onClick={() => setDeleteTarget(report)}
-                            className="inline-flex items-center justify-center h-8 w-8 rounded text-slate-400 hover:text-red-600 hover:bg-red-50 transition cursor-pointer"
+                            className="inline-flex items-center justify-center h-8 w-8 rounded text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors duration-200 cursor-pointer"
                             title="Hapus Laporan"
                           >
                             <Trash2 className="h-4 w-4" />
@@ -759,7 +759,7 @@ Istirahat: ${breakMin}
               </div>
               <button
                 onClick={() => setDetailReport(null)}
-                className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition cursor-pointer"
+                className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors duration-200 cursor-pointer"
                 aria-label="Tutup"
               >
                 <X className="h-5 w-5" />
@@ -893,7 +893,7 @@ Istirahat: ${breakMin}
           <div className="relative w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-xl animate-in fade-in zoom-in-95 duration-200">
             <button
               onClick={() => setDeleteTarget(null)}
-              className="absolute right-4 top-4 rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition"
+              className="absolute right-4 top-4 rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors duration-200"
             >
               <X className="h-5 w-5" />
             </button>
