@@ -20,24 +20,43 @@ export function AdminLandCard({
   const [isEditOpen, setIsEditOpen] = useState(false)
   const [isDeleteOpen, setIsDeleteOpen] = useState(false)
   const [isActionMenuOpen, setIsActionMenuOpen] = useState(false)
+  const [isActionMenuClosing, setIsActionMenuClosing] = useState(false)
   const [name, setName] = useState(land.name)
   const menuRef = useRef<HTMLDivElement>(null)
+
+  const closeActionMenu = () => {
+    if (!isActionMenuOpen || isActionMenuClosing) return
+    setIsActionMenuClosing(true)
+    setTimeout(() => {
+      setIsActionMenuOpen(false)
+      setIsActionMenuClosing(false)
+    }, 150)
+  }
+
+  const toggleActionMenu = () => {
+    if (isActionMenuOpen) {
+      closeActionMenu()
+    } else {
+      setIsActionMenuClosing(false)
+      setIsActionMenuOpen(true)
+    }
+  }
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setIsActionMenuOpen(false)
+        closeActionMenu()
       }
     }
 
-    if (isActionMenuOpen) {
+    if (isActionMenuOpen && !isActionMenuClosing) {
       document.addEventListener('mousedown', handleClickOutside)
     }
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside)
     }
-  }, [isActionMenuOpen])
+  }, [isActionMenuOpen, isActionMenuClosing])
   const [description, setDescription] = useState(land.description ?? '')
   const [isSaving, setIsSaving] = useState(false)
   const [isSavingVisibility, setIsSavingVisibility] = useState(false)
@@ -204,17 +223,21 @@ export function AdminLandCard({
           </div>
 
           <div ref={menuRef} className="relative flex-shrink-0" onClick={(event) => event.stopPropagation()}>
-            <Button size="icon-sm" variant="ghost" onClick={() => setIsActionMenuOpen((isOpen) => !isOpen)} title="Aksi card" aria-label={`Aksi untuk card ${land.name}`} className="text-muted-foreground hover:bg-muted hover:text-foreground">
+            <Button size="icon-sm" variant="ghost" onClick={toggleActionMenu} title="Aksi card" aria-label={`Aksi untuk card ${land.name}`} className="text-muted-foreground hover:bg-muted hover:text-foreground">
               <MoreVertical className="w-5 h-5" />
             </Button>
             {isActionMenuOpen && (
-              <div className="absolute right-0 top-9 z-10 w-48 rounded-xl border border-border bg-card p-1.5 shadow-lg">
-                <button onClick={(e) => { setIsActionMenuOpen(false); handleToggleVisibility(e); }} disabled={isSavingVisibility} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-medium text-foreground hover:bg-muted disabled:opacity-50">
+              <div className={`absolute right-0 top-9 z-10 w-48 rounded-xl border border-border bg-card p-1.5 shadow-lg ${
+                isActionMenuClosing
+                  ? 'animate-out fade-out slide-out-to-top-2 duration-150 [animation-fill-mode:forwards]'
+                  : 'animate-in fade-in slide-in-from-top-2 duration-150'
+              }`}>
+                <button onClick={(e) => { closeActionMenu(); handleToggleVisibility(e); }} disabled={isSavingVisibility} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-medium text-foreground hover:bg-muted disabled:opacity-50">
                   {isSavingVisibility ? <Loader2 className="w-4 h-4 animate-spin" /> : isHiddenFromOperator ? <Eye className="w-4 h-4 text-emerald-600" /> : <EyeOff className="w-4 h-4 text-amber-600" />}
                   {isHiddenFromOperator ? 'Tampilkan ke Operator' : 'Sembunyikan dari Operator'}
                 </button>
-                <button onClick={(e) => { setIsActionMenuOpen(false); handleOpenEdit(e); }} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-medium text-foreground hover:bg-primary/10 hover:text-primary"><Pencil className="w-4 h-4" /> Edit Card</button>
-                <button onClick={(e) => { setIsActionMenuOpen(false); handleOpenDelete(e); }} disabled={isDeleting} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-medium text-destructive hover:bg-destructive/10 disabled:opacity-50">{isDeleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />} Hapus Card</button>
+                <button onClick={(e) => { closeActionMenu(); handleOpenEdit(e); }} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-medium text-foreground hover:bg-primary/10 hover:text-primary"><Pencil className="w-4 h-4" /> Edit Card</button>
+                <button onClick={(e) => { closeActionMenu(); handleOpenDelete(e); }} disabled={isDeleting} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-medium text-destructive hover:bg-destructive/10 disabled:opacity-50">{isDeleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />} Hapus Card</button>
               </div>
             )}
           </div>
