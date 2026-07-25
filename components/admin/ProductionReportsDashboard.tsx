@@ -347,7 +347,7 @@ Istirahat: ${breakMin}
   };
 
   return (
-    <div className="space-y-8 animate-fadeIn">
+    <div className="space-y-8 animate-in fade-in duration-300">
       {/* Top Banner & Action */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-200 pb-5">
         <div>
@@ -659,8 +659,8 @@ Istirahat: ${breakMin}
                       <td className="py-3.5 px-4 whitespace-nowrap">
                         <span
                           className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-semibold ${report.shift === "Shift 1"
-                              ? "bg-sky-50 text-sky-700 border border-sky-100"
-                              : "bg-indigo-50 text-indigo-700 border border-indigo-100"
+                            ? "bg-sky-50 text-sky-700 border border-sky-100"
+                            : "bg-indigo-50 text-indigo-700 border border-indigo-100"
                             }`}
                         >
                           {report.shift}
@@ -701,10 +701,10 @@ Istirahat: ${breakMin}
                       <td className="py-3.5 px-4 text-right font-semibold whitespace-nowrap">
                         <span
                           className={`${isNgHigh
-                              ? ngRate > 5
-                                ? "text-red-700"
-                                : "text-amber-700"
-                              : "text-slate-400 font-normal"
+                            ? ngRate > 5
+                              ? "text-red-700"
+                              : "text-amber-700"
+                            : "text-slate-400 font-normal"
                             }`}
                         >
                           {ngRate.toFixed(1)}%
@@ -743,8 +743,8 @@ Istirahat: ${breakMin}
 
       {/* Detail Laporan Modal (Modern Light Theme Modal) */}
       {detailReport && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs transition-opacity animate-fadeIn">
-          <div className="relative w-full max-w-lg rounded-2xl bg-white border border-slate-200 shadow-2xl p-6 select-text overflow-hidden animate-scaleIn text-slate-800">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="relative w-full max-w-lg rounded-2xl bg-white border border-slate-200 shadow-2xl p-6 select-text overflow-hidden animate-in fade-in zoom-in-95 duration-200 text-slate-800">
             {/* Header */}
             <div className="flex items-start justify-between border-b border-slate-100 pb-4">
               <div className="flex items-center gap-3">
@@ -786,8 +786,8 @@ Istirahat: ${breakMin}
                   <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider select-none">Shift</span>
                   <div className="mt-1">
                     <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold ${detailReport.shift === "Shift 1"
-                        ? "bg-sky-50 text-sky-700 border border-sky-100"
-                        : "bg-indigo-50 text-indigo-700 border border-indigo-100"
+                      ? "bg-sky-50 text-sky-700 border border-sky-100"
+                      : "bg-indigo-50 text-indigo-700 border border-indigo-100"
                       }`}>
                       {detailReport.shift}
                     </span>
@@ -888,8 +888,8 @@ Istirahat: ${breakMin}
 
       {/* Delete Confirmation Modal */}
       {deleteTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs transition-opacity animate-fadeIn">
-          <div className="relative w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-xl animate-scaleIn">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="relative w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-xl animate-in fade-in zoom-in-95 duration-200">
             <button
               onClick={() => setDeleteTarget(null)}
               className="absolute right-4 top-4 rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition"
