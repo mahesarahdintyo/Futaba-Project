@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { AlertTriangle, Loader2, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
@@ -27,6 +28,11 @@ export function DeleteConfirmDialog({
 }: DeleteConfirmDialogProps) {
   const [isVisible, setIsVisible] = useState(isOpen)
   const [isClosing, setIsClosing] = useState(false)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   useEffect(() => {
     if (isOpen) {
@@ -42,11 +48,29 @@ export function DeleteConfirmDialog({
     }
   }, [isOpen])
 
-  if (!isVisible) return null
+  useEffect(() => {
+    if (isVisible) {
+      document.body.style.overflow = 'hidden'
+      document.documentElement.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+      document.documentElement.style.overflow = ''
+    }
+    return () => {
+      document.body.style.overflow = ''
+      document.documentElement.style.overflow = ''
+    }
+  }, [isVisible])
 
-  return (
+  if (!isVisible || !mounted) return null
+
+  const dialogContent = (
     <div
-      className="fixed inset-0 flex items-center justify-center z-50 p-4 backdrop-blur-sm"
+      className={`fixed inset-0 z-[100] flex items-center justify-center p-4 backdrop-blur-sm ${
+        isClosing
+          ? 'animate-out fade-out duration-200 [animation-fill-mode:forwards]'
+          : 'animate-in fade-in duration-200'
+      }`}
       style={{ backgroundColor: 'rgba(0, 0, 0, 0.45)' }}
       onClick={(e) => {
         if (e.target === e.currentTarget && !isLoading) onCancel()
@@ -115,4 +139,6 @@ export function DeleteConfirmDialog({
       </div>
     </div>
   )
+
+  return createPortal(dialogContent, document.body)
 }
