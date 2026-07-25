@@ -62,7 +62,7 @@ export default function DocumentList({
                       ? "animate-in fade-in slide-in-from-bottom-2 duration-300 fill-mode-backwards"
                       : "animate-in fade-in duration-300 fill-mode-backwards"
                   }
-                  style={{ animationDelay: `${Math.min(index, 8) * 30}ms` }}
+                  style={{ animationDelay: `${Math.min(index, 8) * 30}ms`, willChange: 'transform, opacity' }}
                 >
                   <FolderCard
                     id={folder.id}
@@ -93,7 +93,7 @@ export default function DocumentList({
                       ? "animate-in fade-in slide-in-from-bottom-2 duration-300 fill-mode-backwards"
                       : "animate-in fade-in duration-300 fill-mode-backwards"
                   }
-                  style={{ animationDelay: `${Math.min(index, 8) * 30}ms` }}
+                  style={{ animationDelay: `${Math.min(index, 8) * 30}ms`, willChange: 'transform, opacity' }}
                 >
                   <DocumentCard
                     id={document.id}
