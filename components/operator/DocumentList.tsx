@@ -52,14 +52,19 @@ export default function DocumentList({
             Folder ({folders.length})
           </h2>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
-            {folders.map((folder) => (
-              <FolderCard
+            {folders.map((folder, index) => (
+              <div
                 key={folder.id}
-                id={folder.id}
-                name={folder.name}
-                itemCount={folder.item_count}
-                onEnter={onEnterFolder}
-              />
+                className="animate-in fade-in slide-in-from-bottom-2 duration-300 fill-mode-backwards"
+                style={{ animationDelay: `${Math.min(index * 30, 300)}ms` }}
+              >
+                <FolderCard
+                  id={folder.id}
+                  name={folder.name}
+                  itemCount={folder.item_count}
+                  onEnter={onEnterFolder}
+                />
+              </div>
             ))}
           </div>
         </div>
@@ -71,9 +76,13 @@ export default function DocumentList({
             Dokumen ({documents.length})
           </h2>
           <div className="space-y-3">
-            {documents.map((document) => (
+            {documents.map((document, index) => (
+              <div
+                key={document.id}
+                className="animate-in fade-in slide-in-from-bottom-2 duration-300 fill-mode-backwards"
+                style={{ animationDelay: `${Math.min(index * 30, 300)}ms` }}
+              >
                 <DocumentCard
-                  key={document.id}
                   id={document.id}
                   landId={document.landId ?? selectedLandId}
                   title={document.title}
@@ -84,6 +93,7 @@ export default function DocumentList({
                   targetTime={document.targetTime}
                   showOperatorActions
                 />
+              </div>
             ))}
           </div>
         </div>
