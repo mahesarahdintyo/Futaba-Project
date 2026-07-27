@@ -46,10 +46,10 @@ export function LoginForm() {
         {/* Brand / Logo */}
         <div className="flex flex-col items-center mb-8">
           <Image
-            src="/futaba-logo.png"
-            alt="FUTABA Logo"
+            src="/pkis-logo-wordmark(final).png"
+            alt="PKIS Logo"
             width={180}
-            height={62}
+            height={60}
             className="h-auto w-44 object-contain mb-3 select-none"
             priority
           />

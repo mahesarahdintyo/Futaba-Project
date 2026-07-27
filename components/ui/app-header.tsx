@@ -13,10 +13,10 @@ interface AppHeaderProps {
 export function AppHeader({ children, logoAside, disableLogoLink = false }: AppHeaderProps) {
   const logo = (
     <Image
-      src="/futaba-logo.png"
-      alt="FUTABA Logo"
+      src="/pkis-logo-wordmark(final).png"
+      alt="PKIS Logo"
       width={150}
-      height={52}
+      height={50}
       className="object-contain h-10 sm:h-11 lg:h-12 w-auto"
       priority
     />

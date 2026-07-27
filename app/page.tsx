@@ -32,10 +32,10 @@ export default async function HomePage() {
           <div className="w-full max-w-md bg-white rounded-2xl border border-slate-200/80 shadow-xl p-8 transition-all hover:shadow-2xl text-center">
             {/* Logged In Info */}
             <Image
-              src="/futaba-logo.png"
-              alt="FUTABA Logo"
+              src="/pkis-logo-wordmark(final).png"
+              alt="PKIS Logo"
               width={180}
-              height={62}
+              height={60}
               className="h-auto w-44 object-contain mx-auto mb-4 select-none"
               priority
             />

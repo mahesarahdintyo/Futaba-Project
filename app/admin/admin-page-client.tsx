@@ -401,7 +401,7 @@ export default function Page({ initialLands = [] }: AdminPageProps) {
         <div className={`h-full overflow-hidden transition-[width] duration-300 ease-in-out ${isDesktopSidebarCollapsed ? 'w-0' : 'w-72'}`}>
           <aside className={`h-full w-72 flex flex-col border-r border-border bg-card p-4 transition-all duration-300 ${isAnyDialogOpen ? 'blur-md pointer-events-none opacity-40' : ''}`}>
             <div className="flex items-center justify-between border-b border-border px-2 pb-4">
-              <Link href="/" aria-label="Kembali ke landing page" className="inline-flex"><Image src="/futaba-logo.png" alt="FUTABA Logo" width={150} height={52} className="h-10 w-auto object-contain" priority /></Link>
+              <Link href="/" aria-label="Kembali ke landing page" className="inline-flex"><Image src="/pkis-logo-wordmark(final).png" alt="PKIS Logo" width={180} height={60} className="h-13 w-auto object-contain" priority /></Link>
             </div>
             <nav className="mt-6 flex-1 overflow-y-auto space-y-1" aria-label="Navigasi utama">
               <SidebarButton icon={FolderKanban} label="Workspace" active={activeView === 'workspace'} onClick={() => selectView('workspace')} />
@@ -429,7 +429,7 @@ export default function Page({ initialLands = [] }: AdminPageProps) {
       {/* Mobile sidebar — fixed + translate */}
       <aside className={`fixed inset-y-0 left-0 z-40 lg:hidden flex w-72 flex-col border-r border-border bg-card p-4 shadow-xl transition-all duration-300 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} ${isAnyDialogOpen ? 'blur-md pointer-events-none opacity-40' : ''}`}>
         <div className="flex items-center justify-between border-b border-border px-2 pb-4">
-          <Link href="/" aria-label="Kembali ke landing page" className="inline-flex"><Image src="/futaba-logo.png" alt="FUTABA Logo" width={150} height={52} className="h-10 w-auto object-contain" priority /></Link>
+          <Link href="/" aria-label="Kembali ke landing page" className="inline-flex"><Image src="/pkis-logo-wordmark(final).png" alt="PKIS Logo" width={180} height={60} className="h-13 w-auto object-contain" priority /></Link>
           <button aria-label="Tutup navigasi" className="rounded-lg p-2 text-muted-foreground hover:bg-muted" onClick={() => setIsSidebarOpen(false)}><X className="h-5 w-5" /></button>
         </div>
         <nav className="mt-6 flex-1 overflow-y-auto space-y-1" aria-label="Navigasi utama">

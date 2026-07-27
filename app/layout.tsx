@@ -13,8 +13,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: 'PKIS',
-  description: 'Sistem manajemen dokumen terpusat untuk PT ABC',
-  generator: 'v0.app',
+  description: 'Sistem manajemen dokumen terpusat untuk PT Futaba',
   icons: {
     icon: [
       {
