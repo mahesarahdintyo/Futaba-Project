@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import { requireAdmin } from '@/lib/services/auth-server'
+import { getCurrentUserProfile, requireAdmin } from '@/lib/services/auth-server'
 import { NextResponse } from 'next/server'
 
 declare global {
@@ -37,7 +37,9 @@ function getLandId(value: unknown) {
 export async function POST(request: Request) {
   try {
     const body = await request.json().catch(() => null)
-    const landId = getLandId(body)
+    const reqLandId = getLandId(body)
+    const userProfile = await getCurrentUserProfile()
+    const landId = userProfile.role === 'operator' && userProfile.landId ? userProfile.landId : reqLandId
 
     if (!landId) {
       return NextResponse.json(

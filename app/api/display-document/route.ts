@@ -241,7 +241,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const { errorResponse } = await requireAdminOrOperator()
+    const { profile, errorResponse } = await requireAdminOrOperator()
     if (errorResponse) return errorResponse
 
     const body = await request.json()
@@ -255,7 +255,7 @@ export async function POST(request: Request) {
 
     const targetTime = body.targetTime ?? await getDocumentTargetTime(body.id)
     const requestedAt = getRequestedAt(body)
-    const landId = body.landId
+    const landId = profile?.role === 'operator' && profile?.landId ? profile.landId : body.landId
     const currentResult = await getDatabaseDisplayDocument(landId ?? null)
     const currentDocument = currentResult.document
 
@@ -304,11 +304,12 @@ export async function POST(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
-    const { errorResponse } = await requireAdminOrOperator()
+    const { profile, errorResponse } = await requireAdminOrOperator()
     if (errorResponse) return errorResponse
 
     const { searchParams } = new URL(request.url)
-    const landId = searchParams.get('landId')
+    const reqLandId = searchParams.get('landId')
+    const landId = profile?.role === 'operator' && profile?.landId ? profile.landId : reqLandId
     const clearResult = await clearDatabaseDisplayDocument(landId)
 
     if (!clearResult.hasDatabase) {
