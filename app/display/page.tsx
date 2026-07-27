@@ -53,7 +53,7 @@ export default function DisplayPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-950 to-zinc-950 text-white flex flex-col justify-between select-none">
       {/* Header khusus untuk Layar TV Select */}
-      <header className="border-b border-slate-800/80 bg-slate-950/50 backdrop-blur-md px-8 py-6 flex items-center justify-between">
+      <header className="border-b border-slate-800/80 bg-slate-950/90 px-8 py-6 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 rounded-xl bg-emerald-600/10 border border-emerald-500/20 flex items-center justify-center">
             <Tv className="h-6 w-6 text-emerald-400" />
@@ -109,7 +109,7 @@ export default function DisplayPage() {
               <Link
                 key={land.id}
                 href={`/display/${land.id}`}
-                className="group relative bg-slate-900/40 hover:bg-slate-800/45 backdrop-blur-sm border border-slate-800/60 hover:border-emerald-500/50 rounded-3xl p-8 shadow-xl hover:shadow-2xl hover:shadow-emerald-950/15 transition-all duration-300 transform hover:-translate-y-1 flex flex-col justify-between min-h-[220px]"
+                className="group relative bg-slate-900/90 hover:bg-slate-800/95 border border-slate-800/60 hover:border-emerald-500/50 rounded-3xl p-8 shadow-xl hover:shadow-2xl hover:shadow-emerald-950/15 transition-all duration-300 transform hover:-translate-y-1 flex flex-col justify-between min-h-[220px]"
               >
                 {/* Effect background gradient on hover */}
                 <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-emerald-500/0 via-emerald-500/0 to-emerald-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
