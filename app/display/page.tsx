@@ -111,8 +111,6 @@ export default function DisplayPage() {
                 href={`/display/${land.id}`}
                 className="group relative bg-slate-900/90 hover:bg-slate-800/95 border border-slate-800/60 hover:border-emerald-500/50 rounded-3xl p-8 transition-colors duration-200 flex flex-col justify-between min-h-[220px]"
               >
-                {/* Effect background gradient on hover */}
-                <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-emerald-500/0 via-emerald-500/0 to-emerald-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
 
                 <div className="flex items-start justify-between">
                   <div className="h-14 w-14 rounded-2xl bg-slate-800/80 border border-slate-700/50 flex items-center justify-center group-hover:bg-emerald-950/30 group-hover:border-emerald-500/30 transition-all duration-300">
