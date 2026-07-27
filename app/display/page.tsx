@@ -113,8 +113,8 @@ export default function DisplayPage() {
               >
 
                 <div className="flex items-start justify-between">
-                  <div className="h-14 w-14 rounded-2xl bg-slate-800/80 border border-slate-700/50 flex items-center justify-center group-hover:bg-emerald-950/30 group-hover:border-emerald-500/30 transition-all duration-300">
-                    <Monitor className="h-7 w-7 text-slate-400 group-hover:text-emerald-400 transition-colors duration-300" />
+                  <div className="h-14 w-14 rounded-2xl bg-slate-800/80 border border-slate-700/50 flex items-center justify-center group-hover:bg-emerald-950/30 group-hover:border-emerald-500/30 transition-colors duration-200">
+                    <Monitor className="h-7 w-7 text-slate-400 group-hover:text-emerald-400 transition-colors duration-200" />
                   </div>
                   {/* Status label */}
                   <div className="flex items-center gap-1.5 rounded-full bg-emerald-950/40 border border-emerald-500/20 px-3 py-1 text-[11px] font-medium text-emerald-400">
@@ -124,7 +124,7 @@ export default function DisplayPage() {
                 </div>
 
                 <div className="mt-6">
-                  <h3 className="text-3xl font-black text-white group-hover:text-emerald-400 transition-colors duration-300 uppercase tracking-wide">
+                  <h3 className="text-3xl font-black text-white group-hover:text-emerald-400 transition-colors duration-200 uppercase tracking-wide">
                     {land.name}
                   </h3>
                   <p className="text-slate-400 text-sm mt-2 line-clamp-2">
@@ -132,9 +132,9 @@ export default function DisplayPage() {
                   </p>
                 </div>
 
-                <div className="mt-8 pt-4 border-t border-slate-800/60 flex items-center justify-between text-xs font-semibold text-slate-500 group-hover:text-emerald-400 transition-colors duration-300">
+                <div className="mt-8 pt-4 border-t border-slate-800/60 flex items-center justify-between text-xs font-semibold text-slate-500 group-hover:text-emerald-400 transition-colors duration-200">
                   <span>Buka Layar TV Display</span>
-                  <ArrowRight className="h-4 w-4 transform group-hover:translate-x-1 transition-transform duration-300" />
+                  <ArrowRight className="h-4 w-4 transform group-hover:translate-x-1 transition-transform duration-200" />
                 </div>
               </Link>
             ))}
