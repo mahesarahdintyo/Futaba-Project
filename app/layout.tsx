@@ -3,6 +3,7 @@ import type { Metadata, Viewport } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import { Toaster } from 'sonner'
 import { IosTouchListener } from '@/components/ui/ios-touch-listener'
+import { PwaRegister } from '@/components/pwa-register'
 import './globals.css'
 
 const geistSans = Geist({ variable: '--font-geist-sans', subsets: ['latin'] })
@@ -14,6 +15,12 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: 'PKIS',
   description: 'Sistem manajemen dokumen terpusat untuk PT Futaba',
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    title: 'PKIS',
+    statusBarStyle: 'default',
+  },
   icons: {
     icon: [
       {
@@ -36,8 +43,8 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   colorScheme: 'light dark',
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: 'white' },
-    { media: '(prefers-color-scheme: dark)', color: 'black' },
+    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
+    { media: '(prefers-color-scheme: dark)', color: '#00A545' },
   ],
 }
 
@@ -58,6 +65,7 @@ export default function RootLayout({
       </head>
       <body className="font-sans antialiased">
         <IosTouchListener />
+        <PwaRegister />
         {children}
         <Toaster richColors position="bottom-right" closeButton />
         {process.env.NODE_ENV === 'production' && <Analytics />}
