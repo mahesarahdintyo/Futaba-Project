@@ -1,10 +1,12 @@
 import { createClient } from "@/lib/supabase/server";
-import { getCurrentUserProfile } from "@/lib/services/auth-server";
+import { getCurrentUserProfile, requireAdminOrOperator } from "@/lib/services/auth-server";
 import { NextResponse } from "next/server";
 
 // GET - Fetch production reports with optional filtering (for operator or admin)
 export async function GET(request: Request) {
   try {
+    const { errorResponse } = await requireAdminOrOperator();
+    if (errorResponse) return errorResponse;
     const { searchParams } = new URL(request.url);
     const reqLandId = searchParams.get("landId");
     const startDate = searchParams.get("startDate");
@@ -67,6 +69,9 @@ export async function GET(request: Request) {
 // POST - Submit a new production report with updated fields
 export async function POST(request: Request) {
   try {
+    const { errorResponse } = await requireAdminOrOperator();
+    if (errorResponse) return errorResponse;
+
     const body = await request.json();
     const {
       land_id: reqLandId,

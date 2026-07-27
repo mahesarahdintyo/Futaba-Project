@@ -1,9 +1,12 @@
 import { createClient } from "@/lib/supabase/server";
+import { requireAuthenticatedUser, requireAdmin } from "@/lib/services/auth-server";
 import { NextResponse } from "next/server";
 
 // GET - Fetch all part numbers
 export async function GET() {
   try {
+    const { errorResponse } = await requireAuthenticatedUser();
+    if (errorResponse) return errorResponse;
     const supabase = await createClient();
 
     const { data: partNumbers, error } = await supabase
@@ -32,6 +35,9 @@ export async function GET() {
 // POST - Create a new part number
 export async function POST(request: Request) {
   try {
+    const { errorResponse } = await requireAdmin();
+    if (errorResponse) return errorResponse;
+
     const body = await request.json();
     const { code, description } = body;
 
@@ -43,22 +49,6 @@ export async function POST(request: Request) {
     }
 
     const supabase = await createClient();
-
-    // Check user auth and role to verify they are admin
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
-      .single();
-
-    if (profile?.role !== "admin") {
-      return NextResponse.json({ error: "Forbidden: Admin role required" }, { status: 403 });
-    }
 
     const { data, error } = await supabase
       .from("part_numbers")
@@ -90,6 +80,9 @@ export async function POST(request: Request) {
 // DELETE - Delete a part number by ID
 export async function DELETE(request: Request) {
   try {
+    const { errorResponse } = await requireAdmin();
+    if (errorResponse) return errorResponse;
+
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
 
@@ -101,22 +94,6 @@ export async function DELETE(request: Request) {
     }
 
     const supabase = await createClient();
-
-    // Check user auth and role to verify they are admin
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
-      .single();
-
-    if (profile?.role !== "admin") {
-      return NextResponse.json({ error: "Forbidden: Admin role required" }, { status: 403 });
-    }
 
     const { error } = await supabase
       .from("part_numbers")

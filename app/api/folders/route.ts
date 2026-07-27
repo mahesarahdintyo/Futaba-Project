@@ -1,10 +1,12 @@
 import { createClient } from '@/lib/supabase/server'
-import { getCurrentUserProfile } from '@/lib/services/auth-server'
+import { getCurrentUserProfile, requireAuthenticatedUser, requireAdmin } from '@/lib/services/auth-server'
 import { NextResponse } from 'next/server'
 
 // GET - Fetch all folders for a specific parent (or root if parent_id is null)
 export async function GET(request: Request) {
   try {
+    const { errorResponse } = await requireAuthenticatedUser()
+    if (errorResponse) return errorResponse
     const { searchParams } = new URL(request.url)
     const parentIdStr = searchParams.get('parentId')
     const reqLandId = searchParams.get('landId')
@@ -115,6 +117,9 @@ export async function GET(request: Request) {
 // POST - Create a new folder (auto-rename if name already exists)
 export async function POST(request: Request) {
   try {
+    const { errorResponse } = await requireAdmin()
+    if (errorResponse) return errorResponse
+
     const body = await request.json()
 
     const { name, parentId, landId: reqLandId } = body
@@ -198,6 +203,9 @@ export async function POST(request: Request) {
 // DELETE - Delete a folder beserta seluruh isinya (dokumen & sub-folder) secara rekursif
 export async function DELETE(request: Request) {
   try {
+    const { errorResponse } = await requireAdmin()
+    if (errorResponse) return errorResponse
+
     const { searchParams } = new URL(request.url)
     const idStr = searchParams.get('id')
 

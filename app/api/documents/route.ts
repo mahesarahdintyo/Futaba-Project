@@ -1,10 +1,12 @@
 import { createClient } from "@/lib/supabase/server";
-import { getCurrentUserProfile } from "@/lib/services/auth-server";
+import { getCurrentUserProfile, requireAuthenticatedUser, requireAdmin } from "@/lib/services/auth-server";
 import { NextResponse } from "next/server";
 
 // GET - Fetch documents
 export async function GET(request: Request) {
   try {
+    const { errorResponse } = await requireAuthenticatedUser();
+    if (errorResponse) return errorResponse;
     const { searchParams } = new URL(request.url);
 
     const folderIdStr = searchParams.get("folderId");
@@ -125,6 +127,9 @@ export async function GET(request: Request) {
 // POST - Create document
 export async function POST(request: Request) {
   try {
+    const { errorResponse } = await requireAdmin();
+    if (errorResponse) return errorResponse;
+
     const body = await request.json();
 
     const {

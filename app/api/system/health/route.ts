@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { requireAdmin } from '@/lib/services/auth-server'
 import { NextResponse } from 'next/server'
 
 export const dynamic = 'force-dynamic'
@@ -38,6 +39,9 @@ function isOnline(lastSeenAt?: string) {
 }
 
 export async function GET() {
+  const { errorResponse } = await requireAdmin()
+  if (errorResponse) return errorResponse
+
   const checkedAt = new Date().toISOString()
   const supabase = await createClient()
   let databaseConnected = false

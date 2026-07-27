@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { requireAdmin } from '@/lib/services/auth-server'
 import { NextResponse } from 'next/server'
 
 export async function PATCH(
@@ -6,6 +7,8 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { errorResponse } = await requireAdmin()
+    if (errorResponse) return errorResponse
     const { id } = await params
     const body = await request.json()
 
@@ -140,6 +143,8 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { errorResponse } = await requireAdmin()
+    if (errorResponse) return errorResponse
     const { id } = await params
 
     if (!id) {

@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { requireAdminOrOperator } from '@/lib/services/auth-server'
 import { NextResponse } from 'next/server'
 
 interface DisplayDocument {
@@ -240,6 +241,9 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    const { errorResponse } = await requireAdminOrOperator()
+    if (errorResponse) return errorResponse
+
     const body = await request.json()
 
     if (!isDisplayDocument(body)) {
@@ -300,6 +304,9 @@ export async function POST(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
+    const { errorResponse } = await requireAdminOrOperator()
+    if (errorResponse) return errorResponse
+
     const { searchParams } = new URL(request.url)
     const landId = searchParams.get('landId')
     const clearResult = await clearDatabaseDisplayDocument(landId)

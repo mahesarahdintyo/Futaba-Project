@@ -1,9 +1,12 @@
 import { createClient } from "@/lib/supabase/server";
+import { requireAuthenticatedUser, requireAdmin } from "@/lib/services/auth-server";
 import { NextResponse } from "next/server";
 
-// GET - Fetch all NG categories (public, used by operator)
+// GET - Fetch all NG categories (used by operator & admin)
 export async function GET() {
   try {
+    const { errorResponse } = await requireAuthenticatedUser();
+    if (errorResponse) return errorResponse;
     const supabase = await createClient();
 
     const { data: categories, error } = await supabase
@@ -32,6 +35,9 @@ export async function GET() {
 // POST - Create a new NG category (admin only)
 export async function POST(request: Request) {
   try {
+    const { errorResponse } = await requireAdmin();
+    if (errorResponse) return errorResponse;
+
     const body = await request.json();
     const { name, description } = body;
 
@@ -43,27 +49,6 @@ export async function POST(request: Request) {
     }
 
     const supabase = await createClient();
-
-    // Verify admin role
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
-      .single();
-
-    if (profile?.role !== "admin") {
-      return NextResponse.json(
-        { error: "Forbidden: Admin role required" },
-        { status: 403 }
-      );
-    }
 
     const { data, error } = await supabase
       .from("ng_categories")
@@ -92,6 +77,9 @@ export async function POST(request: Request) {
 // DELETE - Delete an NG category by ID (admin only)
 export async function DELETE(request: Request) {
   try {
+    const { errorResponse } = await requireAdmin();
+    if (errorResponse) return errorResponse;
+
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
 
@@ -103,27 +91,6 @@ export async function DELETE(request: Request) {
     }
 
     const supabase = await createClient();
-
-    // Verify admin role
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
-      .single();
-
-    if (profile?.role !== "admin") {
-      return NextResponse.json(
-        { error: "Forbidden: Admin role required" },
-        { status: 403 }
-      );
-    }
 
     const { error } = await supabase
       .from("ng_categories")

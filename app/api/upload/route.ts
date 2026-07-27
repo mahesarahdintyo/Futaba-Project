@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import { getCurrentUserProfile } from '@/lib/services/auth-server'
+import { getCurrentUserProfile, requireAdmin } from '@/lib/services/auth-server'
 import { NextResponse } from 'next/server'
 
 const ALLOWED_FILE_TYPES = ['application/pdf', 'image/jpeg', 'image/png']
@@ -16,6 +16,8 @@ function isAllowedFile(file: File) {
 
 export async function POST(request: Request) {
   try {
+    const { errorResponse } = await requireAdmin()
+    if (errorResponse) return errorResponse
     const formData = await request.formData()
     const file = formData.get('file') as File
     const title = formData.get('title') as string

@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { requireAdmin } from '@/lib/services/auth-server'
 import { NextResponse } from 'next/server'
 
 declare global {
@@ -83,6 +84,8 @@ export async function POST(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
+    const { errorResponse } = await requireAdmin()
+    if (errorResponse) return errorResponse
     const { searchParams } = new URL(request.url)
     const landId = searchParams.get('landId')?.trim()
 

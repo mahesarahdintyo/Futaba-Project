@@ -1,8 +1,11 @@
 import { createClient } from '@/lib/supabase/server'
+import { requireAuthenticatedUser } from '@/lib/services/auth-server'
 import { NextResponse } from 'next/server'
 
 export async function GET(request: Request) {
   try {
+    const { errorResponse } = await requireAuthenticatedUser()
+    if (errorResponse) return errorResponse
     const { searchParams } = new URL(request.url)
     const filePath = searchParams.get('filePath')
 

@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { getCurrentUserProfile } from "@/lib/services/auth-server";
+import { getCurrentUserProfile, requireAdmin } from "@/lib/services/auth-server";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
@@ -58,6 +58,9 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    const { errorResponse } = await requireAdmin();
+    if (errorResponse) return errorResponse;
+
     const body = await request.json();
     const name = typeof body.name === "string" ? body.name.trim() : "";
     const description =
@@ -112,6 +115,9 @@ export async function POST(request: Request) {
 
 export async function PUT(request: Request) {
   try {
+    const { errorResponse } = await requireAdmin();
+    if (errorResponse) return errorResponse;
+
     const body = await request.json();
     const id = typeof body.id === "string" ? body.id : "";
     const name = typeof body.name === "string" ? body.name.trim() : "";
@@ -175,6 +181,9 @@ export async function PUT(request: Request) {
 
 export async function PATCH(request: Request) {
   try {
+    const { errorResponse } = await requireAdmin();
+    if (errorResponse) return errorResponse;
+
     const body = await request.json();
     const id = typeof body.id === "string" ? body.id : "";
     const hiddenFromOperator = body.hidden_from_operator;
@@ -227,6 +236,9 @@ export async function PATCH(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
+    const { errorResponse } = await requireAdmin();
+    if (errorResponse) return errorResponse;
+
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
 

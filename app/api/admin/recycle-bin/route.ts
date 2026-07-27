@@ -1,10 +1,14 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { requireAdmin } from "@/lib/services/auth-server";
 import { NextResponse } from "next/server";
 
 // DELETE - Delete single item permanently or empty the whole Recycle Bin
 export async function DELETE(request: Request) {
   try {
+    const { errorResponse } = await requireAdmin();
+    if (errorResponse) return errorResponse;
+
     const supabase = createAdminClient();
 
     let type: string | null = null;
@@ -329,6 +333,8 @@ export async function DELETE(request: Request) {
 // POST - Restore a single item (set is_active = true, and recursively activate its dependencies)
 export async function POST(request: Request) {
   try {
+    const { errorResponse } = await requireAdmin();
+    if (errorResponse) return errorResponse;
     const body = await request.json();
     const { type, id } = body;
 
