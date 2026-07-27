@@ -118,7 +118,7 @@ export default function DisplayPage() {
                   </div>
                   {/* Status label */}
                   <div className="flex items-center gap-1.5 rounded-full bg-emerald-950/40 border border-emerald-500/20 px-3 py-1 text-[11px] font-medium text-emerald-400">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
                     Ready
                   </div>
                 </div>
