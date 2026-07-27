@@ -1,14 +1,61 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { login } from "@/app/actions/auth";
-import { User, Lock, Eye, EyeOff, Loader2, AlertCircle } from "lucide-react";
+import { User, Lock, Eye, EyeOff, Loader2, AlertCircle, Download } from "lucide-react";
 import Image from "next/image";
 
 export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [canInstall, setCanInstall] = useState(false);
+  const [isIos, setIsIos] = useState(false);
+  const [showIosGuide, setShowIosGuide] = useState(false);
+
+  useEffect(() => {
+    const checkPwaStatus = () => {
+      const windowWithPwa = window as unknown as { deferredPwaPrompt?: any };
+      if (windowWithPwa.deferredPwaPrompt) {
+        setCanInstall(true);
+      }
+      const isIosDevice =
+        /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+        (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+      const isStandalone =
+        window.matchMedia("(display-mode: standalone)").matches ||
+        ("standalone" in navigator && (navigator as unknown as { standalone: boolean }).standalone);
+      setIsIos(isIosDevice && !isStandalone);
+    };
+
+    checkPwaStatus();
+
+    const handlePwaAvailable = () => {
+      setCanInstall(true);
+    };
+
+    window.addEventListener("pwa-install-available", handlePwaAvailable);
+    return () => {
+      window.removeEventListener("pwa-install-available", handlePwaAvailable);
+    };
+  }, []);
+
+  const handleInstallPwa = async () => {
+    if (isIos) {
+      setShowIosGuide(!showIosGuide);
+      return;
+    }
+    const windowWithPwa = window as unknown as { deferredPwaPrompt?: any };
+    if (windowWithPwa.deferredPwaPrompt) {
+      windowWithPwa.deferredPwaPrompt.prompt();
+      const choiceResult = await windowWithPwa.deferredPwaPrompt.userChoice;
+      if (choiceResult.outcome === "accepted") {
+        console.log("User accepted PWA installation");
+      }
+      windowWithPwa.deferredPwaPrompt = null;
+      setCanInstall(false);
+    }
+  };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -146,6 +193,25 @@ export function LoginForm() {
             )}
           </button>
         </form>
+
+        {/* PWA Install Button (Cleanly integrated inside login card) */}
+        {(canInstall || isIos) && (
+          <div className="pt-4 border-t border-slate-100 mt-5 animate-fadeIn">
+            <button
+              type="button"
+              onClick={handleInstallPwa}
+              className="w-full h-10 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-700 font-semibold text-xs rounded-xl transition duration-200 flex items-center justify-center gap-2 cursor-pointer shadow-xs active:scale-[0.99]"
+            >
+              <Download className="h-4 w-4 text-emerald-600 flex-shrink-0" />
+              <span>Install Aplikasi Futaba PKIS</span>
+            </button>
+            {showIosGuide && (
+              <p className="text-[11px] text-slate-500 mt-2 text-center bg-slate-50 p-2.5 rounded-xl border border-slate-200 leading-relaxed animate-fadeIn">
+                Untuk iOS Safari: Tekan tombol <span className="font-bold text-slate-700">Share ⎋</span> lalu pilih <span className="font-bold text-slate-700">&apos;Add to Home Screen&apos;</span>.
+              </p>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
