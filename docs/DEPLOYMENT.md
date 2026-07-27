@@ -139,3 +139,6 @@ Jika ada perubahan skema database:
 - [ ] Kategori NG awal sudah ditambahkan
 - [ ] TV Display di setiap lini sudah dicek koneksinya
 - [ ] Build berhasil (`npm run build`) tanpa error
+- [ ] PWA: `public/manifest.json` tersedia dan dapat diakses di URL produksi
+- [ ] PWA: `public/service-worker.js` berjalan dengan benar di HTTPS
+- [ ] PWA: Ikon `icon-192.png`, `icon-512.png`, dan `icon-512-maskable.png` sudah ada di `public/`

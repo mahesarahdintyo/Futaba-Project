@@ -6,17 +6,26 @@ Aplikasi **Futaba PKIS** memiliki tiga peran utama: **Admin**, **Operator**, dan
 
 ## 🔑 1. Login & Autentikasi
 
-Buka aplikasi di browser dan masukkan **email** dan **password** yang telah dibuat oleh admin sistem.
+Buka aplikasi di browser dan masukkan **username** dan **password** yang telah dibuat oleh admin sistem.
 
-- **Admin** → diarahkan ke halaman `/admin`
+- **Admin** → diarahkan ke halaman `/admin`. Tersedia shortcut ke **Status & Monitoring Sistem** (`/system`) di halaman utama setelah login.
 - **Operator** → diarahkan ke halaman `/operator`
 - **TV Display** → buka langsung `/display/[landId]` tanpa login (read-only)
+
+### 📲 Install Aplikasi (PWA)
+
+Saat membuka halaman login, tombol **"Install Aplikasi Futaba PKIS"** akan muncul di bawah form jika browser mendukung instalasi PWA.
+
+- **Android / Chrome / Tablet**: Klik tombol → ikuti panduan instalasi browser.
+- **iOS / iPad Safari**: Klik tombol → ikuti instruksi tekan **Share ⎋** → **"Add to Home Screen"**.
+
+Setelah diinstal, aplikasi dapat dibuka langsung dari layar utama perangkat tanpa membuka browser secara manual.
 
 ---
 
 ## 👑 2. Panduan Admin
 
-Halaman Admin memiliki empat tab utama di navigation bar atas:
+Halaman Admin memiliki lima tab utama di navigation bar sidebar:
 
 ### Tab A: Workspace — Manajemen Dokumen
 
@@ -92,6 +101,16 @@ Panel untuk mengelola daftar kategori cacat (NG) yang bisa dipilih operator saat
 - **Hapus**: Klik ikon **Trash** → konfirmasi modal.
 
 > Contoh kategori: Dimensi, Permukaan, Material, Proses, Lainnya.
+
+---
+
+### Halaman System Monitoring (`/system`)
+
+Halaman khusus admin untuk memantau kondisi sistem secara menyeluruh. Dapat diakses dari halaman utama setelah login sebagai admin.
+
+- **Status Database & Storage**: Cek koneksi ke Supabase (PostgreSQL & Storage Bucket).
+- **Status TV Display per Lini**: Lihat status online/offline setiap TV Display beserta waktu terakhir terlihat aktif.
+- **Refresh Manual**: Klik tombol **Refresh** untuk memperbarui status secara manual.
 
 ---
 

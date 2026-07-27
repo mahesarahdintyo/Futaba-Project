@@ -13,11 +13,12 @@
 | Fitur | Keterangan |
 |---|---|
 | Workspace Dokumen | Kelola folder, unggah/hapus dokumen SOP/Manual/Form per lini (Land) |
-| Laporan Produksi | Pantau laporan harian semua operator secara realtime - filter, search, export CSV |
+| Laporan Produksi | Pantau laporan harian semua operator secara realtime — filter, search, export CSV |
 | Detail Laporan | Lihat detail lengkap + salin laporan ke clipboard |
 | Hapus Laporan | Hapus laporan dengan konfirmasi modal |
 | Manajemen Part Number | Tambah & hapus part number yang langsung tersinkron ke dropdown operator |
-| **Manajemen Kategori NG** | Tambah & hapus kategori cacat (NG) yang dipakai operator |
+| Manajemen Kategori NG | Tambah & hapus kategori cacat (NG) yang dipakai operator |
+| **Status & Monitoring Sistem** | Pantau status online/offline setiap TV Display lini produksi dari halaman `/system` |
 
 ### 📱 Operator
 | Fitur | Keterangan |
@@ -31,6 +32,13 @@
 - Menampilkan dokumen aktif secara realtime (update < 1 detik)
 - Tidak memerlukan interaksi fisik — cukup buka sekali di browser
 
+### 📲 Progressive Web App (PWA)
+- Dapat diinstal ke layar utama perangkat (Android, Tablet, iOS)
+- Tombol **Install Aplikasi** muncul di form login saat browser mendukung
+- Panduan instalasi untuk iOS Safari tampil otomatis di perangkat Apple
+- Service Worker dengan strategi caching cerdas: network-only untuk Supabase & `/api/*`, network-first untuk navigasi halaman, cache-first untuk static assets
+- Halaman **Offline fallback** saat koneksi terputus
+
 ---
 
 ## 🛠️ Tech Stack
@@ -43,7 +51,8 @@
 | **Storage** | Supabase Storage Bucket (`documents`) |
 | **Realtime** | Supabase Realtime Channels |
 | **Auth** | Supabase Auth (email/password) + RBAC middleware |
-| **Package Manager** | pnpm |
+| **PWA** | Custom Service Worker (manual, tanpa plugin) + Web App Manifest |
+| **Package Manager** | npm |
 
 ---
 
@@ -55,7 +64,8 @@ Futaba-Project/
 │   ├── admin/                  # Halaman Admin (workspace + laporan + manajemen)
 │   ├── operator/               # Halaman Operator (tablet)
 │   ├── display/[landId]/       # Halaman TV Display per lini
-│   ├── system/                 # Halaman System Status
+│   ├── system/                 # Halaman Status & Monitoring Sistem
+│   ├── offline/                # Halaman fallback PWA saat tidak ada koneksi
 │   └── api/                    # API Routes (Next.js Route Handlers)
 │       ├── ng-categories/      # CRUD kategori NG
 │       ├── part-numbers/       # CRUD part number
@@ -63,28 +73,33 @@ Futaba-Project/
 │       ├── documents/          # CRUD dokumen
 │       ├── folders/            # CRUD folder
 │       ├── lands/              # CRUD lini produksi (land)
-│       └── ...
+│       └── system/             # System health & display heartbeat API
 ├── components/
 │   ├── admin/
-│   │   ├── AdminLandCard.tsx               # Card Land admin (pindah)
-│   │   ├── CreateLandDialog.tsx            # Dialog buat Land admin (pindah)
+│   │   ├── AdminLandCard.tsx               # Card Land admin
+│   │   ├── CreateLandDialog.tsx            # Dialog buat Land admin
 │   │   ├── ProductionReportsDashboard.tsx  # Dashboard laporan produksi admin
 │   │   ├── AdminPartNumbersPanel.tsx       # Panel manajemen part number
 │   │   └── AdminNgCategoriesPanel.tsx      # Panel manajemen kategori NG
 │   ├── operator/
 │   │   ├── OperatorHeader.tsx
 │   │   ├── ProductionReportForm.tsx        # Form laporan produksi operator
-│   │   └── DocumentList.tsx                # List berkas di operator (pindah)
-│   └── ui/                                 # Komponen reusable / umum (pindah)
-│       ├── app-header.tsx
-│       ├── category-filter.tsx
-│       ├── create-folder-dialog.tsx
-│       ├── document-card.tsx
-│       ├── folder-card.tsx
-│       ├── login-form.tsx
-│       ├── logout-button.tsx
-│       ├── search-bar.tsx
-│       └── upload-dialog.tsx
+│   │   └── DocumentList.tsx               # List berkas di operator
+│   ├── ui/                                 # Komponen reusable / umum
+│   │   ├── app-header.tsx                 # Header aplikasi dengan logo PKIS
+│   │   ├── login-form.tsx                 # Form login + tombol install PWA
+│   │   ├── logout-button.tsx
+│   │   └── ...
+│   └── pwa-register.tsx                   # Registrasi Service Worker & event PWA
+├── public/
+│   ├── manifest.json                      # Web App Manifest (PWA)
+│   ├── service-worker.js                  # Custom Service Worker (PWA)
+│   ├── icon-192.png                       # Ikon PWA 192×192
+│   ├── icon-512.png                       # Ikon PWA 512×512
+│   ├── icon-512-maskable.png              # Ikon PWA maskable 512×512
+│   ├── icon.svg                           # Favicon PKIS (monogram "P" hijau)
+│   ├── apple-icon.png                     # Apple Touch Icon
+│   └── pkis-logo-wordmark(final).png      # Logo wordmark PKIS
 ├── lib/
 │   └── services/               # Service layer (fetch helpers)
 │       ├── production-report.ts
@@ -101,7 +116,7 @@ Futaba-Project/
 
 ### Prasyarat
 - **Node.js** v18+ (LTS recommended)
-- **pnpm** (`npm install -g pnpm`)
+- **npm** v9+ (sudah termasuk dengan Node.js)
 - **Akun Supabase** (free tier cukup)
 
 ### 1. Clone & Install
@@ -109,7 +124,7 @@ Futaba-Project/
 ```bash
 git clone https://github.com/mahesarahdintyo/Futaba-Project.git
 cd Futaba-Project
-pnpm install
+npm install
 ```
 
 ### 2. Environment Variables
@@ -142,9 +157,9 @@ Di dashboard Supabase → **Storage** → buat bucket bernama `documents` → se
 ### 5. Jalankan Aplikasi
 
 ```bash
-pnpm dev        # Development mode
+npm run dev        # Development mode
 # atau
-pnpm build && pnpm start   # Production mode
+npm run build && npm run start   # Production mode
 ```
 
 Buka **[http://localhost:3000](http://localhost:3000)**.
@@ -154,11 +169,14 @@ Buka **[http://localhost:3000](http://localhost:3000)**.
 ## 🧭 Alur Penggunaan
 
 ```
-Admin Login
-  └─ Tab: Workspace     → Kelola dokumen/folder per lini
-  └─ Tab: Laporan Produksi -> Pantau laporan operator secara realtime
-  └─ Tab: Part Number   -> Tambah/hapus part number, dropdown operator otomatis update
-  └─ Tab: Kategori NG  → Tambah/hapus kategori cacat
+Admin Login (halaman utama)
+  └─ Ke Dashboard Admin (/admin)
+  │    └─ Tab: Workspace       → Kelola dokumen/folder per lini
+  │    └─ Tab: Laporan Produksi→ Pantau laporan operator secara realtime
+  │    └─ Tab: Part Number     → Tambah/hapus part number
+  │    └─ Tab: Kategori NG     → Tambah/hapus kategori cacat
+  └─ Akses Sebagai Operator (/operator)
+  └─ Status & Monitoring Sistem (/system)
 
 Operator (tablet)
   └─ Pilih Part Number
@@ -166,11 +184,16 @@ Operator (tablet)
   └─ Tekan Finish → sistem set waktu selesai
   └─ Isi QTY (wajib, > 0)
   └─ Isi NG (jika ada → pilih Kategori NG)
-  └─ Simpan Laporan -> dashboard admin otomatis update tanpa refresh
+  └─ Simpan Laporan → dashboard admin otomatis update tanpa refresh
 
 TV Display
   └─ Buka /display/[landId] di browser TV
   └─ Operator kirim dokumen → tampil otomatis realtime
+
+PWA Install
+  └─ Buka halaman login
+  └─ Klik tombol "Install Aplikasi Futaba PKIS" (jika muncul)
+  └─ iOS: tekan Share → Add to Home Screen
 ```
 
 ---
@@ -180,20 +203,9 @@ TV Display
 | File | Keterangan |
 |---|---|
 | [docs/INSTALLATION.md](./docs/INSTALLATION.md) | Setup database lengkap & storage bucket |
-| [docs/USER_GUIDE.md](./docs/USER_GUIDE.md) | Panduan Admin, Operator & TV Display |
+| [docs/USER_GUIDE.md](./docs/USER_GUIDE.md) | Panduan Admin, Operator, TV Display & PWA |
 | [docs/API_REFERENCE.md](./docs/API_REFERENCE.md) | Referensi semua API endpoint |
 | [docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md) | Panduan deploy ke Vercel & konfigurasi RLS produksi |
-
-### 🔗 Dokumentasi Integrasi Supabase (Template)
-
-Dokumentasi tambahan terkait template integrasi database cloud Supabase dapat ditemukan di folder [docs/supabase-integration/](./docs/supabase-integration/):
-- [START_HERE.md](./docs/supabase-integration/START_HERE.md) — Alur awal & orientasi integrasi.
-- [QUICK_REFERENCE.md](./docs/supabase-integration/QUICK_REFERENCE.md) — Panduan cepat penggunaan.
-- [SETUP_GUIDE.md](./docs/supabase-integration/SETUP_GUIDE.md) — Langkah-langkah detail setup & troubleshooting.
-- [IMPLEMENTATION_SUMMARY.md](./docs/supabase-integration/IMPLEMENTATION_SUMMARY.md) — Rangkuman teknis & database schema.
-- [SUPABASE_INTEGRATION_README.md](./docs/supabase-integration/SUPABASE_INTEGRATION_README.md) — Gambaran arsitektur integrasi.
-- [VERIFICATION_CHECKLIST.md](./docs/supabase-integration/VERIFICATION_CHECKLIST.md) — Checklist verifikasi fitur.
-
 
 ---
 
@@ -219,9 +231,26 @@ Sistem menggunakan **Supabase Auth** dengan RBAC berbasis role:
 
 | Role | Akses |
 |---|---|
-| `admin` | Semua halaman (workspace, laporan, manajemen part number & kategori NG) |
+| `admin` | Semua halaman — workspace, laporan, manajemen part number & kategori NG, **monitoring sistem** |
 | `operator` | Halaman operator (tampilkan dokumen + isi laporan produksi) |
 | *(tanpa login)* | TV Display (`/display/[landId]`) — read-only |
+
+---
+
+## 📲 PWA — Progressive Web App
+
+Aplikasi ini mendukung instalasi sebagai PWA di semua perangkat modern.
+
+### Cara Install
+- **Android / Chrome / Edge / Tablet**: Tombol **"Install Aplikasi Futaba PKIS"** akan muncul di form login. Klik untuk memulai instalasi.
+- **iOS / iPad Safari**: Tombol yang sama akan muncul dengan instruksi: tekan **Share ⎋** → pilih **"Add to Home Screen"**.
+
+### Strategi Caching (Service Worker)
+| Jenis Request | Strategi |
+|---|---|
+| Supabase (`supabase.co`) & `/api/*` | **Network-Only** — data realtime selalu fresh |
+| Navigasi halaman (HTML) | **Network-First** — fallback ke `/offline` jika tidak ada koneksi |
+| Static assets (`/_next/static/`, gambar, ikon) | **Cache-First** — cepat dari cache |
 
 ---
 

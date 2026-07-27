@@ -9,7 +9,7 @@ Dokumen ini menjelaskan langkah-langkah untuk menyiapkan dan menjalankan **Futab
 | Software | Versi | Keterangan |
 |---|---|---|
 | **Node.js** | v18+ | Direkomendasikan versi LTS terbaru |
-| **pnpm** | Terbaru | `npm install -g pnpm` |
+| **npm** | v9+ | Sudah termasuk dengan Node.js |
 | **Akun Supabase** | — | Diperlukan untuk database & storage |
 
 ---
@@ -21,7 +21,7 @@ Dokumen ini menjelaskan langkah-langkah untuk menyiapkan dan menjalankan **Futab
 ```bash
 git clone https://github.com/mahesarahdintyo/Futaba-Project.git
 cd Futaba-Project
-pnpm install
+npm install
 ```
 
 ### 2. Konfigurasi Environment Variables
